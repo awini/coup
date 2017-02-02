@@ -19,7 +19,12 @@ Result is an class based on ***_Base***.
 _DOC_ADD = ['We have this smart translates now:\n']
 #_DOC_SMARTERS = []
 
-from itertools import izip_longest
+try:
+    # Python 3
+    from itertools import zip_longest as izip_longest
+except ImportError:
+    # Python 2
+    from itertools import izip_longest
 
 from ._Base import _Base, _Line, _GoodLine
 from ._smart_parsers import _ExpParser
@@ -172,16 +177,25 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     current = [ ins_list[0] ]
 
     def _install_current(cur):
+        print('[ _install_current ] {}'.format(cur))
         current[ 0 ] = cur
 
     class FooType(type):
 
         def __getattr__(cls, key):
+            print('[ get Foo attr ] {}'.format(key))
             val = getattr(current[ 0 ], key)
             return val
 
-    class SmartList:
-        __metaclass__ = FooType
+    import sys as _sys
+
+    if _sys.version_info.major >= 3:
+        _SmartListBase = FooType(str('_SmartListBase'), (), {})
+    else:
+        class _SmartListBase:
+            __metaclass__ = FooType
+
+    class SmartList(_SmartListBase):
 
         def __init__(self, *args, **kwargs):
             self._cur = current[ 0 ]( *args, **kwargs )
@@ -191,9 +205,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
         @classmethod
         def is_instruction(cls, line):
+            print('[ is_instruction ] {}'.format(ins_list))
             for ins in ins_list:
                 if ins.is_instruction(line):
                     _install_current( ins )
                     return True
+
+    print('!!!', ins_list)
 
     return SmartList

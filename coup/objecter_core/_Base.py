@@ -1,5 +1,6 @@
 # coding: utf-8
 from copy import copy
+import sys as _sys
 
 try:
     from colorama import init
@@ -8,29 +9,6 @@ try:
 except ImportError:
     colored = lambda *args, **kwargs: None
 
-
-# class _FilePath(str):
-#
-#     def __init__(self, s, line_number):
-#         super(_FilePath, self).__init__(s)
-#         self.line_number = line_number
-
-# class _CoreKeyer:
-#
-#     def __init__(self, _locals):
-#         self.__start_keys = _locals
-#
-#     def only_created(self, _locals):
-#         __fin_keys = {}
-#         for key in locals().keys():
-#             if key in self.__start_keys or key.startswith('__'):
-#                 continue
-#             __fin_keys[key] = _locals[key]
-#         return __fin_keys
-#
-#
-# def make_core():
-#     __keyer = _CoreKeyer(locals())
 
 class _OtstupAbility:
 
@@ -53,7 +31,15 @@ class _OtstupAbility:
         return ' ' * (self.otstup + add_otstup)
 
 
-class _Base(object, _OtstupAbility):
+def _base_bases():
+    if _sys.version_info.major >= 3:
+        return _OtstupAbility
+    class _BaseBase(object, _OtstupAbility):
+        pass
+    return _BaseBase
+
+
+class _Base(_base_bases()):
     r'''Base class for all translate classes.
 
 Implement those methods in child:
