@@ -477,6 +477,11 @@ def click_delit(self):
             OUT_FORMAT='range(<EXP:LIST>)',
         )
 
+        Range2 = _smart(
+            IN_FORMAT='range(<EXP>, <EXP>)',
+            OUT_FORMAT='<EXP>...<EXP>'
+        )
+
         # FIXME
         # def on_tochka_try_instruction(self, i, line):
         #     print('---.', line, self)
@@ -493,11 +498,30 @@ def click_delit(self):
         #     OUT_FORMAT='<EXP>.<EXP>',
         #     on_try_instruction=on_tochka_try_instruction,
         # )
+        Eval = _smart(
+            IN_FORMAT='eval(<EXP>)',
+            OUT_FORMAT='Expression(<EXP>).eval()',
+        )
+
+        # FIXME !!!
+        Format = _smart(
+            IN_FORMAT="'{:.2f}'.format(<EXP>)",
+            OUT_FORMAT='java.lang.String.format("%.2f", <EXP>)',
+        )
+
+        Bad = _smart(
+            IN_FORMAT='self.R.<EXP:TEXT>.text',
+            OUT_FORMAT='R.<EXP:TEXT>.getText().toString()',
+        )
 
         t = TextTryer(
+            Bad=Bad,
+            Format=Format,
+            Eval=Eval,
             Self=Self,
             Element=Element,
             Range=Range,
+            Range2=Range2,
             #Tochka=Tochka,
             Ravno=Ravno,
             Print=Print,
@@ -547,60 +571,15 @@ class CalcWidget(BoxLayout):
         self.R.mainInput.text += " * "
         print(self.ttt)
 
-    def click_minus(self):
-        self.R.mainInput.text += " - "
-
-    def click_plus(self):
-        self.R.mainInput.text += " + "
-
-    def click_zapyata(self):
-        self.R.mainInput.text += ","
-
-    def click_skobki(self):
-        self.R.mainLabel.text = "( )"
-
     def click_count(self):
-        self.R.mainLabel.text = '{:.2f}'.format( eval(self.R.mainInput.text) )
+        #self.R.mainLabel.text = '{:.2f}'.format( eval(self.R.mainInput.text) )
+
+        s = eval(self.R.mainInput.text)
+        self.R.mainLabel.text = '{:.2f}'.format( s )
 
     def click_0(self):
         self.R.mainLabel.text = "000"
         self.R.mainInput.text += "0"
-
-    def click_1(self):
-        self.R.mainLabel.text = "111"
-        self.R.mainInput.text += "1"
-
-    def click_2(self):
-        self.R.mainLabel.text = "222"
-        self.R.mainInput.text += "2"
-
-    def click_3(self):
-        self.R.mainLabel.text = "333"
-        self.R.mainInput.text += "3"
-
-    def click_4(self):
-        self.R.mainLabel.text = "444"
-        self.R.mainInput.text += "4"
-
-    def click_5(self):
-        self.R.mainLabel.text = "555"
-        self.R.mainInput.text += "5"
-
-    def click_6(self):
-        self.R.mainLabel.text = "666"
-        self.R.mainInput.text += "6"
-
-    def click_7(self):
-        self.R.mainLabel.text = "777"
-        self.R.mainInput.text += "7"
-
-    def click_8(self):
-        self.R.mainLabel.text = "888"
-        self.R.mainInput.text += "8"
-
-    def click_9(self):
-        self.R.mainLabel.text = "999"
-        self.R.mainInput.text += "9"
 ''')
 
         print( '\n---] '.join(t.b.get_tree().split('\n')) )
