@@ -68,14 +68,17 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 #print('deleters_in:', self.deleters_in, line)
                 #print('deleters_in.exps:', self.deleters_in.exps)
                 line = line.strip()
-                for l in self.deleters_in:
-                    if len(l) == 0:
-                        continue
-                    line = line.replace(l, '|')
-                if line.startswith('|'):
-                    line = line[1:]
-                if line.endswith('|'):
-                    line = line[:-1]
+                # for l in self.deleters_in:
+                #     if len(l) == 0:
+                #         continue
+                #     line = line.replace(l, '|')
+                # if line.startswith('|'):
+                #     line = line[1:]
+                # if line.endswith('|'):
+                #     line = line[:-1]
+
+                line = _line_to_slashs(line, self.deleters_in) #, IN_FORMAT)
+
                 lst = line.split('|')
                 #print('line:', line)
 
@@ -214,3 +217,52 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     print('!!!', ins_list)
 
     return SmartList
+
+def _line_to_slashs(line, deleters_in):
+    line = line.strip()
+    start_line = line
+
+    #IN_FORMAT = IN_FORMAT.replace('<EXP', '<EEEEEEEE')
+
+    #IN_FORMAT = '<EXP>'.join( [ a.split('>')[-1] for a in IN_FORMAT.split('<EXP') ] )
+    #IN_FORMAT_LEFT = IN_FORMAT[:len(IN_FORMAT)/2]
+    #IN_FORMAT_RIGHT = IN_FORMAT[len(IN_FORMAT) / 2:]
+
+    #print('^^^ {} / {}'.format(IN_FORMAT_LEFT, IN_FORMAT_RIGHT))
+
+    #left = [a for a in deleters_in if a in IN_FORMAT_LEFT] #[:len(deleters_in)/2+1]
+    #right = [a for a in deleters_in[::-1] if a in IN_FORMAT_RIGHT] #deleters_in[-1:-len(deleters_in) / 2:-1]
+
+    left = deleters_in[:len(deleters_in)/2+1]
+    right = deleters_in[-1:-len(deleters_in) / 2:-1]
+
+    if len(right) > len(left):
+        left, right = left + right[-1:], right[:-1]
+    elif len(left) + 1 > len(right):
+        left, right = left[:-1], right + left[-1:]
+
+    #print('::: {} / {}'.format(left, right))
+
+    for l in left:
+        if len(l) == 0:
+            continue
+        i = line.find(l)
+        #print('\t{} [{}]: {}'.format(i, l, line))
+        line = line[:i] + '|' + line[i+len(l):]
+
+    for l in right:
+        if len(l) == 0:
+            continue
+        i = line.rfind(l)
+        #print('\t{} [{}]: {} R'.format(i, l, line))
+        line = line[:i] + '|' + line[i + len(l):]
+
+
+    if line.startswith('|'):
+        line = line[1:]
+    if line.endswith('|'):
+        line = line[:-1]
+
+    #print('... {} --> {} --> {}'.format(start_line, deleters_in, line) )
+
+    return line

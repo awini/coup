@@ -572,7 +572,7 @@ class CalcWidget(BoxLayout):
         print(self.ttt)
 
     def click_count(self):
-        #self.R.mainLabel.text = '{:.2f}'.format( eval(self.R.mainInput.text) )
+        self.R.mainLabel.text = '{:.2f}'.format( eval(self.R.mainInput.text) )
 
         s = eval(self.R.mainInput.text)
         self.R.mainLabel.text = '{:.2f}'.format( s )
@@ -583,6 +583,30 @@ class CalcWidget(BoxLayout):
 ''')
 
         print( '\n---] '.join(t.b.get_tree().split('\n')) )
+
+    def test_7(self):
+        from coup.objecter_core._Smart import _line_to_slashs
+
+        def tst(line, deleters_in, IN_FORMAT=None):
+            out = _line_to_slashs(
+                line=line,
+                deleters_in=deleters_in,
+                #IN_FORMAT=IN_FORMAT
+            )
+            print('>>> {}'.format(line))
+            print('    {}'.format(out))
+
+        tst(
+            line='for a in [1, 2, 3]:',
+            deleters_in=['for ', ' in '],
+            #IN_FORMAT='for <EXP> in <EXP>:'
+        )
+
+        tst(
+            line="self.do_something('{:.2f}'.format())",
+            deleters_in=['self.', '(', ')'],
+            #IN_FORMAT='self.<EXP>(<EXP>)'
+        )
 
 
 
