@@ -361,6 +361,14 @@ class _Line(_Base):
 class _GoodLine(_Line):
     pass
 
+class _ToDeleteLine(_Line):
+    def __add__(self, other):
+        return _ToDeleteLine(self.line+other)
+    def __radd__(self, other):
+        return _ToDeleteLine(other+self.line)
+    def split(self, s):
+        return []
+
 
 class _Local(_Line):
 
@@ -415,11 +423,15 @@ You need no subclass by this class.
 
     def get_tree(self):
         if self.insert_childs:
-            return '\n'.join([
-                    self.get_tree_start(),
-                    self.get_tree_base(),
-                    self.get_tree_end()
-                ])
+            start, base, end = self.get_tree_start(), self.get_tree_base(), self.get_tree_end()
+            if type(base) == _ToDeleteLine:
+                return base
+            return (
+                ((start + '\n') if type(start) != _ToDeleteLine else '')
+                + base +
+                (('\n' + end) if type(end) != _ToDeleteLine else '')
+            )
+
         else:
             self.get_tree_base() # needed
             return '\n'.join([
@@ -439,7 +451,8 @@ You need no subclass by this class.
             b.print_tree()
 
     def get_tree_base(self):
-        return '\n'.join( b.get_tree() for b in self.blocks ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
+        gen = ( b.get_tree() for b in self.blocks )
+        return '\n'.join( b for b in gen if type(b) != _ToDeleteLine ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
 
     def get_tree_start(self):
         return ' ' * (self.otstup-4) + (self.start_instruction._BLOCK_START if self.otstup > 0 else '')

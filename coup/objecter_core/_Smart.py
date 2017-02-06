@@ -32,14 +32,17 @@ from ._smart_parsers import _ExpParser
 
 def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            tst=False, locals=None, init_locals=None, TYPE_OUT=None,
+           on_init=lambda self:None,
            on_try_instruction=lambda self, i, line: None,
            on_instruction=lambda self,i,ins:ins,
            on_block_start=lambda self, block:None,
-           on_get_tree=lambda self,text:text):
+           on_get_tree=lambda self,text:text,
+           BLOCK_START='{', BLOCK_END='}'):
 
     _INDEX = INDEX
     _TYPE_OUT = TYPE_OUT
     _on_block_start = on_block_start
+    _on_init = on_init
 
     def make_smart(IN_FORMAT):
 
@@ -141,12 +144,16 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             TYPE_OUT = _TYPE_OUT
 
             on_block_start = _on_block_start
+            _BLOCK_START = BLOCK_START
+            _BLOCK_END = BLOCK_END
 
             def __init__(self, line, parent=None, line_number=0):
                 self.locals = locals
                 self.init_locals = init_locals
 
                 super(Smart, self).__init__(line, parent, line_number)
+
+                _on_init(self)
 
                 def on_my_instruction(i, ins):
                     return on_instruction(self, i, ins)
