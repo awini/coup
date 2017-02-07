@@ -33,6 +33,7 @@ from ._smart_parsers import _ExpParser
 def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            tst=False, locals=None, init_locals=None, TYPE_OUT=None,
            on_init=lambda self:None,
+           on_init_end=lambda self:None,
            on_try_instruction=lambda self, i, line: None,
            on_instruction=lambda self,i,ins:ins,
            on_block_start=lambda self, block:None,
@@ -43,6 +44,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     _TYPE_OUT = TYPE_OUT
     _on_block_start = on_block_start
     _on_init = on_init
+    _on_init_end = on_init_end
 
     def make_smart(IN_FORMAT):
 
@@ -159,6 +161,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     return on_instruction(self, i, ins)
 
                 self.init_exps(line, on_my_instruction)
+
+                _on_init_end(self)
 
             def __eq__(self, other):
                 if hasattr(other, 'instructions'):
