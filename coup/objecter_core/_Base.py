@@ -465,7 +465,7 @@ You need no subclass by this class.
 
     def add_line(self, line, line_number, parent):
         #print('add_line: {} | {} | {}'.format(line, line_number, self))
-        #if self.is_line_in_me_only(line):
+        #if self.is_line_continue_block(line):
         if True:
 
             #print('LLL', self, line)
@@ -494,14 +494,18 @@ You need no subclass by this class.
             if stripped.startswith(name + '.'):
                 return _Local(line, parent=parent, line_number=line_number)
 
-    def is_line_in_me(self, line):
-        return len(line.strip()) == 0 or _Base.get_otstup(line) >= self.otstup
+    # ===================
 
-    def is_line_in_me_only(self, line):
+    # def is_line_in_me(self, line):
+    #     return len(line.strip()) == 0 or _Base.get_otstup(line) >= self.otstup
+
+    def is_line_starts_block(self, line):
+        return _Base.get_otstup(line) > self.otstup
+
+    def is_line_continue_block(self, line):
         return _Base.get_otstup(line) == self.otstup or len(line.strip()) == 0
 
-    def is_line_block(self, line):
-        return _Base.get_otstup(line) > self.otstup
+    # ===================
 
     def add_lines(self, lines, diapazon):
         tst_lines = copy(lines)
@@ -509,8 +513,8 @@ You need no subclass by this class.
 
         while len(tst_lines):
             line = tst_lines[0]
-            #print('>>>', diapazon[0], line, self.is_line_block(line), id(self))
-            if self.is_line_block(line):
+            #print('>>>', diapazon[0], line, self.is_line_starts_block(line), id(self))
+            if self.is_line_starts_block(line):
                 #print('INBLOCK')
                 #print('# ^^^ ' +line)
                 #print('#$$$ ', self.last_instruction.line)
@@ -561,7 +565,7 @@ You need no subclass by this class.
                     self.start_instruction.add_param_line(line)
                     continue
                 #print('....', line)
-                if self.is_line_in_me_only(line):
+                if self.is_line_continue_block(line):
                     ret = self.add_line(line, diapazon[0]-1, self)
                     # if ret == None:
                     #     #print('# --- {}'.format(line))

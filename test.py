@@ -608,6 +608,86 @@ class CalcWidget(BoxLayout):
             #IN_FORMAT='self.<EXP>(<EXP>)'
         )
 
+    def test_8(self):
+        from coup.objecter_core._Base import _Block
+
+
+        def new_smart(*args, **kwargs):
+            return _smart(*args, BLOCK_START='begin', BLOCK_END='end', **kwargs)
+
+
+        def is_line_starts_block(self, line):
+            return line.strip().endswith('{')
+
+        def is_line_continue_block(self, line):
+            return not line.endswith('}') and not is_line_starts_block(self, line)
+
+        # @staticmethod
+        def is_start(line):
+            return line.strip().endswith('{')
+
+        def is_end(self, line):
+            return line.endswith('}')
+
+
+        _Block.is_start = is_start
+        _Block.is_end = is_end
+        #_Block.is_line_starts_block = is_line_starts_block
+        #_Block.is_line_continue_block = is_line_continue_block
+
+
+        Comment = new_smart(
+            IN_FORMAT='<EXP>#<EXP:TEXT>',
+            OUT_FORMAT='<EXP> // <EXP:TEXT>',
+        )
+
+        CommentFull = new_smart(
+            IN_FORMAT='#<EXP:TEXT>',
+            OUT_FORMAT='// <EXP:TEXT>',
+        )
+
+        If = new_smart(
+            IN_FORMAT='if (<EXP>) {',
+            OUT_FORMAT='if <EXP> then',
+        )
+
+        More = new_smart(
+            IN_FORMAT='<EXP:NAME> > <EXP>',
+            OUT_FORMAT='<EXP:NAME> > <EXP>',
+        )
+
+        Str = new_smart(
+            IN_FORMAT='"<EXP:TEXT>"',
+            OUT_FORMAT='"<EXP:TEXT>"',
+            TYPE_OUT='str',
+        )
+        Print = new_smart(
+            IN_FORMAT='print(<EXP>);',
+            OUT_FORMAT='print(<EXP>)',
+        )
+        BlockEnd = new_smart(
+            IN_FORMAT='}',
+            OUT_FORMAT='',
+        )
+
+        t = TextTryer(
+            NumberInt=NumberInt,
+            Comment=Comment,
+            CommentFull=CommentFull,
+            If=If,
+            More=More,
+            Str=Str,
+            Print=Print,
+            BlockEnd=BlockEnd,
+        ).parse('''# coding: utf-8
+if (x > 17) {
+    print("hello");
+}
+        ''')
+
+        #self.assertEqual(type(t.b.blocks[0]), CommentFull)
+        print( t.get_tree_text() )
+
 
 
 
