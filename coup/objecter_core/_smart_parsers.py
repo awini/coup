@@ -225,7 +225,7 @@ class _ExpParser(list):
             if i == 0:
                 if len(main_lst[0]) > 0: #and False:
                     #print('!!!', main_lst, lst[0])
-                    deleters.append(lst[0])
+                    deleters.append(ex)#lst[0])
                     #exps.append( _ExpString('') )
             else:
                 es_in = lst[0].split(':')[-1]
@@ -233,7 +233,7 @@ class _ExpParser(list):
                 #print('>>>', es, es_in)
                 exps.append( es )
                 if len(lst) > 1:
-                    deleters.append( lst[1] )
+                    deleters.append( '>'.join(lst[1:]) )
         self.exps = exps
         #print(exps, '--', line)
         return deleters

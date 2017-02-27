@@ -368,10 +368,104 @@ def click_delit(self):
             on_instruction=on_def_simple_instruction,
         )
 
+        _URLER_HAVER = [None]
+
+        def _on_def_init_end(self):
+            if _URLER_HAVER[ 0 ]:
+                print('DEF INIT:', self, _URLER_HAVER[ 0 ])
+                self.instructions = self.instructions[:1] + [_GoodLine('_ status: Status? = nil, _ data: String? = nil')]
+                self._BLOCK_START = '    -> [String: String]!\n    {'
+
+                func_name = self.instructions[0].line
+                self.instructions[0].line += '_answer'
+
+                self._URLER_OK = '''public func {FUNC_NAME}(_ view: View? = nil) {
+        var params = self.{FUNC_NAME}_answer(Status(0, true), nil)
+
+        // Instantiate the RequestQueue.
+        var queue = Volley.newRequestQueue(self.getActivity())  // RequestQueue
+        var url = "{URL}"   // String
+
+        class ResponseListener: Response.Listener<String> {
+            var me:{CLASS_NAME}
+            init(_ me:{CLASS_NAME}) {
+                self.me = me
+            }
+            func onResponse(_ response: String) {
+                self.me.{FUNC_NAME}_answer(Status(200), response)
+            }
+        }
+
+        class ErrorListener: Response.ErrorListener {
+            var me:{CLASS_NAME}
+            init(_ me:{CLASS_NAME}) {
+                self.me = me
+            }
+            func onErrorResponse(_ error: VolleyError!) {
+                var statusCode = error.networkResponse.statusCode
+                var response:NetworkResponse = error.networkResponse
+                var headers = response.headers
+                if statusCode == 302 {
+                    var queue2 = Volley.newRequestQueue(self.me.getActivity())  // RequestQueue
+                    var url2 = headers["location"]   // String
+                    var stringRequest2 = StringRequest(Request.Method.GET, url2,
+                        ResponseListener(self.me), ErrorListener(self.me))
+                    queue2.add(stringRequest2)
+                } else {
+                    //((self.me.rootView as! View).findViewById(R.id.nameInput) as! EditText).setText("Error: " + statusCode+" "+response.data)
+                }
+            }
+        }
+
+        // Request a string response from the provided URL.
+        var stringRequest = StringRequest(Request.Method.GET, url,
+                ResponseListener(self), ErrorListener(self))
+
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest)
+    }
+    '''.replace('{URL}', _URLER_HAVER[ 0 ].instructions[0].get_tree()).replace(
+                    '{FUNC_NAME}', func_name).replace(
+                    '{CLASS_NAME}', _URLER_HAVER[ 0 ].instructions[0].get_parent_class().instructions[0].line)
+                _URLER_HAVER[0].instructions[0].get_parent_class().get_parent_block().blocks.insert(0,
+                     _GoodLine('''
+import com.android.volley
+import com.android.volley.toolbox
+
+public class Status
+{
+ 	var value: Int16
+ 	ver before: Boolean
+
+ 	init(_ value: Integer!, _ before: Boolean!) {
+ 		self.value = value
+ 		self.before = before
+ 	}
+}
+                     ''')
+                                                                                                    )
+                _URLER_HAVER[ 0 ] = None
+
+        def _on_def_get_tree(self, text):
+            if hasattr(self, '_URLER_OK'):
+                return self._URLER_OK + text
+            return text
+
         Def = _smart(
             IN_FORMAT='def <EXP:NAME>(self,<EXP:NAMES_LIST>):',
             OUT_FORMAT='public func <EXP:NAME>(<EXP:NAMES_LIST>)',
-            locals={'self': Class}
+            locals={'self': Class},
+            on_init_end=_on_def_init_end,
+            on_get_tree=_on_def_get_tree
+        )
+
+        def _on_urler_init(self):
+            _URLER_HAVER[ 0 ] = self
+
+        URLER_OK = _smart(
+            '@URLER_OK(<EXP:TEXT>)',
+            '//URLER_OK: <EXP:TEXT>',
+            on_init=_on_urler_init,
         )
 
         DefStart = _smart(
@@ -514,7 +608,31 @@ def click_delit(self):
             OUT_FORMAT='R.<EXP:TEXT>.getText().toString()',
         )
 
+        StatusBefore = _smart(
+            IN_FORMAT='status.before',
+            OUT_FORMAT='status.before',
+        )
+
+        If = _smart(
+            IN_FORMAT='if <EXP>:',
+            OUT_FORMAT='if <EXP>',
+        )
+
+        Else = _smart(
+            IN_FORMAT='else:',
+            OUT_FORMAT='else',
+        )
+
+        Return = _smart(
+            IN_FORMAT='return <EXP>',
+            OUT_FORMAT='return <EXP>',
+        )
+
         t = TextTryer(
+            Return=Return,
+            If=If,
+            Else=Else,
+            StatusBefore=StatusBefore,
             Bad=Bad,
             Format=Format,
             Eval=Eval,
@@ -544,6 +662,7 @@ def click_delit(self):
             Class=Class,
             DefSimple=DefSimple,
             Def=Def,
+            URLER_OK=URLER_OK,
         ).parse('''
 # coding: utf-8
 from kivy.uix.boxlayout import BoxLayout
@@ -580,6 +699,16 @@ class CalcWidget(BoxLayout):
     def click_0(self):
         self.R.mainLabel.text = "000"
         self.R.mainInput.text += "0"
+
+    @URLER_OK('/data/')
+    def get_data(self, status=None, data=None):
+        if status.before:
+            print('login start...')
+            #return {'name':self.ids.nameInput.text, 'pass':self.ids.passwordInput.text}
+        else:
+            text = 'login... {}'.format(status)
+            print(text)
+            # FIXME: print('login... {}'.format(status))
 ''')
 
         print( '\n---] '.join(t.b.get_tree().split('\n')) )
