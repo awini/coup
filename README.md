@@ -1,7 +1,27 @@
 # ~=~ COUP ~=~
 ## -(= Translate engine =)-
 
-It is very interesting to translate your programs to other languages.
+*It is very interesting to translate your programs to other languages.*
+
+Imagine we have program code on **Python** like (file **"main.py"**):
+```
+if __name__ == '__main__':
+    print('Hello!')
+```
+Now we want auto translater that can translate it ro **Golang**. In **Golang**
+this program code will be like:
+```Golang
+package main
+import "fmt"
+
+func main()
+{
+    fmt.Println("Hello!")
+}
+```
+
+OK, this task is created for this tool!
+Now let's try to write our new translate engine in simple syntax. It wil be like this:
 
 ```python
 from coup import Translater, accord, Accord
@@ -27,12 +47,6 @@ class ToGO(Translater):
 
 ```
 
-Python file "main.py":
-```
-if __name__ == '__main__':
-    print('Hello!')
-```
-
 And now translate is simple:
 
 ```python
@@ -50,7 +64,8 @@ func main()
 
 }
 ```
-
+OK
+------
 You can use classess oportunities a lot:
 
 ```python
