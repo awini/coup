@@ -219,7 +219,6 @@ class _ExpParser(list):
 
     def split_line(self, line):
         need_debug = False #'#<EXP:TEXT>' == line
-
         exps = []
         deleters = []
         main_lst = line.split('<EXP')
@@ -249,4 +248,10 @@ class _ExpParser(list):
 
         if need_debug:
             print(exps, '--', line)
+
+        #print('**** DELETERS:', deleters)
+
+        self.exps = exps
+        #print(exps, '--', line)
+        
         return deleters

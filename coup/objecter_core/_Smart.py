@@ -308,6 +308,7 @@ def _line_to_slashs(line, deleters_in):
 
     return line
 
+
 from inspect import isclass
 
 class _SmartMeta(type):
@@ -402,3 +403,4 @@ Translater = Smarter
 accord = _smart
 
 Accord = SmarterProperty
+
