@@ -942,14 +942,22 @@ if (x > 17) {
 
         from coup import Translater, accord, Accord
 
-        class NewTranslate(Translater):
+        class ToGOBase(Translater):
 
-            some_check = accord(
-                IN =  'print(<EXP>)',
-                OUT = 'println(<EXP>);',
+            OUT_START = ['package main',
+                         'import "fmt"']
+
+            Main = accord(
+                IN = "if __name__ == '__main__':",
+                OUT = 'func main()'
             )
 
-        class NewTranslate2(NewTranslate):
+            Print = accord(
+                IN =  'print(<EXP>)',
+                OUT = 'fmt.Println(<EXP>)',
+            )
+
+        class ToGO(ToGOBase):
 
             class Str(Accord):
                 IN = "'<EXP:TEXT>'"
@@ -963,11 +971,10 @@ if (x > 17) {
                     self._hello()
 
         last_text = '''
-
-print('Hello!')
-
-        '''
-        new_text = NewTranslate2.translate(last_text)
+if __name__ == '__main__':
+    print('Hello!')
+'''
+        new_text = ToGO.translate(last_text)
 
         print('last_text lines: {}'.format(len(last_text.split('\n'))))
         print(new_text)

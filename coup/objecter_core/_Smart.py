@@ -358,11 +358,19 @@ class Smarter(object):
     __metaclass__ = _SmartMeta
 
     _GLOBALS = None
+    OUT_START = []
 
     @classmethod
     def translate(cls, text, filename=None):
         _getter = _Line.init_instructs(cls._GLOBALS, filename=filename)[1]
-        return _getter(text)
+        out_text = _getter(text)
+        out_text = '\n'.join(cls.OUT_START) + out_text
+        return out_text
+
+    @classmethod
+    def translate_file(cls, filename):
+        text = open(filename).read()
+        return cls.translate(text, filename=filename)
 
 class SmarterProperty(object):
 
