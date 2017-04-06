@@ -66,7 +66,9 @@ class _ExpName(_ExpType):
 
         #print('..', parent.locals, line)
         if hasattr(parent, 'locals') and parent.locals != None:
-            parent.locals[ line ] = None
+            name = line.split('=')[0].split(':')[0].strip().replace('*','') # FIXME
+            #print('[ NAME ] {} --> {}'.format(name, parent))
+            parent.locals[ name ] = None
 
         return _GoodLine(line, line_number=line_number, new_name=True, parent=parent)
 
@@ -174,6 +176,7 @@ class _ExpGetLocal(_ExpType):
         #print( '-----', parent_class, line )
         if line in parent_class.init_locals:
             return _GoodLine(line, line_number=line_number, parent=parent)
+
         return None
 
 class _ExpInsertLocal(_ExpType):
@@ -211,14 +214,18 @@ class _ExpParser(list):
 
     def __init__(self, line):
         deleters = self.split_line(line)
+        self.line = line
         super(_ExpParser, self).__init__(deleters)
 
     def split_line(self, line):
+        need_debug = False #'#<EXP:TEXT>' == line
+
         exps = []
         deleters = []
         main_lst = line.split('<EXP')
 
-        #print('MAIN_LST:', main_lst)
+        if need_debug:
+            print('**** MAIN_LST:', main_lst, line)
 
         for i, ex in enumerate(main_lst):
             lst = ex.split('>')
@@ -234,6 +241,12 @@ class _ExpParser(list):
                 exps.append( es )
                 if len(lst) > 1:
                     deleters.append( '>'.join(lst[1:]) )
+
+        if need_debug:
+            print('**** DELETERS:', deleters)
+
         self.exps = exps
-        #print(exps, '--', line)
+
+        if need_debug:
+            print(exps, '--', line)
         return deleters

@@ -137,6 +137,9 @@ def _make_lines_deleters(*lines, **kwargs):
         line_deleters[ 0 ] += 1
         class NewLineDeleter(_LineDelete):
             FIND_STRING = line
+            @classmethod
+            def to_str(cls):
+                return '{}: {}'.format(cls.__name__, cls.FIND_STRING)
         name = 'NewLineDeleter{}'.format(line_deleters[ 0 ])
         kwargs['globals'][name] = NewLineDeleter
     for line in lines:
@@ -311,6 +314,28 @@ class _NumberInt(_Base):
 
     def __str__(self):
         return 'NumberInt({})'.format(self.number)
+
+    def __repr__(self):
+        return self.__str__()
+
+class _NumberFloat(_Base):
+
+    def __init__(self, line, parent=None, line_number=0):
+        super(_NumberFloat, self).__init__(line, parent, line_number)
+        self.number = float(line.strip())
+
+    @staticmethod
+    def is_instruction(line):
+        return line.count('.') == 1 and all([ a.isdigit() for a in line.strip().split('.') ])
+
+    def get_tree_main(self):
+        return '{}'.format(self.number)
+
+    def __eq__(self, other):
+        return isinstance(other, _NumberFloat) and other.number == self.number
+
+    def __str__(self):
+        return '_NumberFloat({})'.format(self.number)
 
     def __repr__(self):
         return self.__str__()

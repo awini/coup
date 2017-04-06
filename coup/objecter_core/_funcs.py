@@ -14,12 +14,17 @@ def into_maybe_kavichki(func):
     return new_func
 
 def remove_kavichki(s):
-    if s[0] in ('"', "'"):
-        return s[1:-1]
+    s = s.strip()
+    if len(s) > 0:
+        for a in ('"', "'"):
+            if s[0] == a:
+                return s.replace(a, '')
+        # if s[0] in ('"', "'"):
+        #     return s[1:-1]
     return s
 
 def add_kavichki(s):
-    if s[0] in ('"', "'"):
+    if len(s)==0 or s[0] in ('"', "'"):
         return s
     return '"' + s + '"'
 

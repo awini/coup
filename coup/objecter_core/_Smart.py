@@ -37,12 +37,20 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_try_instruction=lambda self, i, line: None,
            on_instruction=lambda self,i,ins:ins,
            on_block_start=lambda self, block:None,
+           on_block_before_start=lambda self, block:None,
            on_get_tree=lambda self,text:text,
-           BLOCK_START='{', BLOCK_END='}'):
+           BLOCK_START='{', BLOCK_END='}',
+           full_line=False, IN=None, OUT=None):
+
+    if IN != None:
+        IN_FORMAT = IN
+    if OUT != None:
+        OUT_FORMAT = OUT
 
     _INDEX = INDEX
     _TYPE_OUT = TYPE_OUT
     _on_block_start = on_block_start
+    _on_block_before_start = on_block_before_start
     _on_init = on_init
     _on_init_end = on_init_end
 
@@ -61,7 +69,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             deleters_out = _ExpParser(OUT_FORMAT)
 
             if _INDEX == None:
-                INDEX = -sum([len(d) for d in deleters_in]) + len(deleters_in.exps)
+                INDEX = (-sum([len(d) for d in deleters_in])*20 + len(deleters_in.exps)) + (
+                    -1000 if full_line else 0)
             else:
                 INDEX = _INDEX
 
@@ -70,8 +79,16 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             init_locals = None
 
             def init_exps(self, line, on_instruction):
-                #print('deleters_in:', self.deleters_in, line)
-                #print('deleters_in.exps:', self.deleters_in.exps)
+                need_debug = False #self.deleters_in.line == '#<EXP:TEXT>'
+
+                if need_debug and OUT_FORMAT == '':
+                    print('--------')
+                    print('deleters_in:', self.deleters_in, line)
+                    print('deleters_in.exps:', self.deleters_in.exps)
+                    print('deleters_out:', self.deleters_out, line)
+                    print('deleters_out.exps:', self.deleters_out.exps)
+
+
                 line = line.strip()
                 # for l in self.deleters_in:
                 #     if len(l) == 0:
@@ -85,12 +102,20 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 line = _line_to_slashs(line, self.deleters_in) #, IN_FORMAT)
 
                 lst = line.split('|')
-                #print('line:', line)
+                if need_debug:
+                    print('line:', line)
 
                 def pr(ei, e, i):
-                    #print('...', ei, e, self)
+                    if need_debug:
+                        print('...', ei, e, self)
                     ins = on_try_instruction(self, i, e)
-                    if ins:
+
+                    if i > len(self.deleters_out.exps)-1:
+                        return _Line('')
+
+                    if type(ins) == str:
+                        e = ins
+                    elif ins:
                         return ins
                     return ei.try_instruction(e, line_number=self.line_number, parent=self)
 
@@ -108,6 +133,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 return True
 
             def get_tree_main(self):
+                #print('::: {} --> {} : {}'.format(self.line, self, self.instructions))
                 trees = [ ins.get_tree() for ins in self.instructions ] #line = '|'.join()
                 #print( trees, self.deleters_out )
                 #print(len(self.deleters_in), len(self.instructions), self.deleters_in[0], self.instructions[0])
@@ -146,6 +172,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             TYPE_OUT = _TYPE_OUT
 
             on_block_start = _on_block_start
+            on_block_before_start = _on_block_before_start
             _BLOCK_START = BLOCK_START
             _BLOCK_END = BLOCK_END
 
@@ -163,6 +190,10 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 self.init_exps(line, on_my_instruction)
 
                 _on_init_end(self)
+
+            @classmethod
+            def to_str(cls):
+                return '{}: {}'.format(cls.__name__, IN_FORMAT)
 
             def __eq__(self, other):
                 if hasattr(other, 'instructions'):
@@ -191,13 +222,13 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     current = [ ins_list[0] ]
 
     def _install_current(cur):
-        print('[ _install_current ] {}'.format(cur))
+        #print('[ _install_current ] {}'.format(cur))
         current[ 0 ] = cur
 
     class FooType(type):
 
         def __getattr__(cls, key):
-            print('[ get Foo attr ] {}'.format(key))
+            #print('[ get Foo attr ] {}'.format(key))
             val = getattr(current[ 0 ], key)
             return val
 
@@ -219,14 +250,13 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
         @classmethod
         def is_instruction(cls, line):
-            print('[ is_instruction ] {}'.format(ins_list))
+            #print('[ is_instruction ] {}'.format(ins_list))
             for ins in ins_list:
                 if ins.is_instruction(line):
                     _install_current( ins )
                     return True
 
-    print('!!!', ins_list)
-
+    #print('!!!', ins_list)
     return SmartList
 
 def _line_to_slashs(line, deleters_in):
@@ -277,3 +307,90 @@ def _line_to_slashs(line, deleters_in):
     #print('... {} --> {} --> {}'.format(start_line, deleters_in, line) )
 
     return line
+
+from inspect import isclass
+
+class _SmartMeta(type):
+
+    def __new__(cls, name, bases, attrs):
+        super_new = super(_SmartMeta, cls).__new__
+
+        def check_bases(bases):
+            for base in bases:
+                if base == Smarter or issubclass(base, Smarter):
+                    return True
+
+        if 'Smarter' in globals() and 'SmarterProperty' in globals() and check_bases(bases) and name != 'Smarter':
+
+            new_cls = super_new(cls, name, bases, attrs)
+
+            base = bases[0]
+
+            _LAST_GLOBALS = {} if base._GLOBALS == None else base._GLOBALS
+            _GLOBALS = {}
+            new_cls._GLOBALS = _GLOBALS
+
+            for name in dir(new_cls):
+                attr = getattr(new_cls, name)
+                if name in _LAST_GLOBALS:
+                    continue
+
+                if isclass(attr) and type(attr) != type and issubclass(attr, SmarterProperty):
+                    d = {}
+                    attr = attr()
+                    for nm in dir(attr):
+                        if nm.startswith('_') or nm in ('mro',):
+                            continue
+                        d[nm] = getattr(attr, nm)
+                    attr = _smart(**d)
+
+                _GLOBALS[name] = attr
+
+            new_cls._GLOBALS.update(_LAST_GLOBALS)
+
+            return new_cls
+
+        return super_new(cls, name, bases, attrs)
+
+
+class Smarter(object):
+
+    __metaclass__ = _SmartMeta
+
+    _GLOBALS = None
+
+    @classmethod
+    def translate(cls, text, filename=None):
+        _getter = _Line.init_instructs(cls._GLOBALS, filename=filename)[1]
+        return _getter(text)
+
+class SmarterProperty(object):
+
+    __metaclass__ = _SmartMeta
+
+    IN_FORMAT = None
+    OUT_FORMAT = None
+    INDEX = None
+    tst = False
+    locals = None
+    init_locals = None
+    TYPE_OUT = None
+    on_init = lambda _, self: None
+    on_init_end = lambda _, self: None
+    on_try_instruction = lambda _, self, i, line: None
+    on_instruction = lambda _, self, i, ins: ins
+    on_block_start = lambda _, self, block: None
+    on_block_before_start = lambda _, self, block: None
+    on_get_tree = lambda _, self, text: text
+    BLOCK_START = '{'
+    BLOCK_END = '}'
+    full_line = False
+    IN = None
+    OUT = None
+
+
+Translater = Smarter
+
+accord = _smart
+
+Accord = SmarterProperty

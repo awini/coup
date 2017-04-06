@@ -72,11 +72,20 @@ Implement those methods in child:
         self.parent = parent
         self.line_number = line_number
 
+    @classmethod
+    def to_str(cls):
+        return cls.__name__
+
     def __str__(self):
         return self.__class__.__name__ #+'({})'.format(id(self))
 
     def __repr__(self):
         return self.__str__()
+
+    def get_unknown_instructions(self):
+        if hasattr(self, 'instructions'):
+            return [ ins for ins in self.instructions if type(ins) == _UnknownLine ]
+        return []
 
     def find_type_instruction(self, tip):
         for ins in self.instructions:
@@ -90,13 +99,6 @@ Implement those methods in child:
     def get_parent_class(self, full_name=False):
         parent = self.parent
 
-        # while parent and 'class' not in parent.__class__.__name__.lower():
-        #     parent = parent.block
-        #     if parent:
-        #         parent = parent.start_instruction
-        #         #print('\t\t{}'.format(parent))
-        #     #print('\t{} - {}'.format(parent, parent.block if parent else ''))
-
         cls_name = lambda: parent.START_NAME if hasattr(parent, 'START_NAME') else parent.__class__.__name__
 
         check_cls = lambda: 'class' != cls_name().lower if full_name else 'class' not in cls_name().lower()
@@ -108,6 +110,16 @@ Implement those methods in child:
             if parent:
                 parent = parent.start_instruction
         return parent
+
+    def find_def(self):
+        obj = self
+        while obj and not obj.is_def() and obj.parent:
+            #print('......{}, locals: {}'.format(obj, obj.locals if hasattr(obj, 'locals') else '-'))
+            obj = obj.parent.start_instruction
+        return obj
+
+    def is_def(self):
+        return hasattr(self, 'locals') and self.locals != None
 
     def get_parent_block(self, child_blocker=None):
         if child_blocker:
@@ -288,10 +300,14 @@ class _Line(_Base):
         return _Line._print_text_tree, ( _Line._get_objects_tree if only_tree else _Line._get_text_tree )
 
     @staticmethod
-    def _print_text_tree(text):
-        b = _Block()
-        b.add_lines(text.split('\n'), [0, len(text)])
-        b.print_tree()
+    def _print_text_tree(text=None):
+        if text:
+            b = _Block()
+            b.add_lines(text.split('\n'), [0, len(text)])
+            b.print_tree()
+        else:
+            for ins in sorted(_Line._INSTRUCTS, key=lambda ins:ins.INDEX):
+                print('{:>12}. {}'.format(ins.INDEX, ins.to_str()))
 
     @staticmethod
     def _get_text_tree(text):
@@ -305,10 +321,6 @@ class _Line(_Base):
         _Block.clear_errors()
         b = _Block()
         lines = text.split('\n')
-        # if len(lines[-1].strip()) > 0:
-        #     raise Exception('\n\n\tYou have no clear line at the end of file!'+
-        #                     "\n\tLast line: '{}'".format(lines[-1])+
-        #                     '\n\tPlease add clean line at the end.')
         b.add_lines(lines, [0, len(text)])
         return b
 
@@ -321,13 +333,31 @@ class _Line(_Base):
     @staticmethod
     def try_instruction_base(line, instructers, parent=None, line_number=0,
                              no_instructs_react=None):
-        #print('try ({}): {}'.format(line_number, line))
+
+        got_instructs = []
+        was_unknown = copy(_UnknownLine._unknown_lines)
+
         for ins in instructers:
             if ins.is_instruction(line):
                 #print(ins)
                 ins_o = ins(line, parent=parent, line_number=line_number)
                 ins_o.init_otstup(line)
-                return ins_o
+
+                unknown = ins_o.get_unknown_instructions()
+                if len(unknown) == 0:
+                    #print(ins_o, '!!!!!!!!>>>>>>>>>!!!!!!!!', unknown)
+                    _UnknownLine._unknown_lines = was_unknown
+                    return ins_o
+                else:
+                    got_instructs.append((ins_o, len(unknown), unknown))
+
+        if len(got_instructs) > 0:
+            gt = sorted(got_instructs, lambda g:g[1])[0]
+            gi = gt[0]
+            _UnknownLine._unknown_lines = was_unknown
+            _UnknownLine._unknown_lines += gt[2]
+
+
         ln = len(line.strip())
         is_space = ln == 0
         if is_space:
@@ -350,9 +380,10 @@ class _Line(_Base):
                 return ret
 
         #_Block.errors.append(str('\n\n\tDont know instruction: "{}", line: {}, len: {}'.format(line, line_number+1, len(line.strip()))))
-        raise Exception('\n\n\tDont know instruction: "{}", line: {}, len: {} ( {filename} )'.format(
-            line, line_number+1, len(line.strip()), filename=_Line._filename))
+        # raise Exception(colored('\n\n\tDont know instruction: "{}", line: {}, len: {} ( {filename} )'.format(
+        #     line, line_number+1, len(line.strip()), filename=_Line._filename), 'red'))
         #return _Line(line)
+        return _UnknownLine(line, parent=parent, line_number=line_number)
 
     def get_tree_main(self):
         return self.line
@@ -369,11 +400,57 @@ class _ToDeleteLine(_Line):
     def split(self, s):
         return []
 
+class _UnknownLine(_Base):
+
+    _unknown_lines = []
+
+    def __init__(self, line, parent=None, line_number=0):
+        super(_UnknownLine, self).__init__(line, parent, line_number)
+        _UnknownLine._unknown_lines.append(self)
+
+    def __str__(self):
+        return '_UnknownLine: {}, line: {}'.format(
+            colored(self.line.strip(), 'red'), self.line_number+1)
+            #    self.line.line_number if hasattr(self.line, 'line_number') else '-')
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class _Local(_Line):
 
     def __init__(self, line, parent=None, line_number=0):
         super(_Local, self).__init__(line, parent, line_number)
+
+# class _TstList(list):
+#     def jo
+
+class _TstLine(str):
+    line_number = 0
+
+    def strip(self, chars=None):
+        s = super(_TstLine, self).strip(chars)
+        return _tst_line(s, self.line_number)
+
+    def split(self, sep=None, maxsplit=-1):
+        return [ _tst_line(s, self.line_number) for s in super(_TstLine, self).split(sep, maxsplit)]
+
+    def __getitem__(self, key):
+        #print('_________________ {}'.format(key))
+        s = super(_TstLine, self).__getitem__(key)
+        return _tst_line(s, self.line_number)
+
+    def __add__(self, other):
+        s = super(_TstLine, self).__add__(other)
+        return _tst_line(s, self.line_number)
+
+
+def _tst_line(s, line_number):
+    if type(s) == _TstLine:
+        return s
+    t = _TstLine(s)
+    t.line_number = line_number
+    return t
 
 
 class _Block(_OtstupAbility):
@@ -421,7 +498,17 @@ You need no subclass by this class.
     def __repr__(self):
         return self.__str__()
 
+    def is_def(self):
+        return False
+
     def get_tree(self):
+        ln = len(_UnknownLine._unknown_lines)
+        if ln > 0:
+            text = ''
+            for i, ul in enumerate(_UnknownLine._unknown_lines):
+                text += '\n\t{:>2}. {}'.format(i+1, ul)
+            raise Exception(colored('{} unknown instructions:'.format(ln), 'red')+text)
+
         if self.insert_childs:
             start, base, end = self.get_tree_start(), self.get_tree_base(), self.get_tree_end()
             if type(base) == _ToDeleteLine:
@@ -455,43 +542,50 @@ You need no subclass by this class.
         return '\n'.join( b for b in gen if type(b) != _ToDeleteLine ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
 
     def get_tree_start(self):
-        return ' ' * (self.otstup-4) + (self.start_instruction._BLOCK_START if self.otstup > 0 else '')
+        try:
+            return ' ' * (self.otstup-4) + (self.start_instruction._BLOCK_START if self.otstup > 0 else '')
+        except Exception as e:
+            print('------> {}'.format(self))
+            raise
 
     def get_tree_end(self):
         return ' ' * (self.otstup-4) + (self.start_instruction._BLOCK_END if self.otstup > 0 else '')
 
     def get_locals(self):
-        return self.start_instruction._locals if hasattr(self.start_instruction, '_locals') else {}
+        #return ( self.start_instruction.locals or {} ) if hasattr(self.start_instruction, 'locals') else {}
 
-    def add_line(self, line, line_number, parent):
-        #print('add_line: {} | {} | {}'.format(line, line_number, self))
-        #if self.is_line_continue_block(line):
-        if True:
+        if not self.start_instruction:
+            return {}
 
-            #print('LLL', self, line)
+        func = self.start_instruction.find_def()
+        #print('..def: {}'.format(func))
+
+        return func.locals if hasattr(func, 'locals') else {}
+
+    def add_line(self, line, line_number, parent, ignore=False):
+        #print('[ {:>3} ]: {} | {}'.format(line_number, line, line.line_number))
+        line_number = line.line_number
+        if ignore:
+            ins = ignore(line, line_number=line_number, parent=parent)
+            self.last_instruction = ins
+        else:
             ins = _Line.try_instruction(line, line_number, parent=parent)
             if not ins:
                 ins = self.try_local_instruction(line, line_number, parent)
             if ins:
                 if _Block._debug:
                     print('[ {} ] {}'.format(ins, line))
-                #print('{:>3}: {}{} ({})'.format(ins.line_number, ins.otstup_string(), ins, ins.parent))
-                #print('\tappend', line, ins)
                 self.blocks.append(ins.set_block(self))
-                #self.lines.append(line)
 
-                if type(ins) != _Line: #or ins.line.strip() != 0:
+                if type(ins) != _Line:
                     self.last_instruction = ins
 
-        #     return True
-        # if len(line.strip()) == 0:
-        #     return None
-        # return False
-
     def try_local_instruction(self, line, line_number, parent):
+        #print('[ !!! try_local_instruction ] {} | {}'.format(self, line))
         stripped = line.strip()
         for name, val in self.get_locals().items():
-            if stripped.startswith(name + '.'):
+            #print('..local: {} = {}'.format(name, val))
+            if stripped.startswith(name + '.') or stripped == name:
                 return _Local(line, parent=parent, line_number=line_number)
 
     # ===================
@@ -507,19 +601,17 @@ You need no subclass by this class.
 
     # ===================
 
-    def add_lines(self, lines, diapazon):
-        tst_lines = copy(lines)
+    def add_lines(self, lines, diapazon, ignore=False):
+        tst_lines = [ _tst_line(line, i) for i, line in enumerate(lines) ]
+        #tst_lines = _Lines(lines)
+        #tst_lines = copy(lines)
         diapazon = copy(diapazon)
+        #print('@@@ lines: {}:{}'.format(diapazon[0], diapazon[1]))
 
+        #while not tst_lines.empty():
         while len(tst_lines):
             line = tst_lines[0]
-            #print('>>>', diapazon[0], line, self.is_line_starts_block(line), id(self))
             if self.is_line_starts_block(line):
-                #print('INBLOCK')
-                #print('# ^^^ ' +line)
-                #print('#$$$ ', self.last_instruction.line)
-                #self.blocks.append(_Line(self.otstup_string() + '[ BLOCK ] {}'.format(self.last_instruction.line)))
-
                 if self.last_block:
                     # FIXME
                     if ( len(self.last_block.blocks) > 0 and type(self.last_block.blocks[-1]) == _Line and
@@ -529,11 +621,12 @@ You need no subclass by this class.
                 b = _Block(parent=self, line=line,
                            start_instruction=self.last_instruction)
                 self.last_block = b
-                #print(' '*b.otstup + '[ BLOCK ] {} ({})'.format(diapazon, id(b)))
-                after_in_lines = b.add_lines(tst_lines, diapazon)
 
-                #print('-'*10)
-                #print( '\n'.join(after_in_lines) )
+                smart_ret = None
+                if hasattr(self.last_instruction, 'on_block_before_start'):
+                    smart_ret = self.last_instruction.on_block_before_start(b)
+
+                after_in_lines = b.add_lines(tst_lines, diapazon, ignore or smart_ret)
 
                 if hasattr(self.last_instruction, 'on_block_start'):
                     self.last_instruction.on_block_start(b)
@@ -541,45 +634,21 @@ You need no subclass by this class.
                 d = len(tst_lines) - len(after_in_lines)
 
                 tst_lines = after_in_lines
-                # if len(after_in_lines) == 0:
-                #     print( '{{{', len(tst_lines), d )
-                #     break
                 if d > 0:
-                    #print('!!!!', d, tst_lines[d:], len(tst_lines[d:]), len(after_in_lines))
-                    #self.blocks[-1].line = self.blocks[-1].line.replace(':', ' {') #+= ' {' # !!!
-                    #tst_lines = tst_lines[d-1:]
                     diapazon[0] += d-1
                     self.blocks.append(b)
                 else:
                     break
-
-                #self.last_instruction = None
-
             else:
-                #print('---', line)
-
                 last_lines = tst_lines
                 tst_lines = tst_lines[1:]
                 diapazon[0] += 1
                 if self.start_instruction and self.start_instruction.is_param_line(line):
                     self.start_instruction.add_param_line(line)
                     continue
-                #print('....', line)
                 if self.is_line_continue_block(line):
-                    ret = self.add_line(line, diapazon[0]-1, self)
-                    # if ret == None:
-                    #     #print('# --- {}'.format(line))
-                    #     #print('\treturn {}'.format(len(tst_lines)))
-                    #     return last_lines
-                    # else:
-                    #     print(':::', line)
-                # elif len(line.strip()) == 0:
-                #     pass
+                    ret = self.add_line(line, diapazon[0]-1, self, ignore=ignore)
                 else:
-                    #print('***', line)
-                    #last_lines.insert(0, line)
-                    #self.blocks.append(_Line(self.otstup_string(-4) + '[ END ]'))
-
                     return last_lines
 
         return tst_lines

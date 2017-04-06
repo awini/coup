@@ -628,7 +628,78 @@ public class Status
             OUT_FORMAT='return <EXP>',
         )
 
+        # GridControl = _smart(
+        #     IN_FORMAT='class GridControl:',
+        #     OUT_FORMAT='',
+        # )
+        #
+        # GridControlChild = _smart(
+        #     IN_FORMAT='class <EXP:NAME>(GridControl):',
+        #     OUT_FORMAT='public class <EXP:NAME>: GridControl',
+        # )
+
+        def _on_GridControlCreate_init_end(self):
+            self.get_parent_class().get_parent_block().blocks.insert(0,
+                _GoodLine('''
+public class {NAME}GridControl {
+    var listView:ListView
+    var adapter:ArrayAdapter
+
+    init(_ layout: Integer!, _ listView: ListView!, _ context: Context!) {
+        // получаем экземпляр элемента ListView
+        self.listView = listView
+
+        // используем адаптер данных
+        self.adapter = ArrayAdapter<{NAME}GridControlItem>(context, layout)
+
+        self.listView.setAdapter(self.adapter)
+    }
+}
+                '''.replace('{NAME}', self.instructions[0].line)
+                          ))
+
+
+        GridControlCreate = _smart(
+            IN_FORMAT='self.grid_control = <EXP:TEXT>GridControl(grid=self.ids.<EXP:TEXT>)',
+            OUT_FORMAT='self.grid_control = <EXP:TEXT>GridControl(R.layout.<EXP:TEXT>, self.findViewById(R.id.<EXP[1]:TEXT>) as! ListView)',
+            on_init_end=_on_GridControlCreate_init_end
+        )
+
+        GridControlItem = _smart(
+            IN_FORMAT='class <EXP:TEXT>GridControlItem(GridControlItem):',
+            OUT_FORMAT = 'public class <EXP:TEXT>GridControlItem'
+        )
+
+        GridControlString = _smart(
+            IN_FORMAT='<EXP:TEXT> = GridControlString()',
+            OUT_FORMAT='var <EXP:TEXT>: String = ""'
+        )
+        GridControlInt = _smart(
+            IN_FORMAT='<EXP:TEXT> = GridControlInt()',
+            OUT_FORMAT='var <EXP:TEXT>: Integer = 0'
+        )
+
+
+
+        Init = _smart(
+            IN_FORMAT='def __init__(self, parent):',
+            OUT_FORMAT='func init()'
+        )
+
+        Super = _smart(
+            IN_FORMAT='super(<EXP:TEXT>, self).__init__(parent)',
+            OUT_FORMAT='// super(<EXP:TEXT>, self).__init__(parent)',
+        )
+
         t = TextTryer(
+            Super=Super,
+            Init=Init,
+            GridControlItem=GridControlItem,
+            GridControlCreate=GridControlCreate,
+            GridControlString=GridControlString,
+            GridControlInt=GridControlInt,
+            #GridControlChild=GridControlChild,
+            #GridControl=GridControl,
             Return=Return,
             If=If,
             Else=Else,
@@ -667,7 +738,52 @@ public class Status
 # coding: utf-8
 from kivy.uix.boxlayout import BoxLayout
 
+
+# class GridControl:
+#
+#     def __init__(self, grid):
+#         self.grid = grid
+#         self.widgets = {}
+#
+#     def clear_grid(self):
+#         self.grid.clear_widgets()
+#         self.widgets = {}
+#
+#     def add_widget(self, index, widget):
+#         if index not in self.widgets:
+#             self.widgets[ index ] = widget
+#             self.grid.add_widget(widget, index)
+#         else:
+#             raise Exception('wrong work!!! index = {}'.format(index))
+
+class TasksGridControlItem(GridControlItem):
+    title = GridControlString()
+    task_id = GridControlInt()
+    task_state = GridControlString()
+    executor = GridControlString()
+    #date = GridControlDatetime()
+    full_info = GridControlString()
+
+
+# class TasksGridControl(GridControl):
+#
+#     # item_class = TaskBoxItem
+#
+#     def create_widget(self, index, item):
+#         # task_box = TaskBox(**item.params)
+#         # task_box.complete_task_box()
+#         # self.add_widget(index, task_box)
+#         pass
+
+
+
 class CalcWidget(BoxLayout):
+
+    # def __init__(self, parent):
+    #     super(CalcWidget, self).__init__(parent)
+
+    def init_grid_control(self):
+        self.grid_control = TasksGridControl(grid=self.ids.tasks_box_grid)
 
     def click_ac(self):
         for a in [1, 2, 3]:
@@ -816,6 +932,46 @@ if (x > 17) {
 
         #self.assertEqual(type(t.b.blocks[0]), CommentFull)
         print( t.get_tree_text() )
+
+    def test_9(self):
+
+        # *** Now you import is simple.
+        #
+        # *** Subclass from Translater,
+        #     and that's all you need.
+
+        from coup import Translater, accord, Accord
+
+        class NewTranslate(Translater):
+
+            some_check = accord(
+                IN =  'print(<EXP>)',
+                OUT = 'println(<EXP>);',
+            )
+
+        class NewTranslate2(NewTranslate):
+
+            class Str(Accord):
+                IN = "'<EXP:TEXT>'"
+                OUT = '"<EXP:TEXT>"'
+
+                def _hello(self):
+                    print('Hello!')
+
+                def on_init(self, *args, **kwargs):
+                    print('on_init:', args, kwargs)
+                    self._hello()
+
+        last_text = '''
+
+print('Hello!')
+
+        '''
+        new_text = NewTranslate2.translate(last_text)
+
+        print('last_text lines: {}'.format(len(last_text.split('\n'))))
+        print(new_text)
+        print('new_text lines: {}'.format(len(new_text.split('\n'))))
 
 
 
