@@ -4,7 +4,7 @@
 *It is very interesting to translate your programs to other languages.*
 
 Imagine we have program code on **Python** like (file **"main.py"**):
-```
+```python
 if __name__ == '__main__':
     print('Hello!')
 ```
