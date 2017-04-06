@@ -1,7 +1,7 @@
 # ~=~ COUP ~=~
 ## -(= Translate engine =)-
 
-*It is very interesting to translate your programs to other languages.*
+*It is very **simple** to translate your programs to other languages with this tool!*
 
 Imagine we have program code on **Python** like (file **"main.py"**):
 ```python
