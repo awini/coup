@@ -66,7 +66,6 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
         class _Exper:
 
             deleters_in = _ExpParser(IN_FORMAT)
-            deleters_out = _ExpParser(OUT_FORMAT)
 
             if _INDEX == None:
                 INDEX = (-sum([len(d) for d in deleters_in])*20 + len(deleters_in.exps)) + (
@@ -79,31 +78,29 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             init_locals = None
 
             def init_exps(self, line, on_instruction):
-                need_debug = False #self.deleters_in.line == '#<EXP:TEXT>'
+                need_debug = False #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
-                if need_debug and OUT_FORMAT == '':
+                self.deleters_out = _ExpParser(OUT_FORMAT(self)) if callable(OUT_FORMAT) else _ExpParser(OUT_FORMAT)
+
+                if need_debug: #and OUT_FORMAT == '':
                     print('--------')
                     print('deleters_in:', self.deleters_in, line)
                     print('deleters_in.exps:', self.deleters_in.exps)
                     print('deleters_out:', self.deleters_out, line)
                     print('deleters_out.exps:', self.deleters_out.exps)
 
-
                 line = line.strip()
-                # for l in self.deleters_in:
-                #     if len(l) == 0:
-                #         continue
-                #     line = line.replace(l, '|')
-                # if line.startswith('|'):
-                #     line = line[1:]
-                # if line.endswith('|'):
-                #     line = line[:-1]
 
-                line = _line_to_slashs(line, self.deleters_in) #, IN_FORMAT)
+                new_line = _line_to_slashs(line, self.deleters_in, need_debug=need_debug)
+                if new_line == None:
+                    raise Exception('cant be {}: {}'.format(self, line))
+                line = new_line
 
                 lst = line.split('|')
                 if need_debug:
                     print('line:', line)
+
+                _tmp_line = self.line
 
                 def pr(ei, e, i):
                     if need_debug:
@@ -120,16 +117,32 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     return ei.try_instruction(e, line_number=self.line_number, parent=self)
 
                 self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, self.deleters_in.exps)) ]
+                self.line = _tmp_line
 
             @classmethod
             def is_instruction(cls, line):
                 line = line.strip()
+                need_debug = False #'self.ttt' == line and 'self.' in cls.deleters_in
+                pos = -1
                 for i, part in enumerate(cls.deleters_in):
-                    if part not in line:
+                    pos = line.find(part, pos+1)
+                    if need_debug:
+                        print('>>>>>', line, '>>', cls.deleters_in, '>>', part, ':', pos)
+                    # if pos <= _last_pos:
+                    #     return False
+                    if pos < 0:#part not in line:
+                        if need_debug:
+                            print('\tFALSE')
                         return False
                     if i == 0 and cls._starts_with_deleter:
-                        if line.find(part) != 0:
+                        if pos != 0:
+                            if need_debug:
+                                print('\tFALSE')
                             return False
+                    pos += len(part)-1
+                    #_last_pos = pos + len(part)-1
+                if need_debug:
+                    print('\tOK')
                 return True
 
             def get_tree_main(self):
@@ -248,6 +261,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
         def __getattr__(self, item):
             return getattr(self._cur, item)
 
+        def __str__(self):
+            return 'SmartList({})'.format(self._cur)
+
+        def __repr__(self):
+            return self.__str__()
+
         @classmethod
         def is_instruction(cls, line):
             #print('[ is_instruction ] {}'.format(ins_list))
@@ -259,20 +278,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     #print('!!!', ins_list)
     return SmartList
 
-def _line_to_slashs(line, deleters_in):
+def _line_to_slashs(line, deleters_in, need_debug=False):
     line = line.strip()
     start_line = line
-
-    #IN_FORMAT = IN_FORMAT.replace('<EXP', '<EEEEEEEE')
-
-    #IN_FORMAT = '<EXP>'.join( [ a.split('>')[-1] for a in IN_FORMAT.split('<EXP') ] )
-    #IN_FORMAT_LEFT = IN_FORMAT[:len(IN_FORMAT)/2]
-    #IN_FORMAT_RIGHT = IN_FORMAT[len(IN_FORMAT) / 2:]
-
-    #print('^^^ {} / {}'.format(IN_FORMAT_LEFT, IN_FORMAT_RIGHT))
-
-    #left = [a for a in deleters_in if a in IN_FORMAT_LEFT] #[:len(deleters_in)/2+1]
-    #right = [a for a in deleters_in[::-1] if a in IN_FORMAT_RIGHT] #deleters_in[-1:-len(deleters_in) / 2:-1]
 
     left = deleters_in[:len(deleters_in)/2+1]
     right = deleters_in[-1:-len(deleters_in) / 2:-1]
@@ -282,20 +290,28 @@ def _line_to_slashs(line, deleters_in):
     elif len(left) + 1 > len(right):
         left, right = left[:-1], right + left[-1:]
 
-    #print('::: {} / {}'.format(left, right))
+    if need_debug:
+        print('::: {} / {}'.format(left, right))
 
+    ii_1 = []
     for l in left:
         if len(l) == 0:
             continue
         i = line.find(l)
-        #print('\t{} [{}]: {}'.format(i, l, line))
-        line = line[:i] + '|' + line[i+len(l):]
+        ii_1.append(ii_1)
+        new_line = line[:i] + '|' + line[i+len(l):]
+        if need_debug:
+            print('\t{} [{}]: {} --> {}'.format(i, l, line, new_line))
+        line = new_line
 
     for l in right:
         if len(l) == 0:
             continue
         i = line.rfind(l)
-        #print('\t{} [{}]: {} R'.format(i, l, line))
+        if i < 0:
+            return None
+        if need_debug:
+            print('\t{} [{}]: {} R'.format(i, l, line))
         line = line[:i] + '|' + line[i + len(l):]
 
 
@@ -304,7 +320,8 @@ def _line_to_slashs(line, deleters_in):
     if line.endswith('|'):
         line = line[:-1]
 
-    #print('... {} --> {} --> {}'.format(start_line, deleters_in, line) )
+    if need_debug:
+        print('... {} --> {} --> {}'.format(start_line, deleters_in, line) )
 
     return line
 

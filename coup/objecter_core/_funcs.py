@@ -24,8 +24,9 @@ def remove_kavichki(s):
     return s
 
 def add_kavichki(s):
-    if len(s)==0 or s[0] in ('"', "'"):
-        return s
+    if len(s) != 0:
+        if s[0] in ('"', "'"):
+            return s
     return '"' + s + '"'
 
 def need_be_id(s):

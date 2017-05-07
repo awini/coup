@@ -156,14 +156,18 @@ class _ExpInsertVar(_ExpType):
         index = block.get_block_index( child_blocker[0] )
         if index < 0:
             index = 0
+
         #print('!!!', block, child_blocker[0], index)
 
-        r = ( _SmartLine(line=block.otstup_string()+'let _generated_1', line_number=line_number, new_name=True, parent=parent) +
+
+        let_generated, generated = block.new_let_generated() #'let _generated_1', '_generated_1'
+
+        r = ( _SmartLine(line=block.otstup_string()+let_generated, line_number=line_number, new_name=True, parent=parent) +
               _SmartLine(line=' = ', line_number=line_number, parent=parent) + got )
 
         block.blocks.insert(0, r)
 
-        return _GoodLine(line='_generated_1', line_number=line_number, new_name=True, parent=parent)
+        return _GoodLine(line=generated, line_number=line_number, new_name=True, parent=parent)
 
 
 class _ExpGetLocal(_ExpType):
@@ -218,7 +222,7 @@ class _ExpParser(list):
         super(_ExpParser, self).__init__(deleters)
 
     def split_line(self, line):
-        need_debug = False #'#<EXP:TEXT>' == line
+        need_debug = False #'<EXP:TEXT>.<EXP:TEXT>' in str(line) #'#<EXP:TEXT>' == line
         exps = []
         deleters = []
         main_lst = line.split('<EXP')
