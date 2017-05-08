@@ -386,9 +386,14 @@ class Smarter(object):
         return out_text
 
     @classmethod
-    def translate_file(cls, filename):
+    def translate_file(cls, filename, to_filename=None):
         text = open(filename).read()
-        return cls.translate(text, filename=filename)
+        out_text = cls.translate(text, filename=filename)
+        if to_filename:
+            with open(to_filename, 'w') as f:
+                f.write(out_text)
+        else:
+            return out_text
 
 class SmarterProperty(object):
 
