@@ -24,7 +24,7 @@ Else = _smart(
 
 Print = _smart(
     IN_FORMAT='print(<EXP>)',
-    OUT_FORMAT='print(<EXP>)',
+    OUT_FORMAT='Log.d("DEBUG", ""+<EXP>)',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 

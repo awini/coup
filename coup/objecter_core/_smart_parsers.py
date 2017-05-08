@@ -213,6 +213,9 @@ class _ExpInsertLocalType(_ExpType):
 
 _ExpType.init(globals())
 
+_EXP_FUNCERS = {
+    'lower': lambda s:s.lower()
+}
 
 class _ExpParser(list):
 
@@ -238,9 +241,15 @@ class _ExpParser(list):
                     deleters.append(ex)#lst[0])
                     #exps.append( _ExpString('') )
             else:
-                es_in = lst[0].split(':')[-1]
+                e_lst = lst[0].split(':')
+                es_in = e_lst[1] if len(e_lst) > 1 else e_lst[-1]
                 es = _ExpString(es_in)
-                #print('>>>', es, es_in)
+                if len(e_lst) > 2:
+                    #print('>>>', es, e_lst)
+                    fu = _EXP_FUNCERS.get(e_lst[2])
+                    if fu:
+                        es.funcer = fu
+                        #print('\t--> {}'.format(fu))
                 exps.append( es )
                 if len(lst) > 1:
                     deleters.append( '>'.join(lst[1:]) )

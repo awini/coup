@@ -78,7 +78,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             init_locals = None
 
             def init_exps(self, line, on_instruction):
-                need_debug = False #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
+                need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
                 self.deleters_out = _ExpParser(OUT_FORMAT(self)) if callable(OUT_FORMAT) else _ExpParser(OUT_FORMAT)
 
@@ -117,6 +117,10 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     return ei.try_instruction(e, line_number=self.line_number, parent=self)
 
                 self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, self.deleters_in.exps)) ]
+
+                if need_debug:
+                    print('>>>>>>', self.instructions)
+
                 self.line = _tmp_line
 
             @classmethod
@@ -124,6 +128,10 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 line = line.strip()
                 need_debug = False #'self.ttt' == line and 'self.' in cls.deleters_in
                 pos = -1
+                i = -1
+
+                not_empty_deleters = len([d for d in cls.deleters_in if len(d.strip()) > 0 ])
+
                 for i, part in enumerate(cls.deleters_in):
                     pos = line.find(part, pos+1)
                     if need_debug:
@@ -141,8 +149,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                             return False
                     pos += len(part)-1
                     #_last_pos = pos + len(part)-1
-                if need_debug:
-                    print('\tOK')
+                if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
+                    if line[pos:] == cls.deleters_in[-1]:
+                        return True
+                    print('\tOK', i, '/', len(cls.deleters_in.exps), not_empty_deleters, '=', line, IN_FORMAT)
+                    print('\t', pos, len(line), '=', line[pos:])
+                    return False
                 return True
 
             def get_tree_main(self):
@@ -156,9 +168,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 else:
                     plus = lambda tree, d: tree + d
 
+                cor = lambda ex, p: ex.funcer(p) if hasattr(ex, 'funcer') else p
+
                 #print( self.line, len(trees), len(self.deleters_out) )
 
-                line = ''.join( plus(tree, d) for tree, d in izip_longest(trees, self.deleters_out, fillvalue='') )
+                line = ''.join( cor(ex, plus(tree, d)) for tree, d, ex in izip_longest(trees, self.deleters_out, self.deleters_out.exps, fillvalue='') )
                 #print('new line:', line)
 
                 # if tst:
