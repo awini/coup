@@ -352,7 +352,7 @@ class _Line(_Base):
                     got_instructs.append((ins_o, len(unknown), unknown))
 
         if len(got_instructs) > 0:
-            gt = sorted(got_instructs, lambda g:g[1])[0]
+            gt = sorted(got_instructs, lambda *g:g[0][1])[0]
             gi = gt[0]
             _UnknownLine._unknown_lines = was_unknown
             _UnknownLine._unknown_lines += gt[2]

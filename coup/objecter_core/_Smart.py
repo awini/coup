@@ -125,6 +125,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def is_instruction(cls, line):
+                if OUT_FORMAT == NotImplemented:
+                    return False
+
                 line = line.strip()
                 need_debug = False #'self.ttt' == line and 'self.' in cls.deleters_in
                 pos = -1
@@ -147,13 +150,16 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                             if need_debug:
                                 print('\tFALSE')
                             return False
-                    pos += len(part)-1
+                    pos += len(part) #len(part)-1
+
+                pos -= len(part)
                     #_last_pos = pos + len(part)-1
                 if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
                     if line[pos:] == cls.deleters_in[-1]:
                         return True
+                    print('>>>> {} = {}'.format(part, line[pos:]))
                     print('\tOK', i, '/', len(cls.deleters_in.exps), not_empty_deleters, '=', line, IN_FORMAT)
-                    print('\t', pos, len(line), '=', line[pos:])
+                    print('\t', pos, len(line), '=', line[pos:], '!=', cls.deleters_in[-1], cls.deleters_in)
                     return False
                 return True
 

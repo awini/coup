@@ -17,7 +17,8 @@ class _ExpString:
 
     def try_exp_type(self, line):
         for t in _ExpType.types:
-            if t.try_me(line):
+            t = t.try_me(line)
+            if t:
                 return t
 
     def try_instruction(self, line, line_number, parent=None):
@@ -52,11 +53,31 @@ class _ExpType:
 
     @classmethod
     def try_me(cls, line):
-        return line == cls.TEXT
+        return cls if line == cls.TEXT else None
 
     @classmethod
     def try_instruction(cls, line, line_number, parent):
         return _Line.try_instruction(line, line_number=line_number, parent=parent)
+
+class _ExpIgnore(_ExpType):
+    TEXT = 'ignore'
+
+    def __init__(self, ign_text):
+        self.ign_text = ign_text
+
+    @classmethod
+    def try_me(cls, line):
+        lst = line.split('=')
+        if lst[0] == cls.TEXT and len(lst) == 2:
+            return _ExpIgnore(lst[1].strip())
+
+    def try_instruction(self, line, line_number, parent):
+
+        if line.strip() == self.ign_text:
+            #raise Exception("{}: ".format(line_number)+line)
+            return _GoodLine(self.ign_text)
+
+        return _ExpType.try_instruction(line, line_number, parent)
 
 class _ExpName(_ExpType):
     TEXT = 'NAME'
