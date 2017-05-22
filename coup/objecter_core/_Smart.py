@@ -399,21 +399,28 @@ class Smarter(object):
     OUT_START = []
 
     @classmethod
-    def translate(cls, text, filename=None):
+    def translate(cls, text, filename=None, remove_space_lines=False):
         _getter = _Line.init_instructs(cls._GLOBALS, filename=filename)[1]
         out_text = _getter(text)
         out_text = '\n'.join(cls.OUT_START) + out_text
+        if remove_space_lines:
+            out_text = cls._remove_space_lines(out_text)
         return out_text
 
     @classmethod
-    def translate_file(cls, filename, to_filename=None):
+    def translate_file(cls, filename, to_filename=None, remove_space_lines=False):
         text = open(filename).read()
-        out_text = cls.translate(text, filename=filename)
+        out_text = cls.translate(text, filename=filename, remove_space_lines=remove_space_lines)
         if to_filename:
             with open(to_filename, 'w') as f:
                 f.write(out_text)
         else:
             return out_text
+
+    @classmethod
+    def _remove_space_lines(cls, text):
+        lines = [li for li in text.split('\n') if len(li.strip()) > 0]
+        return '\n'.join(lines)
 
 class SmarterProperty(object):
 
