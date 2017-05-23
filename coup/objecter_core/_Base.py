@@ -608,6 +608,8 @@ You need no subclass by this class.
         diapazon = copy(diapazon)
         #print('@@@ lines: {}:{}'.format(diapazon[0], diapazon[1]))
 
+        b = None
+
         #while not tst_lines.empty():
         while len(tst_lines):
             line = tst_lines[0]
@@ -649,7 +651,12 @@ You need no subclass by this class.
                 if self.is_line_continue_block(line):
                     ret = self.add_line(line, diapazon[0]-1, self, ignore=ignore)
                 else:
+                    if b and hasattr(b.start_instruction, 'on_block_end'):
+                        b.start_instruction.on_block_end(b)
                     return last_lines
+
+        if b and hasattr(b.start_instruction, 'on_block_end'):
+            b.start_instruction.on_block_end(b)
 
         return tst_lines
 

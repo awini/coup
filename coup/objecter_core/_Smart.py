@@ -38,6 +38,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_instruction=lambda self,i,ins:ins,
            on_block_start=lambda self, block:None,
            on_block_before_start=lambda self, block:None,
+           on_block_end=lambda self, block:None,
            on_get_tree=lambda self,text:text,
            BLOCK_START='{', BLOCK_END='}',
            full_line=False, IN=None, OUT=None):
@@ -47,10 +48,14 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     if OUT != None:
         OUT_FORMAT = OUT
 
+    if OUT_FORMAT == None:
+        OUT_FORMAT = IN_FORMAT
+
     _INDEX = INDEX
     _TYPE_OUT = TYPE_OUT
     _on_block_start = on_block_start
     _on_block_before_start = on_block_before_start
+    _on_block_end = on_block_end
     _on_init = on_init
     _on_init_end = on_init_end
 
@@ -206,6 +211,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             on_block_start = _on_block_start
             on_block_before_start = _on_block_before_start
+            on_block_end = _on_block_end
             _BLOCK_START = BLOCK_START
             _BLOCK_END = BLOCK_END
 
@@ -439,6 +445,7 @@ class SmarterProperty(object):
     on_instruction = lambda _, self, i, ins: ins
     on_block_start = lambda _, self, block: None
     on_block_before_start = lambda _, self, block: None
+    on_block_end = lambda self, block: None
     on_get_tree = lambda _, self, text: text
     BLOCK_START = '{'
     BLOCK_END = '}'
