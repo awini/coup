@@ -39,7 +39,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_block_start=lambda self, block:None,
            on_block_before_start=lambda self, block:None,
            on_block_end=lambda self, block:None,
-           on_get_tree=lambda self,text:text,
+           on_get_tree=lambda self, text:text,
+           on_good_line=lambda self, line:line,
            BLOCK_START='{', BLOCK_END='}',
            full_line=False, IN=None, OUT=None, SEARCH_IN=None):
 
@@ -60,6 +61,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     _on_block_end = on_block_end
     _on_init = on_init
     _on_init_end = on_init_end
+    _on_good_line = on_good_line
 
     def make_smart(IN_FORMAT):
 
@@ -94,7 +96,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         self.instructions = [ _SEARCH_IN(line, line_number=self.line_number, parent=self) ]
                         self.need_search[0] = 0
                     else:
-                        self.instructions = [ _GoodLine(line) ]
+                        self.instructions = [ _GoodLine(_on_good_line(self, line)) ]
 
                     self.get_tree = self.instructions[0].get_tree
                     return
@@ -422,18 +424,20 @@ class Smarter(object):
     OUT_START = []
 
     @classmethod
-    def translate(cls, text, filename=None, remove_space_lines=False):
+    def translate(cls, text, filename=None, remove_space_lines=False, strip=False):
         _getter = _Line.init_instructs(cls._GLOBALS, filename=filename)[1]
         out_text = _getter(text)
         out_text = '\n'.join(cls.OUT_START) + out_text
         if remove_space_lines:
             out_text = cls._remove_space_lines(out_text)
+        if strip:
+            out_text = out_text.strip()
         return out_text
 
     @classmethod
-    def translate_file(cls, filename, to_filename=None, remove_space_lines=False):
+    def translate_file(cls, filename, to_filename=None, remove_space_lines=False, strip=False):
         text = open(filename).read()
-        out_text = cls.translate(text, filename=filename, remove_space_lines=remove_space_lines)
+        out_text = cls.translate(text, filename=filename, remove_space_lines=remove_space_lines, strip=strip)
         if to_filename:
             with open(to_filename, 'w') as f:
                 f.write(out_text)
