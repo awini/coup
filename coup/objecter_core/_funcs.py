@@ -18,7 +18,10 @@ def remove_kavichki(s):
     if len(s) > 0:
         for a in ('"', "'"):
             if s[0] == a:
-                return s.replace(a, '')
+                s = s[1:]
+            if s[-1] == a:
+                s = s[:-1]
+                #return s.replace(a, '')
         # if s[0] in ('"', "'"):
         #     return s[1:-1]
     return s
