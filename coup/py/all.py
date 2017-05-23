@@ -103,8 +103,10 @@ class ExpList(_ExpList):
 
 class Format(_Format):
 
+    REPLACE_POINT_TO = '.'
+
     def get_format_text(self):
-        return '"' + self.s + '".format(' + self.in_instruction.get_tree() + ')'
+        return '"{:' + self.s + '}".format(' + self.in_instruction.get_tree() + ')'
 
 
 ForIn = _smart(

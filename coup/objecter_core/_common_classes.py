@@ -391,11 +391,13 @@ class _ExpList(_Base):
 
 class _Format(_Base):
 
+    REPLACE_POINT_TO = '%.'
+
     def __init__(self, line, parent=None, line_number=0):
         super(_Format, self).__init__(line, parent, line_number)
 
         lst = line.split('.format(')
-        self.s = lst[0].strip()[1:-1].replace('{', '').replace('}', '').replace(':', '').replace('.', '%.')
+        self.s = lst[0].strip()[1:-1].replace('{', '').replace('}', '').replace(':', '').replace('.', self.REPLACE_POINT_TO)
         self.in_instruction = _Line.try_instruction( lst[1].strip()[:-1], line_number=line_number, parent=self )
 
     @staticmethod
