@@ -41,7 +41,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_block_end=lambda self, block:None,
            on_get_tree=lambda self,text:text,
            BLOCK_START='{', BLOCK_END='}',
-           full_line=False, IN=None, OUT=None):
+           full_line=False, IN=None, OUT=None, SEARCH_IN=None):
 
     if IN != None:
         IN_FORMAT = IN
@@ -50,6 +50,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
     if OUT_FORMAT == None:
         OUT_FORMAT = IN_FORMAT
+
+    _SEARCH_IN = _smart(IN = SEARCH_IN) if SEARCH_IN else None
 
     _INDEX = INDEX
     _TYPE_OUT = TYPE_OUT
@@ -71,6 +73,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
         class _Exper:
 
             deleters_in = _ExpParser(IN_FORMAT)
+            need_search = [0]
 
             if _INDEX == None:
                 INDEX = (-sum([len(d) for d in deleters_in])*20 + len(deleters_in.exps)) + (
@@ -84,6 +87,17 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             def init_exps(self, line, on_instruction):
                 need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
+
+                self.need_search[0] += 1 if _SEARCH_IN else 0
+                if self.need_search[0] > 1:
+                    if _SEARCH_IN.is_instruction(line):
+                        self.instructions = [ _SEARCH_IN(line, line_number=self.line_number, parent=self) ]
+                        self.need_search[0] = 0
+                    else:
+                        self.instructions = [ _GoodLine(line) ]
+
+                    self.get_tree = self.instructions[0].get_tree
+                    return
 
                 self.deleters_out = _ExpParser(OUT_FORMAT(self)) if callable(OUT_FORMAT) else _ExpParser(OUT_FORMAT)
 
@@ -130,6 +144,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def is_instruction(cls, line):
+                if cls.need_search[0]:
+                    return True
+
                 if OUT_FORMAT == NotImplemented:
                     return False
 
