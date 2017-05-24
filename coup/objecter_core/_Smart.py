@@ -26,7 +26,7 @@ except ImportError:
     # Python 2
     from itertools import izip_longest
 
-from ._Base import _Base, _Line, _GoodLine
+from ._Base import _Base, _Line, _GoodLine, _Block
 from ._smart_parsers import _ExpParser
 
 
@@ -42,7 +42,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_get_tree=lambda self, text:text,
            on_good_line=lambda self, line:line,
            BLOCK_START='{', BLOCK_END='}',
-           full_line=False, IN=None, OUT=None, SEARCH_IN=None):
+           full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None):
 
     if IN != None:
         IN_FORMAT = IN
@@ -52,7 +52,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     if OUT_FORMAT == None:
         OUT_FORMAT = IN_FORMAT
 
-    _SEARCH_IN = _smart(IN = SEARCH_IN) if SEARCH_IN else None
+    _SEARCH_IN = _smart(IN = SEARCH_IN, OUT = SEARCH_IN if not SEARCH_OUT else SEARCH_OUT) if SEARCH_IN else None
 
     _INDEX = INDEX
     _TYPE_OUT = TYPE_OUT
@@ -89,17 +89,6 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             def init_exps(self, line, on_instruction):
                 need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
-
-                self.need_search[0] += 1 if _SEARCH_IN else 0
-                if self.need_search[0] > 1:
-                    if _SEARCH_IN.is_instruction(line):
-                        self.instructions = [ _SEARCH_IN(line, line_number=self.line_number, parent=self) ]
-                        self.need_search[0] = 0
-                    else:
-                        self.instructions = [ _GoodLine(_on_good_line(self, line)) ]
-
-                    self.get_tree = self.instructions[0].get_tree
-                    return
 
                 self.deleters_out = _ExpParser(OUT_FORMAT(self)) if callable(OUT_FORMAT) else _ExpParser(OUT_FORMAT)
 
@@ -239,6 +228,23 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 self.init_locals = init_locals
 
                 super(Smart, self).__init__(line, parent, line_number)
+
+                if _SEARCH_IN:
+                    self.need_search[0] += 1
+                    if self.need_search[0] == 1:
+                        _Block._ignore_start_block = True
+                    else:
+                        is_search = _SEARCH_IN.is_instruction(line)
+                        if is_search:
+                            self.instructions = [_SEARCH_IN(line, line_number=self.line_number, parent=self)]
+                            self.need_search[0] = 0
+                            _Block._ignore_start_block = False
+                            print('>>>>>>>>> FIN need_search')
+                        else:
+                            self.instructions = [_GoodLine(_on_good_line(self, line))]
+
+                        self.get_tree = self.instructions[0].get_tree
+                        return
 
                 _on_init(self)
 

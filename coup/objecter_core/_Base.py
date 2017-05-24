@@ -477,6 +477,7 @@ You need no subclass by this class.
     _BLOCK_END = '}'
 
     insert_childs = True
+    _ignore_start_block = False
 
     def __init__(self, line="", i=0, parent=None, start_instruction=None):
         _Block._BLOCKS_COUNT += 1
@@ -594,9 +595,13 @@ You need no subclass by this class.
     #     return len(line.strip()) == 0 or _Base.get_otstup(line) >= self.otstup
 
     def is_line_starts_block(self, line):
+        if self._ignore_start_block:
+            return False
         return _Base.get_otstup(line) > self.otstup
 
     def is_line_continue_block(self, line):
+        if self._ignore_start_block:
+            return True
         return _Base.get_otstup(line) == self.otstup or len(line.strip()) == 0
 
     # ===================

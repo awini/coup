@@ -16,11 +16,11 @@ def into_maybe_kavichki(func):
 def remove_kavichki(s):
     s = s.strip()
     if len(s) > 0:
-        for a in ('"', "'"):
-            if s[0] == a:
-                s = s[1:]
-            if s[-1] == a:
-                s = s[:-1]
+        for a in ("'''", '"""', '"', "'"):
+            if s.startswith(a):
+                s = s[len(a):]
+            if s.endswith(a):
+                s = s[:-len(a)]
                 #return s.replace(a, '')
         # if s[0] in ('"', "'"):
         #     return s[1:-1]
