@@ -26,6 +26,8 @@ except ImportError:
     # Python 2
     from itertools import izip_longest
 
+from copy import copy
+
 from ._Base import _Base, _Line, _GoodLine, _Block
 from ._smart_parsers import _ExpParser
 
@@ -126,7 +128,25 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         return ins
                     return ei.try_instruction(e, line_number=self.line_number, parent=self)
 
-                self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, self.deleters_in.exps)) ]
+                in_exps = self.deleters_in.exps
+                # for i, pos in enumerate(self.deleters_out.exps_poses):
+                #     if pos != None:
+                #         in_exps[i] = self.deleters_in.exps[pos]
+                #
+                # if in_exps != self.deleters_in.exps:
+                #     raise Exception('{} != {}\n{}\n{}'.format(in_exps, self.deleters_in.exps, _tmp_line, self.deleters_out.exps_poses))
+
+                self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, in_exps)) ]
+
+                instructions = self.instructions[::]
+                for i, pos in enumerate(self.deleters_out.exps_poses):
+                    if pos != None:
+                        instructions[i] = self.instructions[pos]
+
+                if instructions != self.instructions:
+                    self.instructions = instructions
+                    # raise Exception('{} != {}\n{}\n{}'.format(instructions, self.instructions, _tmp_line,
+                    #                                           self.deleters_out.exps_poses))
 
                 if need_debug:
                     print('>>>>>>', self.instructions)

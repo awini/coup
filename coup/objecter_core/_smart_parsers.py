@@ -245,11 +245,23 @@ class _ExpParser(list):
         self.line = line
         super(_ExpParser, self).__init__(deleters)
 
+    def get_exps_positions(self, main_lst):
+        poses = []
+        if len(main_lst) > 1:
+            for m in main_lst[1:]:
+                pos = None
+                if m.startswith('['):
+                    i = m.find(']')
+                    pos = int(m[1:i])
+                poses.append(pos)
+        return poses
+
     def split_line(self, line):
         need_debug = False #'<EXP:TEXT>.<EXP:TEXT>' in str(line) #'#<EXP:TEXT>' == line
         exps = []
         deleters = []
         main_lst = line.split('<EXP')
+        poses = self.get_exps_positions(main_lst)
 
         if need_debug:
             print('**** MAIN_LST:', main_lst, line)
@@ -279,6 +291,7 @@ class _ExpParser(list):
             print('**** DELETERS:', deleters)
 
         self.exps = exps
+        self.exps_poses = poses
 
         if need_debug:
             print(exps, '--', line)
