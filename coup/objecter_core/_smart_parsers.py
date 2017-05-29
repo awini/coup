@@ -179,12 +179,13 @@ class _ExpInsertVar(_ExpType):
             index = 0
 
         #print('!!!', block, child_blocker[0], index)
-
+        start_instruction = block.start_instruction
 
         let_generated, generated = block.new_let_generated() #'let _generated_1', '_generated_1'
 
         r = ( _SmartLine(line=block.otstup_string()+let_generated, line_number=line_number, new_name=True, parent=parent) +
               _SmartLine(line=' = ', line_number=line_number, parent=parent) + got )
+        r._INSTRUCTION_LINE_ENDING = start_instruction._INSTRUCTION_LINE_ENDING
 
         block.blocks.insert(0, r)
 
@@ -204,6 +205,19 @@ class _ExpGetLocal(_ExpType):
 
         return None
 
+
+    # def init_locals_maker(self, name, tip):
+    #     return self.d['init_locals_maker'](name=name, tip=tip) #'var {}:tip'.format(name, tip)
+
+    #def init_locals_maker(self, name, tip):
+    #    return getattr(self, '_init_locals_maker')(name, tip)
+
+    # @init_locals_maker.setter
+    # def init_locals_maker(self, val):
+    #     def make(self, name, tip):
+    #         return val(name, tip)
+    #     self._init_locals_maker = make
+
 class _ExpInsertLocal(_ExpType):
     TEXT = '^init_locals'
 
@@ -212,7 +226,21 @@ class _ExpInsertLocal(_ExpType):
         #got = _Line.try_instruction(line, line_number=line_number, parent=parent)
         parent_class = parent.get_parent_class()
         #print( '-----', parent_class, line )
-        parent_class.init_locals[ line ] = None
+
+        # raise Exception('''
+        #
+        # >>>    {}
+        #
+        # '''.format(parent))
+
+        class _InitLocalsHandler:
+            tip = None
+
+            @staticmethod
+            def init_locals_maker(name, tip):
+                return parent.init_locals_maker(name, tip)
+
+        parent_class.init_locals[ line ] = _InitLocalsHandler
         parent_class.init_locals_last = line
 
 class _ExpInsertLocalType(_ExpType):
@@ -225,7 +253,7 @@ class _ExpInsertLocalType(_ExpType):
         parent_class = parent.get_parent_class()
 
         #print( '::::::', parent_class, got, line )
-        parent_class.init_locals[ parent_class.init_locals_last ] = got.TYPE_OUT
+        parent_class.init_locals[ parent_class.init_locals_last ].tip = got.TYPE_OUT
         parent_class.init_locals_last = None
 
         #parent_class.init_locals[ line ] = None

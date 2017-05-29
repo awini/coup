@@ -43,11 +43,18 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_block_end=lambda self, block:None,
            on_get_tree=lambda self, text:text,
            on_good_line=lambda self, line:line,
-           BLOCK_START='{', BLOCK_END='}',
-           full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None):
+           BLOCK_START='{', BLOCK_END='}', INSTRUCTION_LINE_ENDING='',
+           full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
+           init_locals_maker=None):
+
+
 
     if IN != None:
         IN_FORMAT = IN
+
+    if init_locals_maker and '^init_locals' not in IN_FORMAT:
+        raise Exception('It has no "<EXP:^init_locals>" so you should not set "init_locals_maker"')
+
     if OUT != None:
         OUT_FORMAT = OUT
 
@@ -64,6 +71,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     _on_init = on_init
     _on_init_end = on_init_end
     _on_good_line = on_good_line
+    _init_locals_maker = init_locals_maker
 
     def make_smart(IN_FORMAT):
 
@@ -88,6 +96,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             _starts_with_deleter = len(deleters_in) > 0 and len(deleters_in[0]) > 0 and IN_FORMAT.startswith(deleters_in[0])
 
             init_locals = None
+            init_locals_maker = _init_locals_maker
 
             def init_exps(self, line, on_instruction):
                 need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
@@ -218,9 +227,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 #     raise Exception('!!!')
                 if self.init_locals:
                     i = 0
-                    for name, tip in self.init_locals.items():
+                    for name, handler in self.init_locals.items():
                         #print(self.in_block, name)
-                        self.in_block.blocks.insert(i, _GoodLine(self.otstup_string(4)+'var {}:{}? = nil'.format(name, tip)))
+                        self.in_block.blocks.insert(i, _GoodLine(self.otstup_string(4)+handler.init_locals_maker(name, handler.tip))) #'var {}:{}? = nil'.format(name, tip)))
                         i += 1
                     if i > 0:
                         self.in_block.blocks.insert(i, _GoodLine(''))
@@ -242,6 +251,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             on_block_end = _on_block_end
             _BLOCK_START = BLOCK_START
             _BLOCK_END = BLOCK_END
+            _INSTRUCTION_LINE_ENDING = INSTRUCTION_LINE_ENDING
 
             def __init__(self, line, parent=None, line_number=0):
                 self.locals = locals
@@ -496,6 +506,7 @@ class SmarterProperty(object):
     on_get_tree = lambda _, self, text: text
     BLOCK_START = '{'
     BLOCK_END = '}'
+    INSTRUCTION_LINE_ENDING = ''
     full_line = False
     IN = None
     OUT = None

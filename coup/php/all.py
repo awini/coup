@@ -8,6 +8,7 @@ from ..objecter_core._Base import _Base
 def _smart(*args, **kwargs):
     kwargs['BLOCK_START'] = '{'
     kwargs['BLOCK_END'] = '}'
+    kwargs['INSTRUCTION_LINE_ENDING'] = ';'
     return __smart(*args, **kwargs)
 
 Nonnne = _smart(
@@ -46,6 +47,7 @@ CommentFull = _smart(
 
 Index = _smart(
     IN_FORMAT='<EXP:NAME>[<EXP>]',
+    OUT = '$<EXP:NAME>[<EXP>]',
     INDEX=_Base.IN_LINE_CHILD_LAST+1
 )
 

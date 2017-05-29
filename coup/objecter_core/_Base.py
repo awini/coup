@@ -62,6 +62,7 @@ Implement those methods in child:
 
     _BLOCK_START = '{'
     _BLOCK_END = '}'
+    _INSTRUCTION_LINE_ENDING = ''
 
     block = None
     in_block = None
@@ -539,8 +540,10 @@ You need no subclass by this class.
             b.print_tree()
 
     def get_tree_base(self):
-        gen = ( b.get_tree() for b in self.blocks )
-        return '\n'.join( b for b in gen if type(b) != _ToDeleteLine ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
+        gen = ( (b.get_tree(), b) for b in self.blocks )
+        gen = ( (t, b) for t, b in gen if type(t) != _ToDeleteLine )
+        return '\n'.join( (t+b._INSTRUCTION_LINE_ENDING)
+                          if len(t) and hasattr(b, '_INSTRUCTION_LINE_ENDING') and not b.in_block else t for t, b in gen ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
 
     def get_tree_start(self):
         try:
