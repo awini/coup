@@ -200,26 +200,26 @@ class _ExpGetLocal(_ExpType):
         #got = _Line.try_instruction(line, line_number=line_number, parent=parent)
         parent_class = parent.get_parent_class()
         #print( '-----', parent_class, line )
-        if line in parent_class.init_locals:
+        if line in parent_class.arg_to_instance:
             return _GoodLine(line, line_number=line_number, parent=parent)
 
         return None
 
 
-    # def init_locals_maker(self, name, tip):
-    #     return self.d['init_locals_maker'](name=name, tip=tip) #'var {}:tip'.format(name, tip)
+    # def arg_maker(self, name, tip):
+    #     return self.d['arg_maker'](name=name, tip=tip) #'var {}:tip'.format(name, tip)
 
-    #def init_locals_maker(self, name, tip):
-    #    return getattr(self, '_init_locals_maker')(name, tip)
+    #def arg_maker(self, name, tip):
+    #    return getattr(self, '_arg_maker')(name, tip)
 
-    # @init_locals_maker.setter
-    # def init_locals_maker(self, val):
+    # @arg_maker.setter
+    # def arg_maker(self, val):
     #     def make(self, name, tip):
     #         return val(name, tip)
-    #     self._init_locals_maker = make
+    #     self._arg_maker = make
 
 class _ExpInsertLocal(_ExpType):
-    TEXT = '^init_locals'
+    TEXT = '^arg_to_instance'
 
     @classmethod
     def try_instruction(cls, line, line_number, parent):
@@ -233,15 +233,15 @@ class _ExpInsertLocal(_ExpType):
         #
         # '''.format(parent))
 
-        class _InitLocalsHandler:
+        class _ArgMakerHandler:
             tip = None
 
             @staticmethod
-            def init_locals_maker(name, tip):
-                return parent.init_locals_maker(name, tip)
+            def arg_maker(name, tip):
+                return parent.arg_maker(name, tip)
 
-        parent_class.init_locals[ line ] = _InitLocalsHandler
-        parent_class.init_locals_last = line
+        parent_class.arg_to_instance[ line ] = _ArgMakerHandler
+        parent_class.arg_to_instance_last = line
 
 class _ExpInsertLocalType(_ExpType):
     TEXT = '^type'
@@ -253,10 +253,10 @@ class _ExpInsertLocalType(_ExpType):
         parent_class = parent.get_parent_class()
 
         #print( '::::::', parent_class, got, line )
-        parent_class.init_locals[ parent_class.init_locals_last ].tip = got.TYPE_OUT
-        parent_class.init_locals_last = None
+        parent_class.arg_to_instance[ parent_class.arg_to_instance_last ].tip = got.TYPE_OUT
+        parent_class.arg_to_instance_last = None
 
-        #parent_class.init_locals[ line ] = None
+        #parent_class.arg_to_instance[ line ] = None
         return _ExpType.try_instruction(line, line_number, parent)
 
 

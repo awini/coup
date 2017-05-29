@@ -58,7 +58,7 @@ class TestAll(TestCase):
                 IN_FORMAT='class <EXP:NAME>(<EXP:LIST>):',
                 OUT_FORMAT='public class <EXP:NAME>:<EXP:LIST>',
                 locals={},
-                init_locals={},
+                arg_to_instance={},
             ),
             RavnoText=_smart(
                 IN_FORMAT='<EXP:NAME>=<EXP>',
@@ -159,7 +159,7 @@ class Hello(object):
             IN_FORMAT='class <EXP:NAME>(<EXP:LIST>):',
             OUT_FORMAT='public class <EXP:NAME>:<EXP:LIST>',
             locals={},
-            init_locals={},
+            arg_to_instance={},
             on_instruction = on_class_instruction,
             on_block_start = on_class_block_start,
         )
@@ -176,7 +176,7 @@ class Hello(object):
         )
 
         SelfRavno = _smart(
-            IN_FORMAT='self.<EXP:NAME,^init_locals> = <EXP:^type>',
+            IN_FORMAT='self.<EXP:NAME,^arg_to_instance> = <EXP:^type>',
             OUT_FORMAT='self.<EXP:NAME> = <EXP>',
         )
 
@@ -350,7 +350,7 @@ def click_delit(self):
             IN_FORMAT='class <EXP:NAME>(<EXP:LIST>):',
             OUT_FORMAT='public class <EXP:NAME>:<EXP:LIST>',
             locals={},
-            init_locals={},
+            arg_to_instance={},
             on_instruction=on_class_instruction,
             on_block_start=on_class_block_start,
         )
@@ -476,7 +476,7 @@ public class Status
         #get_local
 
         SelfRavno = _smart(
-            IN_FORMAT='self.<EXP:NAME,^init_locals> = <EXP:^type>',
+            IN_FORMAT='self.<EXP:NAME,^arg_to_instance> = <EXP:^type>',
             OUT_FORMAT='self.<EXP:NAME> = <EXP>',
         )
 
@@ -486,7 +486,7 @@ public class Status
         )
 
         # SelfRavno = _smart(
-        #     IN_FORMAT='self.<EXP:NAME,^init_locals> = <EXP:^type>',
+        #     IN_FORMAT='self.<EXP:NAME,^arg_to_instance> = <EXP:^type>',
         #     OUT_FORMAT='self.<EXP:NAME> = <EXP>',
         # )
 
