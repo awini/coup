@@ -2,53 +2,53 @@
 from ..objecter_core._common_classes import ( _Class, _NumberInt, _Str, _Substr,
                                               _Format, _ExpList, _DefBase, _NumberFloat )
 #from ..objecter_core._smart_parsers import _ExpList
-from ..objecter_core._Smart import _smart as __smart
+from ..objecter_core._Smart import accord as __accord
 from ..objecter_core._Base import _Base
 
-def _smart(*args, **kwargs):
+def accord(*args, **kwargs):
     kwargs['BLOCK_START'] = ''
     kwargs['BLOCK_END'] = ''
-    return __smart(*args, **kwargs)
+    return __accord(*args, **kwargs)
 
-Nonnne = _smart(
-    IN_FORMAT='None')
+Nonnne = accord(
+    IN='None')
 
-If = _smart(
-    IN_FORMAT='if <EXP>:',
+If = accord(
+    IN='if <EXP>:',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-Else = _smart(
-    IN_FORMAT='else:',
+Else = accord(
+    IN='else:',
     INDEX=_Base.FULL_LINE_PARENTER)
 
-Print = _smart(
-    IN_FORMAT='print(<EXP>)',
+Print = accord(
+    IN='print(<EXP>)',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-Range = _smart(
-    IN_FORMAT='range(<EXP>, <EXP>)',
+Range = accord(
+    IN='range(<EXP>, <EXP>)',
     INDEX=_Base.IN_LINE_PARENTER
 )
 
-Comment = _smart(
-    IN_FORMAT='<EXP>#<EXP:TEXT>',
+Comment = accord(
+    IN='<EXP>#<EXP:TEXT>',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-CommentFull = _smart(
-    IN_FORMAT='#<EXP:TEXT>',
+CommentFull = accord(
+    IN='#<EXP:TEXT>',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-Index = _smart(
-    IN_FORMAT='<EXP:NAME>[<EXP>]',
+Index = accord(
+    IN='<EXP:NAME>[<EXP>]',
     INDEX=_Base.IN_LINE_CHILD_LAST+1
 )
 
-Eval = _smart(
-    IN_FORMAT='eval(<EXP>)',
+Eval = accord(
+    IN='eval(<EXP>)',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
@@ -78,9 +78,9 @@ class Substr(_Substr):
         return '.substring({}, {})'.format(start, end)
 
 
-List = _smart(
-    IN_FORMAT='[<EXP>]',
-    OUT_FORMAT='[<EXP>]',
+List = accord(
+    IN='[<EXP>]',
+    OUT='[<EXP>]',
     INDEX=_Base.IN_LINE_CHILD_LAST
 )
 
@@ -109,8 +109,8 @@ class Format(_Format):
         return '"{:' + self.s + '}".format(' + self.in_instruction.get_tree() + ')'
 
 
-ForIn = _smart(
-    IN_FORMAT='for <EXP:NAME> in <EXP:^var>:',
+ForIn = accord(
+    IN='for <EXP:NAME> in <EXP:^var>:',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 

@@ -2,59 +2,59 @@
 from ..objecter_core._common_classes import ( _Class, _NumberInt, _Str, _Substr,
                                               _Format, _ExpList, _DefBase, _NumberFloat )
 #from ..objecter_core._smart_parsers import _ExpList
-from ..objecter_core._Smart import _smart
+from ..objecter_core._Smart import accord
 from ..objecter_core._Base import _Base
 
-Nonnne = _smart(
-    IN_FORMAT='None',
-    OUT_FORMAT='nil',
+Nonnne = accord(
+    IN='None',
+    OUT='nil',
 )
 
-If = _smart(
-    IN_FORMAT='if <EXP>:',
-    OUT_FORMAT='if <EXP>',
+If = accord(
+    IN='if <EXP>:',
+    OUT='if <EXP>',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-Else = _smart(
-    IN_FORMAT='else:',
-    OUT_FORMAT='else',
+Else = accord(
+    IN='else:',
+    OUT='else',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-Print = _smart(
-    IN_FORMAT='print(<EXP>)',
-    OUT_FORMAT='Log.d("DEBUG", ""+<EXP>)',
+Print = accord(
+    IN='print(<EXP>)',
+    OUT='Log.d("DEBUG", ""+<EXP>)',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-Range = _smart(
-    IN_FORMAT='range(<EXP>, <EXP>)',
-    OUT_FORMAT=' <EXP>...<EXP>',
+Range = accord(
+    IN='range(<EXP>, <EXP>)',
+    OUT=' <EXP>...<EXP>',
     INDEX=_Base.IN_LINE_PARENTER
 )
 
-Comment = _smart(
-    IN_FORMAT='<EXP>#<EXP:TEXT>',
-    OUT_FORMAT='<EXP> // <EXP:TEXT>',
+Comment = accord(
+    IN='<EXP>#<EXP:TEXT>',
+    OUT='<EXP> // <EXP:TEXT>',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-CommentFull = _smart(
-    IN_FORMAT='#<EXP:TEXT>',
-    OUT_FORMAT='// <EXP:TEXT>',
+CommentFull = accord(
+    IN='#<EXP:TEXT>',
+    OUT='// <EXP:TEXT>',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
-Index = _smart(
-    IN_FORMAT='<EXP:NAME>[<EXP>]',
-    OUT_FORMAT='<EXP:NAME>[<EXP>]',
+Index = accord(
+    IN='<EXP:NAME>[<EXP>]',
+    OUT='<EXP:NAME>[<EXP>]',
     INDEX=_Base.IN_LINE_CHILD_LAST+1
 )
 
-Eval = _smart(
-    IN_FORMAT='eval(<EXP>)',
-    OUT_FORMAT='Expression(<EXP>).eval()',
+Eval = accord(
+    IN='eval(<EXP>)',
+    OUT='Expression(<EXP>).eval()',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
@@ -84,9 +84,9 @@ class Substr(_Substr):
         return '.substring({}, {})'.format(start, end)
 
 
-List = _smart(
-    IN_FORMAT='[<EXP>]',
-    OUT_FORMAT='[<EXP>]',
+List = accord(
+    IN='[<EXP>]',
+    OUT='[<EXP>]',
     INDEX=_Base.IN_LINE_CHILD_LAST
 )
 
@@ -113,9 +113,9 @@ class Format(_Format):
         return 'java.lang.String.format("' + self.s + '", ' + self.in_instruction.get_tree() + ')'
 
 
-ForIn = _smart(
-    IN_FORMAT='for <EXP:NAME> in <EXP:^var>:',
-    OUT_FORMAT='for <EXP:NAME> in <EXP:^var>',
+ForIn = accord(
+    IN='for <EXP:NAME> in <EXP:^var>:',
+    OUT='for <EXP:NAME> in <EXP:^var>',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
