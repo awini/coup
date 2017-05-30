@@ -500,8 +500,8 @@ class SmarterProperty(object):
     on_init_end = lambda _, self: None
     on_try_instruction = lambda _, self, i, line: None
     on_instruction = lambda _, self, i, ins: ins
-    on_block_start = lambda _, self, block: None
-    on_block_before_start = lambda _, self, block: None
+    on_block_start = lambda self, block: None
+    on_block_before_start = lambda self, block: None
     on_block_end = lambda self, block: None
     on_get_tree = lambda _, self, text: text
     BLOCK_START = '{'

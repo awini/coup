@@ -1,9 +1,9 @@
 # coding: utf-8
 from ..objecter_core._common_classes import ( _Class, _NumberInt, _Str, _Substr,
                                               _Format, _ExpList, _DefBase, _NumberFloat )
-#from ..objecter_core._smart_parsers import _ExpList
 from ..objecter_core._Smart import accord
 from ..objecter_core._Base import _Base
+
 
 Nonnne = accord(
     IN='None',

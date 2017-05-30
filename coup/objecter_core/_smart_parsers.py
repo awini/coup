@@ -98,6 +98,10 @@ class _InstructList(list):
     def get_tree(self):
         return ', '.join(a.get_tree() for a in self)
 
+    @property
+    def line_number(self):
+        return self[0].line_number
+
 
 class _ExpList(_ExpType):
     TEXT = 'NAMES_LIST'

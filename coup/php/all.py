@@ -1,15 +1,16 @@
 # coding: utf-8
 from ..objecter_core._common_classes import ( _Class, _NumberInt, _Str, _Substr,
                                               _Format, _ExpList, _DefBase, _NumberFloat )
-#from ..objecter_core._smart_parsers import _ExpList
 from ..objecter_core._Smart import accord as __accord
 from ..objecter_core._Base import _Base
+
 
 def accord(*args, **kwargs):
     kwargs['BLOCK_START'] = '{'
     kwargs['BLOCK_END'] = '}'
     kwargs['INSTRUCTION_LINE_ENDING'] = ';'
     return __accord(*args, **kwargs)
+
 
 Nonnne = accord(
     IN='None')

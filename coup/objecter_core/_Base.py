@@ -634,7 +634,11 @@ You need no subclass by this class.
 
                 smart_ret = None
                 if hasattr(self.last_instruction, 'on_block_before_start'):
-                    smart_ret = self.last_instruction.on_block_before_start(b)
+                    try:
+                        smart_ret = self.last_instruction.on_block_before_start(b)
+                    except Exception:
+                        print('GOT: {}, line_number: {}'.format(self.last_instruction, self.last_instruction.line_number))
+                        raise
 
                 after_in_lines = b.add_lines(tst_lines, diapazon, ignore or smart_ret)
 
