@@ -75,8 +75,8 @@ class NumberFloat(_NumberFloat):
     TYPE_OUT = 'Float'
 
 
-class Str(_Str):
-    TYPE_OUT = 'String'
+# class Str(_Str):
+#     TYPE_OUT = 'String'
 
 
 class Substr(_Substr):
@@ -117,6 +117,12 @@ class Format(_Format):
 ForIn = accord(
     IN='for <EXP:NAME> in <EXP:^var>:',
     OUT='for <EXP:NAME> in <EXP:^var>',
+    INDEX=_Base.FULL_LINE_PARENTER
+)
+
+ForIn2 = accord(
+    IN='for <EXP:NAME>, <EXP:NAME> in <EXP:^var>:',
+    OUT='for <EXP:NAME>, <EXP:NAME> in <EXP:^var>',
     INDEX=_Base.FULL_LINE_PARENTER
 )
 
