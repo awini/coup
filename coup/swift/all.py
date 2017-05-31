@@ -13,7 +13,8 @@ Nonnne = accord(
 If = accord(
     IN='if <EXP>:',
     OUT='if <EXP>',
-    INDEX=_Base.FULL_LINE_PARENTER
+    INDEX=_Base.FULL_LINE_PARENTER,
+    locals=lambda self:self.parent.get_locals()
 )
 
 Else = accord(

@@ -85,11 +85,28 @@ class _ExpName(_ExpType):
     @classmethod
     def try_instruction(cls, line, line_number, parent):
 
-        #print('..', parent.locals, line)
+        locals = None
+
         if hasattr(parent, 'locals') and parent.locals != None:
-            name = line.split('=')[0].split(':')[0].strip().replace('*','') # FIXME
-            #print('[ NAME ] {} --> {}'.format(name, parent))
-            parent.locals[ name ] = None
+            if hasattr(parent.locals, '__call__'):
+                #print('!!!!!!!!!!!!!!!!!!!')
+                locals = parent.locals(parent)
+            else:
+                locals = parent.locals
+        else:
+            locals = parent.get_locals()
+
+        if locals != None:
+            name = line.split('=')[0].split(':')[0].strip().replace('*', '')  # FIXME
+            #print('\t[ NAME ] {} --> {}'.format(name, parent))
+            locals[ name ] = None
+        else:
+            raise Exception('''
+    {} have no "locals",
+    line: {}
+    line_number: {}
+
+            '''.format(parent, line, line_number))
 
         return _GoodLine(line, line_number=line_number, new_name=True, parent=parent)
 

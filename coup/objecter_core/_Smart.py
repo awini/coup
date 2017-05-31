@@ -199,9 +199,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
                     if line[pos:] == cls.deleters_in[-1]:
                         return True
-                    print('>>>> {} = {}'.format(part, line[pos:]))
-                    print('\tOK', i, '/', len(cls.deleters_in.exps), not_empty_deleters, '=', line, IN_FORMAT)
-                    print('\t', pos, len(line), '=', line[pos:], '!=', cls.deleters_in[-1], cls.deleters_in)
+                    #print('>>>> {} = {}'.format(part, line[pos:]))
+                    #print('\tOK', i, '/', len(cls.deleters_in.exps), not_empty_deleters, '=', line, IN_FORMAT)
+                    #print('\t', pos, len(line), '=', line[pos:], '!=', cls.deleters_in[-1], cls.deleters_in)
                     return False
                 return True
 
@@ -245,6 +245,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             START_NAME = start_name
             locals = None
             TYPE_OUT = _TYPE_OUT
+
+            smarter = None
+            name_in_smarter = None
 
             on_block_start = _on_block_start
             on_block_before_start = _on_block_before_start
@@ -295,11 +298,13 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 return False
 
             def __str__(self):
-                return self.make_my_str()
+                return self.make_my_str(self.smarter, self.name_in_smarter)
 
             @classmethod
-            def make_my_str(cls):
-                return cls.__name__ + '(' + start_name + ': ' + IN_FORMAT + ')'
+            def make_my_str(cls, smarter, name_in_smarter):
+                smarter_name = smarter.__name__ if smarter else ''
+                name = (smarter_name + '.' + name_in_smarter) if name_in_smarter else smarter_name
+                return cls.__name__ + '(' + str(name) + ': ' + IN_FORMAT + ')'
 
             @classmethod
             def test_string(cls, line):
@@ -461,6 +466,13 @@ class Smarter(object):
 
     @classmethod
     def translate(cls, text, filename=None, remove_space_lines=False, strip=False):
+        if cls._GLOBALS:
+            for name, value in cls._GLOBALS.items():
+                try:
+                    value.smarter = cls
+                    value.name_in_smarter = name
+                except AttributeError:
+                    pass
         _getter = _Line.init_instructs(cls._GLOBALS, filename=filename)[1]
         out_text = _getter(text)
         out_text = '\n'.join(cls.OUT_START) + out_text

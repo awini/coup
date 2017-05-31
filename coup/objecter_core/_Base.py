@@ -112,6 +112,20 @@ Implement those methods in child:
                 parent = parent.start_instruction
         return parent
 
+    def get_locals(self):
+        # print('......', self.block)
+        # print('......', self.parent, self.parent.locals)
+        # print('......', self, self.locals)
+        if hasattr(self, 'locals') and self.locals:
+            return self.locals
+        parent = self.parent
+        if parent:
+            #print('......', parent)
+            if hasattr(parent, 'locals') and parent.locals:
+                #print('.......', parent.locals)
+                return parent.locals
+            return parent.get_locals()
+
     def find_def(self):
         obj = self
         while obj and not obj.is_def() and obj.parent:
@@ -321,6 +335,7 @@ class _Line(_Base):
         _Block._debug = debug
         _Block.clear_errors()
         b = _Block()
+        b.locals = {}
         lines = text.split('\n')
         b.add_lines(lines, [0, len(text)])
         return b
@@ -563,8 +578,13 @@ You need no subclass by this class.
 
         func = self.start_instruction.find_def()
         #print('..def: {}'.format(func))
+        locals = func.locals if hasattr(func, 'locals') else {}
+        if hasattr(locals, '__call__'):
+            locals = locals(func)
+            # if len(locals) > 0:
+            #     print('................', self.start_instruction, locals.keys())
 
-        return func.locals if hasattr(func, 'locals') else {}
+        return locals
 
     def add_line(self, line, line_number, parent, ignore=False):
         #print('[ {:>3} ]: {} | {}'.format(line_number, line, line.line_number))
