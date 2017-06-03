@@ -2,14 +2,22 @@
 from ._Base import _Line, _GoodLine
 
 class _ExpString:
-    def __init__(self, names_string):
+    def __init__(self, names_string, on_new_name=lambda self, name, line, line_number: None):
         self.try_exp_types(names_string)
+        self.on_new_name = on_new_name
 
     def __str__(self):
         return '_ExpString(' + ','.join(str(t) if t==None else t.__name__ for t in self.types) + ')'
 
     def __repr__(self):
         return self.__str__()
+
+    def is_me(self, line):
+        for t in self.types:
+            if t and hasattr(t, 'is_me') and not t.is_me(line):
+                return False
+        return True
+
 
     def try_exp_types(self, line):
         self.types = [ self.try_exp_type(a.strip()) for a in line.split(',') ]
@@ -22,16 +30,17 @@ class _ExpString:
                 return t
 
     def try_instruction(self, line, line_number, parent=None):
-        #print(self, line)
+
         rets = []
         for t in self.types:
             ret = None
             if t == None:
                 ret = _ExpType.try_instruction(line, line_number=line_number, parent=parent)
             else:
-                ret = t.try_instruction(line, line_number=line_number, parent=parent)
+                ret = t.try_instruction(line, line_number=line_number, parent=parent, exp_string=self)
             if ret:
                 rets.append(ret)
+
         if len(rets):
             return rets[0]
 
@@ -71,7 +80,7 @@ class _ExpIgnore(_ExpType):
         if lst[0] == cls.TEXT and len(lst) == 2:
             return _ExpIgnore(lst[1].strip())
 
-    def try_instruction(self, line, line_number, parent):
+    def try_instruction(self, line, line_number, parent, exp_string=None):
 
         if line.strip() == self.ign_text:
             #raise Exception("{}: ".format(line_number)+line)
@@ -83,7 +92,11 @@ class _ExpName(_ExpType):
     TEXT = 'NAME'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def is_me(cls, line):
+        return ' ' not in line
+
+    @classmethod
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
 
         locals = None
 
@@ -100,6 +113,10 @@ class _ExpName(_ExpType):
             name = line.split('=')[0].split(':')[0].strip().replace('*', '')  # FIXME
             #print('\t[ NAME ] {} --> {}'.format(name, parent))
             locals[ name ] = None
+
+            if exp_string:
+                exp_string.on_new_name(name, line, line_number)
+
         else:
             raise Exception('''
     {} have no "locals",
@@ -124,11 +141,19 @@ class _ExpList(_ExpType):
     TEXT = 'NAMES_LIST'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def is_me(cls, line):
+        for name in line.split(','):
+            name = name.strip()
+            if ' ' in name:
+                return False
+        return True
+
+    @classmethod
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
 
         lst = _InstructList()
         for name in line.split(','):
-            lst.append( _ExpName.try_instruction(name.strip(), line_number, parent) )
+            lst.append( _ExpName.try_instruction(name.strip(), line_number, parent, exp_string=exp_string) )
 
         return lst
 
@@ -136,7 +161,7 @@ class _ExpSimpleList(_ExpType):
     TEXT = 'LIST'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
 
         lst = _InstructList()
         for sub in line.split(','):
@@ -149,15 +174,34 @@ class _ExpDel(_ExpType):
     TEXT = 'DEL'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
         return _Line('', line_number=line_number, parent=parent)
 
 class _ExpText(_ExpType):
     TEXT = 'TEXT'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
         return _GoodLine(line, line_number=line_number, parent=parent)
+
+class _ExpTextWithoutSpaces(_ExpType):
+    TEXT = 'TEXT_WITHOUT_SPACES'
+
+    @classmethod
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
+        if ' ' in line.strip():
+
+            #if line.strip() == 'self.users_checked and str(id) != str(self.main_root.api.user_id)':
+            raise Exception(line)
+
+            return None
+        return _GoodLine(line, line_number=line_number, parent=parent)
+
+    @classmethod
+    def is_me(cls, line):
+        #print('^^^^^^^^^^^^', line)
+        return ' ' not in line
+
 
 class _SmartLine(_Line):
 
@@ -184,7 +228,7 @@ class _ExpInsertVar(_ExpType):
     TEXT = '^var'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
         got = _Line.try_instruction(line, line_number=line_number, parent=parent)
 
         #print('got:', got, got.START_NAME)
@@ -217,7 +261,7 @@ class _ExpGetLocal(_ExpType):
     TEXT = '^get_local'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
         #got = _Line.try_instruction(line, line_number=line_number, parent=parent)
         parent_class = parent.get_parent_class()
         #print( '-----', parent_class, line )
@@ -243,7 +287,7 @@ class _ExpInsertLocal(_ExpType):
     TEXT = '^arg_to_instance'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
         #got = _Line.try_instruction(line, line_number=line_number, parent=parent)
         parent_class = parent.get_parent_class()
         #print( '-----', parent_class, line )
@@ -268,7 +312,7 @@ class _ExpInsertLocalType(_ExpType):
     TEXT = '^type'
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
         got = _Line.try_instruction(line, line_number=line_number, parent=parent)
 
         parent_class = parent.get_parent_class()
@@ -290,9 +334,20 @@ _EXP_FUNCERS = {
 class _ExpParser(list):
 
     def __init__(self, line):
+        #self.on_new_name = on_new_name
+        #print(id(self), self.on_new_name)
         deleters = self.split_line(line)
         self.line = line
         super(_ExpParser, self).__init__(deleters)
+
+    @property
+    def on_new_name(self):
+        return None
+
+    @on_new_name.setter
+    def on_new_name(self, val):
+        for exp in self.exps:
+            exp.on_new_name = val
 
     def get_exps_positions(self, main_lst):
         poses = []
@@ -325,6 +380,7 @@ class _ExpParser(list):
             else:
                 e_lst = lst[0].split(':')
                 es_in = e_lst[1] if len(e_lst) > 1 else e_lst[-1]
+                #print('>>>', id(self), type(self), hasattr(self, 'on_new_name'))
                 es = _ExpString(es_in)
                 if len(e_lst) > 2:
                     #print('>>>', es, e_lst)

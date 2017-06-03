@@ -43,6 +43,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_block_end=lambda self, block:None,
            on_get_tree=lambda self, text:text,
            on_good_line=lambda self, line:line,
+           on_is_instruction=lambda cls, line:None,
+           on_new_name=lambda self, name, line, line_number:None,
            BLOCK_START='{', BLOCK_END='}', INSTRUCTION_LINE_ENDING='',
            full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
            arg_maker=None):
@@ -72,6 +74,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     _on_init_end = on_init_end
     _on_good_line = on_good_line
     _arg_maker = arg_maker
+    _on_is_instruction = on_is_instruction
+    _on_new_name = on_new_name
 
     def make_smart(IN_FORMAT):
 
@@ -98,7 +102,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             arg_to_instance = None
             arg_maker = _arg_maker
 
+            def on_new_name(self, name, line, line_number):
+                _on_new_name(self, name, line, line_number)
+
             def init_exps(self, line, on_instruction):
+                self.deleters_in.on_new_name = self.on_new_name
+
                 need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
                 self.deleters_out = _ExpParser(OUT_FORMAT(self)) if callable(OUT_FORMAT) else _ExpParser(OUT_FORMAT)
@@ -167,6 +176,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 if cls.need_search[0]:
                     return True
 
+                _on_is_instruction(cls, line)
+
                 if OUT_FORMAT == NotImplemented:
                     return False
 
@@ -174,13 +185,34 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 need_debug = False #'self.ttt' == line and 'self.' in cls.deleters_in
                 pos = -1
                 i = -1
+                exp_i = -1
 
                 not_empty_deleters = len([d for d in cls.deleters_in if len(d.strip()) > 0 ])
 
+                last_i = len(cls.deleters_in) - 1
+
                 for i, part in enumerate(cls.deleters_in):
-                    pos = line.find(part, pos+1)
+                    new_pos = line.find(part, pos+1)
+
+                    # if i == last_i and len(part):
+                    #     new_pos2 = line.find(part, -1)
+                    #     if new_pos2 > new_pos:
+                    #         #raise Exception(line +"\n\t{}:{}:{}".format(part, new_pos, new_pos2))
+                    #         new_pos = new_pos2
+
                     if need_debug:
                         print('>>>>>', line, '>>', cls.deleters_in, '>>', part, ':', pos)
+
+                    if pos > 0:
+                        exp_i += 1
+                        exp = cls.deleters_in.exps[exp_i]
+                        #print(exp)
+                        if hasattr(exp, 'is_me'):
+                            if not exp.is_me(line[pos:new_pos]):
+                                return False
+
+                    pos = new_pos
+
                     # if pos <= _last_pos:
                     #     return False
                     if pos < 0:#part not in line:

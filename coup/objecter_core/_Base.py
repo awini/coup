@@ -166,8 +166,73 @@ Implement those methods in child:
         #print('log: {}'.format(self))
         return ' '*self.otstup + self.get_tree_main()
 
+    def make_objects_tree_html(self):
+        lines = []
+        ids = []
+
+        def make_full_line(self, hidden=False):
+            ids.append(self)
+            _id = ids.index(self)
+            _parent_id = ids.index(self.parent.start_instruction) if self.parent and self.parent.start_instruction else '-'
+
+            padding_left = 4 + self.otstup * 4
+            childs_count = len(self.in_block.blocks) if self.in_block else 0
+            make_line = lambda text: '<span style="padding-left:{}px;min-width:800px;display:inline-block;">'.format(
+                padding_left) + text + '</span>'
+
+            lines.append('<p id="p{}" class="child-of-p{}" style="{}" onclick="click_p(this);">'.format(_id, _parent_id, 'display:none;' if False and hidden else '') +
+                         '<span style="min-width:30px;display:inline-block;">{} ({}):</span>'.format(self.line_number, childs_count) +
+                         make_line(self.line) +
+                         make_line(str(self).replace('<','[').replace('>',']')) +
+                         '</p>')
+
+        make_full_line(self)
+        if self.in_block:
+            for bins in self.in_block.instuctions_lines_gen():
+                make_full_line(bins, hidden=True)
+
+        return '\n'.join(lines)
+
     def get_tree_main(self):
-        raise NotImplementedError
+        inss = self.parent.instructions if self.parent else ''
+        root_class = self.get_parent_class()
+
+        html = '''<html>
+<head>
+<style>
+html, body {
+    min-width:3000px;
+}
+p {margin:0; padding:0;height:20px; border-bottom:1px solid #aaa; font-family:"Helvetica"; color:#333; font-size:12px;}
+</style>
+</head>
+<script>
+function click_p(p) {
+    var i;
+    var _id = p.id;
+    console.log('p:', p);
+    var pps = document.getElementsByTagName("p");
+    for (i=0; i<pps.length;i++) {
+        var ch = pps[i];
+        //console.log('parent:', ch.className);
+        if (ch.className == 'child-of-'+_id) {
+            console.log('child:', ch);
+            ch.style.display = 'block';
+        }
+    }
+}
+</script>
+<body>
+''' + root_class.make_objects_tree_html() + '''
+</body>'''
+        with open('build/coup_errors.html', 'w') as f:
+            f.write(html)
+
+        import os
+        from subprocess import call
+        call(os.path.join('build', 'coup_errors.html'), shell=True)
+
+        raise NotImplementedError('in: {} in {}\n\t{}'.format(self, self.parent, inss))
 
     def print_tree_base(self):
         raise NotImplementedError
@@ -559,6 +624,14 @@ You need no subclass by this class.
         gen = ( (t, b) for t, b in gen if type(t) != _ToDeleteLine )
         return '\n'.join( (t+b._INSTRUCTION_LINE_ENDING)
                           if len(t) and hasattr(b, '_INSTRUCTION_LINE_ENDING') and not b.in_block else t for t, b in gen ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
+
+    def instuctions_lines_gen(self):
+        for b in self.blocks:
+            if b.__class__ == _Block:
+                for bb in b.instuctions_lines_gen():
+                    yield bb
+            else:
+                yield b
 
     def get_tree_start(self):
         try:
