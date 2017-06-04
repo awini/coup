@@ -91,7 +91,7 @@ class Dottext(_Base):
     INDEX = _Base.IN_LINE_CHILD_LAST + 1
 
     @staticmethod
-    def is_instruction(line):
+    def is_instruction(line, parent=None, line_number=None):
         return line.strip() == '.text'
 
     def get_tree_main(self):

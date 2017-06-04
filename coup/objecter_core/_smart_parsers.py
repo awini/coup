@@ -12,9 +12,9 @@ class _ExpString:
     def __repr__(self):
         return self.__str__()
 
-    def is_me(self, line):
+    def is_me(self, line, parent=None, line_number=None):
         for t in self.types:
-            if t and hasattr(t, 'is_me') and not t.is_me(line):
+            if t and hasattr(t, 'is_me') and not t.is_me(line, parent=parent, line_number=line_number):
                 return False
         return True
 
@@ -92,7 +92,7 @@ class _ExpName(_ExpType):
     TEXT = 'NAME'
 
     @classmethod
-    def is_me(cls, line):
+    def is_me(cls, line, parent=None, line_number=None):
         return ' ' not in line
 
     @classmethod
@@ -141,7 +141,7 @@ class _ExpList(_ExpType):
     TEXT = 'NAMES_LIST'
 
     @classmethod
-    def is_me(cls, line):
+    def is_me(cls, line, parent=None, line_number=None):
         for name in line.split(','):
             name = name.strip()
             if ' ' in name:
@@ -198,7 +198,7 @@ class _ExpTextWithoutSpaces(_ExpType):
         return _GoodLine(line, line_number=line_number, parent=parent)
 
     @classmethod
-    def is_me(cls, line):
+    def is_me(cls, line, parent=None, line_number=None):
         #print('^^^^^^^^^^^^', line)
         return ' ' not in line
 
@@ -256,6 +256,59 @@ class _ExpInsertVar(_ExpType):
 
         return _GoodLine(line=generated, line_number=line_number, new_name=True, parent=parent)
 
+class _ExpGetSimpleLocal(_ExpType):
+    TEXT = 'local'
+
+    @classmethod
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
+        stripped = line.strip()
+        _locals = parent.get_locals()
+
+        # if line_number == 37:
+        #     raise Exception('37')
+
+        if hasattr(_locals, '__call__'):
+            return None
+
+        if stripped in _locals:
+            return _GoodLine(line, line_number=line_number, parent=parent)
+
+        return None
+
+    @classmethod
+    def is_me(cls, line, parent=None, line_number=None):
+        stripped = line.strip()
+        _locals = parent.get_locals()
+
+        if line_number == 37:
+            print('......>> {}'.format(line))
+        #     raise Exception('37: {}\n\t_locals: {}\n\tparent: {}'.format(line, _locals, parent))
+
+        if hasattr(_locals, '__call__'):
+            return None
+
+        return stripped in _locals
+
+class _ExpSomeName(_ExpType):
+    TEXT = 'some_name'
+    TST_STRING = 'qwertyuiopasdfghjklzxcvbnm'
+    TST_STRING += TST_STRING.upper() + '1234567890_'
+
+    @classmethod
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
+        return _GoodLine(line.strip(), line_number=line_number, parent=parent)
+
+    @classmethod
+    def is_me(cls, line, parent=None, line_number=None):
+
+        if line_number == 37: #and line.strip() == 'main_root':
+            raise Exception('37: {}\n\tparent: {}'.format(line, parent))
+
+        for a in line:
+            if a not in cls.TST_STRING:
+                return False
+        return True
+
 
 class _ExpGetLocal(_ExpType):
     TEXT = '^get_local'
@@ -269,7 +322,6 @@ class _ExpGetLocal(_ExpType):
             return _GoodLine(line, line_number=line_number, parent=parent)
 
         return None
-
 
     # def arg_maker(self, name, tip):
     #     return self.d['arg_maker'](name=name, tip=tip) #'var {}:tip'.format(name, tip)

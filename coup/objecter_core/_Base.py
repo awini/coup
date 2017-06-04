@@ -68,6 +68,8 @@ Implement those methods in child:
     in_block = None
     STANDART_OTSTUP = None
 
+    _IS_CATCHING = 0
+
     def __init__(self, line, parent=None, line_number=0):
         self.line = line
         self.parent = parent
@@ -163,27 +165,43 @@ Implement those methods in child:
         return self.block.start_instruction if self.block else None
 
     def get_tree(self):
-        #print('log: {}'.format(self))
         return ' '*self.otstup + self.get_tree_main()
 
     def make_objects_tree_html(self):
         lines = []
         ids = []
 
+        if _Base._IS_CATCHING > 0:
+            return
+
+        _Base._IS_CATCHING += 1
+
         def make_full_line(self, hidden=False):
             ids.append(self)
             _id = ids.index(self)
             _parent_id = ids.index(self.parent.start_instruction) if self.parent and self.parent.start_instruction else '-'
+
+            if self.__class__ == _UnknownLine:
+                self.init_otstup(self.line)
 
             padding_left = 4 + self.otstup * 4
             childs_count = len(self.in_block.blocks) if self.in_block else 0
             make_line = lambda text: '<span style="padding-left:{}px;min-width:800px;display:inline-block;">'.format(
                 padding_left) + text + '</span>'
 
+            if self.__class__ == _UnknownLine:
+                _line_result = '_unk'
+            else:
+                try:
+                    _line_result = self.get_tree_main() if self.__class__ != _Block else self.start_instrustion.get_tree_main()
+                except:
+                    _line_result = '-'
+
             lines.append('<p id="p{}" class="child-of-p{}" style="{}" onclick="click_p(this);">'.format(_id, _parent_id, 'display:none;' if False and hidden else '') +
                          '<span style="min-width:30px;display:inline-block;">{} ({}):</span>'.format(self.line_number, childs_count) +
                          make_line(self.line) +
-                         make_line(str(self).replace('<','[').replace('>',']')) +
+                         make_line(str(self).replace('<','[').replace('>',']').replace('[31m','<span class="red">').replace('[0m','</span>')) +
+                         make_line(_line_result) +
                          '</p>')
 
         make_full_line(self)
@@ -195,44 +213,52 @@ Implement those methods in child:
 
     def get_tree_main(self):
         inss = self.parent.instructions if self.parent else ''
+        self.show_tree_into_html()
+        raise NotImplementedError('in: {} in {}\n\t{}'.format(self, self.parent, inss))
+
+    def show_tree_into_html(self):
         root_class = self.get_parent_class()
 
         html = '''<html>
-<head>
-<style>
-html, body {
-    min-width:3000px;
-}
-p {margin:0; padding:0;height:20px; border-bottom:1px solid #aaa; font-family:"Helvetica"; color:#333; font-size:12px;}
-</style>
-</head>
-<script>
-function click_p(p) {
-    var i;
-    var _id = p.id;
-    console.log('p:', p);
-    var pps = document.getElementsByTagName("p");
-    for (i=0; i<pps.length;i++) {
-        var ch = pps[i];
-        //console.log('parent:', ch.className);
-        if (ch.className == 'child-of-'+_id) {
-            console.log('child:', ch);
-            ch.style.display = 'block';
+        <head>
+        <style>
+        html, body {
+            min-width:3000px;
         }
-    }
-}
-</script>
-<body>
-''' + root_class.make_objects_tree_html() + '''
-</body>'''
+        p {margin:0; padding:0;height:20px; border-bottom:1px solid #aaa; font-family:"Helvetica"; color:#333; font-size:12px;}
+        .red {color:#ff0000;}
+        </style>
+        </head>
+        <script>
+        function click_p(p) {
+            var i;
+            var _id = p.id;
+            console.log('p:', p);
+            var pps = document.getElementsByTagName("p");
+            for (i=0; i<pps.length;i++) {
+                var ch = pps[i];
+                //console.log('parent:', ch.className);
+                if (ch.className == 'child-of-'+_id) {
+                    console.log('child:', ch);
+                    ch.style.display = 'block';
+                }
+            }
+        }
+        </script>
+        <body>
+        ''' + root_class.make_objects_tree_html() + '''
+        </body>'''
         with open('build/coup_errors.html', 'w') as f:
             f.write(html)
 
-        import os
+        import os, sys
         from subprocess import call
-        call(os.path.join('build', 'coup_errors.html'), shell=True)
 
-        raise NotImplementedError('in: {} in {}\n\t{}'.format(self, self.parent, inss))
+        com = os.path.join('build', 'coup_errors.html')
+        if sys.platform == 'darwin':
+            com = 'open ' + com
+
+        call(com, shell=True)
 
     def print_tree_base(self):
         raise NotImplementedError
@@ -254,7 +280,7 @@ class _BlockStartBase(_Base):
         super(_BlockStartBase, self).__init__(line, parent, line_number)
 
     @classmethod
-    def is_instruction(cls, line):
+    def is_instruction(cls, line, parent=None, line_number=None):
         stripped = line.strip()
         if type(cls.NAME) in (list, tuple):
             for waited_name in cls.NAME:
@@ -364,7 +390,7 @@ class _Line(_Base):
         return isinstance(other, _Line) and other.line.strip() == self.line.strip()
 
     def __str__(self):
-        return '_Line("'+ self.line +'")'
+        return self.__class__.__name__+'("'+ self.line +'")'
 
     def __repr__(self):
         return self.__str__()
@@ -419,7 +445,7 @@ class _Line(_Base):
         was_unknown = copy(_UnknownLine._unknown_lines)
 
         for ins in instructers:
-            if ins.is_instruction(line):
+            if ins.is_instruction(line, parent=parent, line_number=line_number):
                 #print(ins)
                 ins_o = ins(line, parent=parent, line_number=line_number)
                 ins_o.init_otstup(line)
@@ -589,6 +615,8 @@ You need no subclass by this class.
             text = ''
             for i, ul in enumerate(_UnknownLine._unknown_lines):
                 text += '\n\t{:>2}. {}'.format(i+1, ul)
+                if i == 0:
+                    ul.show_tree_into_html()
             raise Exception(colored('{} unknown instructions:'.format(ln), 'red')+text)
 
         if self.insert_childs:
@@ -678,6 +706,9 @@ You need no subclass by this class.
                     self.last_instruction = ins
 
     def try_local_instruction(self, line, line_number, parent):
+        # FIXME think, is it needed...
+        return
+
         #print('[ !!! try_local_instruction ] {} | {}'.format(self, line))
         stripped = line.strip()
         for name, val in self.get_locals().items():

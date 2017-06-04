@@ -29,7 +29,7 @@ class _InSimpleBase(_Base):
         raise NotImplementedError
 
     @classmethod
-    def is_instruction(cls, line):
+    def is_instruction(cls, line, parent=None, line_number=None):
         st = line.strip()
         if st.startswith(cls.IN_LEFT) and st.endswith(cls.IN_RIGHT):
             return True

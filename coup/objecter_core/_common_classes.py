@@ -59,7 +59,7 @@ class _DefBase(_Base):
         return self.__str__()
 
     @classmethod
-    def is_instruction(cls, line):
+    def is_instruction(cls, line, parent=None, line_number=None):
         if line.strip().startswith(cls.DEF_NAME + ' '):
             return True
 
@@ -88,7 +88,7 @@ class _SimpleReplacer(_Base):
         pass
 
     @classmethod
-    def is_instruction(cls, line):
+    def is_instruction(cls, line, parent=None, line_number=None):
         if type(cls.FIND_STRING) is list:
             for fs in cls.FIND_STRING:
                 if fs in line:
@@ -103,7 +103,7 @@ class _SimpleReplacer(_Base):
 class _LeftReplacerWithInstructs(_SimpleReplacer):
 
     @classmethod
-    def is_instruction(cls, line):
+    def is_instruction(cls, line, parent=None, line_number=None):
         return line.strip().startswith(cls.FIND_STRING)
 
     def get_full_findstring(self):
@@ -177,7 +177,7 @@ class _OperatorBase(_Base):
                                 ) for i, s in enumerate(line.split(self.OPERATOR)) ]
 
     @classmethod
-    def is_instruction(cls, line):
+    def is_instruction(cls, line, parent=None, line_number=None):
         #print(cls.OPERATOR, line)
         if cls.OPERATOR in line:
             #print(cls.OPERATOR, line)
@@ -235,7 +235,7 @@ class _Str(_Base):
         self.s = st[1:-1]
 
     @staticmethod
-    def is_instruction(line):
+    def is_instruction(line, parent=None, line_number=None):
         return _Str.tst_line_for_str(line)
 
     @staticmethod
@@ -257,7 +257,7 @@ class _Comment(_Base):
         self.s = line.strip()
 
     @staticmethod
-    def is_instruction(line):
+    def is_instruction(line, parent=None, line_number=None):
         st = line.strip()
         return st.startswith('#')
 
@@ -303,7 +303,7 @@ class _NumberInt(_Base):
         self.number = int(line.strip())
 
     @staticmethod
-    def is_instruction(line):
+    def is_instruction(line, parent=None, line_number=None):
         return line.strip().isdigit()
 
     def get_tree_main(self):
@@ -325,7 +325,7 @@ class _NumberFloat(_Base):
         self.number = float(line.strip())
 
     @staticmethod
-    def is_instruction(line):
+    def is_instruction(line, parent=None, line_number=None):
         return line.count('.') == 1 and all([ a.isdigit() for a in line.strip().split('.') ])
 
     def get_tree_main(self):
@@ -355,7 +355,7 @@ class _Substr(_Base):
         self.ranges = [ get_range(t.split(']')[0].split(':')) for t in lst[1:] ]
 
     @staticmethod
-    def is_instruction(line):
+    def is_instruction(line, parent=None, line_number=None):
         line = line.strip()
         return '[' in line and line.find('[') > 0 and line.count('[') == line.count(']') and ':' in line
 
@@ -381,7 +381,7 @@ class _ExpList(_Base):
         self.instructions = [ _Line.try_instruction(a, line_number=line_number, parent=self) for a in lst ]
 
     @staticmethod
-    def is_instruction(line):
+    def is_instruction(line, parent=None, line_number=None):
         return ',' in line
 
     def get_tree_main(self):
@@ -401,7 +401,7 @@ class _Format(_Base):
         self.in_instruction = _Line.try_instruction( lst[1].strip()[:-1], line_number=line_number, parent=self )
 
     @staticmethod
-    def is_instruction(line):
+    def is_instruction(line, parent=None, line_number=None):
         line = line.strip()
         if '.format(' in line and line.endswith(')'):
             st = line.split('.format(')[0].strip()

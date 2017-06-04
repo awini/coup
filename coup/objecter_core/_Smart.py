@@ -172,7 +172,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 self.line = _tmp_line
 
             @classmethod
-            def is_instruction(cls, line):
+            def is_instruction(cls, line, parent=None, line_number=None):
                 if cls.need_search[0]:
                     return True
 
@@ -208,7 +208,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         exp = cls.deleters_in.exps[exp_i]
                         #print(exp)
                         if hasattr(exp, 'is_me'):
-                            if not exp.is_me(line[pos:new_pos]):
+                            if not exp.is_me(line[pos:new_pos], parent=parent, line_number=line_number):
                                 return False
 
                     pos = new_pos
@@ -257,14 +257,16 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                 # if tst:
                 #     raise Exception('!!!')
-                if self.arg_to_instance:
-                    i = 0
-                    for name, handler in self.arg_to_instance.items():
-                        #print(self.in_block, name)
-                        self.in_block.blocks.insert(i, _GoodLine(self.otstup_string(4)+handler.arg_maker(name, handler.tip))) #'var {}:{}? = nil'.format(name, tip)))
-                        i += 1
-                    if i > 0:
-                        self.in_block.blocks.insert(i, _GoodLine(''))
+                if not _Base._IS_CATCHING:
+
+                    if self.arg_to_instance:
+                        i = 0
+                        for name, handler in self.arg_to_instance.items():
+                            #print(self.in_block, name)
+                            self.in_block.blocks.insert(i, _GoodLine(self.otstup_string(4)+handler.arg_maker(name, handler.tip))) #'var {}:{}? = nil'.format(name, tip)))
+                            i += 1
+                        if i > 0:
+                            self.in_block.blocks.insert(i, _GoodLine(''))
 
                     #line = '\n'.join([ 'var {}:{}?'.format(name, tip)
                     #                   for name, tip in self.arg_to_instance.items() ]) + line
@@ -299,7 +301,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     if self.need_search[0] == 1:
                         _Block._ignore_start_block = True
                     else:
-                        is_search = _SEARCH_IN.is_instruction(line)
+                        is_search = _SEARCH_IN.is_instruction(line, parent=parent, line_number=line_number)
                         if is_search:
                             self.instructions = [_SEARCH_IN(line, line_number=self.line_number, parent=self)]
                             self.need_search[0] = 0
@@ -386,10 +388,10 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             return self.__str__()
 
         @classmethod
-        def is_instruction(cls, line):
+        def is_instruction(cls, line, parent=None, line_number=None):
             #print('[ is_instruction ] {}'.format(ins_list))
             for ins in ins_list:
-                if ins.is_instruction(line):
+                if ins.is_instruction(line, parent=parent, line_number=line_number):
                     _install_current( ins )
                     return True
 
