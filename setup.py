@@ -9,4 +9,8 @@ setup(
     author_email='aa.veter@gmail.com',
     packages=['coup', 'coup.objecter_core', 'coup.swift', 'coup.py', 'coup.php'],
     scripts=[],
+    package_data={'coup': [
+        'external/highlight/styles/*.css',
+        'external/highlight/highlight.pack.js',
+    ]},
 )

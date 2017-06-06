@@ -1,6 +1,7 @@
 # coding: utf-8
 from copy import copy
 import sys as _sys
+from os.path import abspath, join, dirname
 
 try:
     from colorama import init
@@ -8,6 +9,10 @@ try:
     init()
 except ImportError:
     colored = lambda *args, **kwargs: None
+
+PATH_TO_THIS_DIR = dirname(abspath(__file__))
+PATH_TO_HIGHLIGHT_JS = join(PATH_TO_THIS_DIR, '..', 'external', 'highlight', 'highlight.pack.js')
+PATH_TO_HIGHLIGHT_CSS = join(PATH_TO_THIS_DIR, '..', 'external', 'highlight', 'styles', 'default.css')
 
 
 class _OtstupAbility:
@@ -186,8 +191,8 @@ Implement those methods in child:
 
             padding_left = 4 + self.otstup * 4
             childs_count = len(self.in_block.blocks) if self.in_block else 0
-            make_line = lambda text: '<span style="padding-left:{}px;min-width:800px;display:inline-block;">'.format(
-                padding_left) + text + '</span>'
+            make_line = lambda text, need_pad=True, hidden=False: '<span class="coup-line{add_class}"><span class="coup-freespace" style="width:{pad}px;"></span>'.format(
+                pad=padding_left if need_pad else 0, add_class=' hidden' if hidden else '') + text + '</span>'
 
             if self.__class__ == _UnknownLine:
                 _line_result = '_unk'
@@ -197,10 +202,10 @@ Implement those methods in child:
                 except:
                     _line_result = '-'
 
-            lines.append('<p id="p{}" class="child-of-p{}" style="{}" onclick="click_p(this);">'.format(_id, _parent_id, 'display:none;' if False and hidden else '') +
+            lines.append('<p id="p{}" class="child-of-p{}" style="{}" onclick="click_p(this);" onmouseover="show_info(this);">'.format(_id, _parent_id, 'display:none;' if False and hidden else '') +
                          '<span style="min-width:30px;display:inline-block;">{} ({}):</span>'.format(self.line_number, childs_count) +
-                         make_line(self.line) +
-                         make_line(str(self).replace('<','[').replace('>',']').replace('[31m','<span class="red">').replace('[0m','</span>')) +
+                         make_line(self.line, need_pad=False, hidden=True) +
+                         make_line(str(self).replace('<','[').replace('>',']').replace('[31m','<span class="red">').replace('[0m','</span>'), hidden=True) +
                          make_line(_line_result) +
                          '</p>')
 
@@ -220,34 +225,72 @@ Implement those methods in child:
         root_class = self.get_parent_class()
 
         html = '''<html>
-        <head>
-        <style>
-        html, body {
-            min-width:3000px;
+<head>
+<meta charset="UTF-8">
+<style>
+html, body {
+    _min-width:3000px;
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+}
+.code-haver {
+    margin: 0; padding: 0;
+    width: 100%; height: 90%;
+    overflow: auto;
+}
+p {margin:0; padding:0; height:14px; border-bottom_:1px solid #aaa; font-family_:"Helvetica"; color:#333; font-size:12px;}
+p:hover {
+    background: #a2c7e3; /* Цвет фона под ссылкой */
+    color: #08406b; /* Цвет ссылки */
+}
+p .coup-line {
+    border-right:1px solid #aaa;
+    min-width:800px;display:inline-block;
+    width:800px;
+    overflow:hidden;
+    height:14px;
+}
+p .hidden {
+    display: none;
+}
+p .coup-freespace {
+    display:inline-block;
+}
+.red {color:#ff0000;}
+</style>
+<link rel="stylesheet" href="{highlight_css}">
+<script src="{highlight_js}"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</head>
+<script>
+function click_p(p) {
+    var i;
+    var _id = p.id;
+    console.log('p:', p);
+    var pps = document.getElementsByTagName("p");
+    for (i=0; i<pps.length;i++) {
+        var ch = pps[i];
+        //console.log('parent:', ch.className);
+        if (ch.className == 'child-of-'+_id) {
+            console.log('child:', ch);
+            ch.style.display = 'block';
         }
-        p {margin:0; padding:0;height:20px; border-bottom:1px solid #aaa; font-family:"Helvetica"; color:#333; font-size:12px;}
-        .red {color:#ff0000;}
-        </style>
-        </head>
-        <script>
-        function click_p(p) {
-            var i;
-            var _id = p.id;
-            console.log('p:', p);
-            var pps = document.getElementsByTagName("p");
-            for (i=0; i<pps.length;i++) {
-                var ch = pps[i];
-                //console.log('parent:', ch.className);
-                if (ch.className == 'child-of-'+_id) {
-                    console.log('child:', ch);
-                    ch.style.display = 'block';
-                }
-            }
-        }
-        </script>
-        <body>
-        ''' + root_class.make_objects_tree_html() + '''
-        </body>'''
+    }
+}
+function show_info(p) {
+    info.innerHTML = p.children[1].innerHTML + '<br>' + p.children[3].innerHTML + '<br>' + p.children[2].innerHTML;
+}
+</script>
+<body>
+<div class='code-haver'>
+<pre><code class="python">
+    '''.replace('{highlight_js}', PATH_TO_HIGHLIGHT_JS).replace(
+            '{highlight_css}', PATH_TO_HIGHLIGHT_CSS) + root_class.make_objects_tree_html() + '''
+</code></pre>
+</div>
+<div id='info'>
+</div>
+</body>'''
         with open('build/coup_errors.html', 'w') as f:
             f.write(html)
 
