@@ -173,17 +173,23 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def is_instruction(cls, line, parent=None, line_number=None):
+
+                _Line.log('[ {} ].is_instruction [{}]: '.format(IN_FORMAT, line_number + 1) + line)
+
                 if cls.need_search[0]:
+                    _Line.log('\tTRUE: need_search: {}'.format(cls.need_search[0]))
                     return True
 
                 _on_is_instruction(cls, line)
 
                 if OUT_FORMAT == NotImplemented:
+                    _Line.log('\tFALSE: OUT_FORMAT == NotImplemented')
                     return False
 
                 line = line.strip()
                 need_debug = False #'self.ttt' == line and 'self.' in cls.deleters_in
                 pos = -1
+                last_pos = 0
                 i = -1
                 exp_i = -1
 
@@ -203,13 +209,17 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     if need_debug:
                         print('>>>>>', line, '>>', cls.deleters_in, '>>', part, ':', pos)
 
-                    if pos > 0:
+                    if new_pos > last_pos:
                         exp_i += 1
-                        exp = cls.deleters_in.exps[exp_i]
-                        #print(exp)
-                        if hasattr(exp, 'is_me'):
-                            if not exp.is_me(line[pos:new_pos], parent=parent, line_number=line_number):
-                                return False
+                        if len(cls.deleters_in.exps) > exp_i:
+                            exp = cls.deleters_in.exps[exp_i]
+                            #print(exp)
+                            if hasattr(exp, 'is_me'):
+                                if not exp.is_me(line[last_pos:new_pos], parent=parent, line_number=line_number):
+                                    _Line.log('\tFALSE: not is_me by exp: {},\n\tline: {}'.format(exp, line[last_pos:new_pos]))
+                                    return False
+
+                    last_pos = new_pos + len(part)
 
                     pos = new_pos
 
@@ -218,11 +228,13 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     if pos < 0:#part not in line:
                         if need_debug:
                             print('\tFALSE')
+                        _Line.log('\tFALSE: pos < 0')
                         return False
                     if i == 0 and cls._starts_with_deleter:
                         if pos != 0:
                             if need_debug:
                                 print('\tFALSE')
+                            _Line.log('\tFALSE: pos != 0')
                             return False
                     pos += len(part) #len(part)-1
 
@@ -230,11 +242,15 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     #_last_pos = pos + len(part)-1
                 if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
                     if line[pos:] == cls.deleters_in[-1]:
+                        _Line.log('\tTRUE: line[pos:] == cls.deleters_in[-1]')
                         return True
                     #print('>>>> {} = {}'.format(part, line[pos:]))
                     #print('\tOK', i, '/', len(cls.deleters_in.exps), not_empty_deleters, '=', line, IN_FORMAT)
                     #print('\t', pos, len(line), '=', line[pos:], '!=', cls.deleters_in[-1], cls.deleters_in)
+                    _Line.log('\tFALSE: need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
                     return False
+
+                _Line.log('\tTRUE: return True')
                 return True
 
             def get_tree_main(self):
@@ -499,7 +515,7 @@ class Smarter(object):
     OUT_START = []
 
     @classmethod
-    def translate(cls, text, filename=None, remove_space_lines=False, strip=False):
+    def translate(cls, text, filename=None, remove_space_lines=False, strip=False, logger=None):
         if cls._GLOBALS:
             for name, value in cls._GLOBALS.items():
                 try:
@@ -507,7 +523,7 @@ class Smarter(object):
                     value.name_in_smarter = name
                 except AttributeError:
                     pass
-        _getter = _Line.init_instructs(cls._GLOBALS, filename=filename)[1]
+        _getter = _Line.init_instructs(cls._GLOBALS, filename=filename, logger=logger)[1]
         out_text = _getter(text)
         out_text = '\n'.join(cls.OUT_START) + out_text
         if remove_space_lines:
@@ -517,9 +533,16 @@ class Smarter(object):
         return out_text
 
     @classmethod
-    def translate_file(cls, filename, to_filename=None, remove_space_lines=False, strip=False):
+    def translate_file(cls, filename, to_filename=None, remove_space_lines=False, strip=False,
+                       log_file=None):
         text = open(filename).read()
-        out_text = cls.translate(text, filename=filename, remove_space_lines=remove_space_lines, strip=strip)
+        logger = open(log_file, 'w') if log_file else None
+
+        out_text = cls.translate(text, filename=filename, remove_space_lines=remove_space_lines, strip=strip,
+                                 logger=logger)
+        if logger:
+            logger.close()
+
         if to_filename:
             with open(to_filename, 'w') as f:
                 f.write(out_text)
