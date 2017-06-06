@@ -31,6 +31,8 @@ class _ExpString:
 
     def try_instruction(self, line, line_number, parent=None):
 
+        _Line.log('_ExpString.try_instruction [{}]: '.format(line_number+1) + line)
+
         rets = []
         for t in self.types:
             ret = None
@@ -41,7 +43,10 @@ class _ExpString:
             if ret:
                 rets.append(ret)
 
+        _Line.log('\tappended: {}'.format(rets))
+
         if len(rets):
+            _Line.log('\treturn: {}'.format(rets[0]))
             return rets[0]
 
 class _ExpType:
@@ -93,7 +98,7 @@ class _ExpName(_ExpType):
 
     @classmethod
     def is_me(cls, line, parent=None, line_number=None):
-        return ' ' not in line
+        return ' ' not in line.strip()
 
     @classmethod
     def try_instruction(cls, line, line_number, parent, exp_string=None):
@@ -280,12 +285,16 @@ class _ExpGetSimpleLocal(_ExpType):
         stripped = line.strip()
         _locals = parent.get_locals()
 
-        if line_number == 37:
-            print('......>> {}'.format(line))
-        #     raise Exception('37: {}\n\t_locals: {}\n\tparent: {}'.format(line, _locals, parent))
+        if hasattr(_locals, '__call__'):
+            _locals = _locals(parent)
+            _Line.log('_ExpGetSimpleLocal._locals: {}'.format(_locals))
+            # return None
 
         if hasattr(_locals, '__call__'):
+            _Line.log('_ExpGetSimpleLocal._locals is callable: {}'.format(_locals))
             return None
+
+        _Line.log('\tstripped( {} ) in _locals = {}'.format(stripped, stripped in _locals))
 
         return stripped in _locals
 

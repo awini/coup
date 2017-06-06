@@ -375,6 +375,7 @@ class _Line(_Base):
     _INSTRUCTS = None
     _GLOBALS = {}
     _filename = None
+    _logger = None
 
     def __init__(self, line, parent=None, line_number=0, new_name=False):
         super(_Line, self).__init__(line, parent, line_number)
@@ -396,8 +397,14 @@ class _Line(_Base):
         return self.__str__()
 
     @staticmethod
-    def init_instructs(_globals, filename=None, only_tree=False):
+    def log(text):
+        if _Line._logger:
+            _Line._logger.write(text + '\n')
+
+    @staticmethod
+    def init_instructs(_globals, filename=None, only_tree=False, logger=None):
         _Line._filename = filename
+        _Line._logger = logger
 
         _Line._INSTRUCTS = [ v for name, v in _globals.items()
                              if not name.startswith('_') and hasattr(v, 'is_instruction') ]
