@@ -124,6 +124,8 @@ Implement those methods in child:
         # print('......', self.parent, self.parent.locals)
         # print('......', self, self.locals)
         if hasattr(self, 'locals') and self.locals:
+            if hasattr(self.locals, '__call__'):
+                return self.locals(self)
             return self.locals
         parent = self.parent
         if parent:
@@ -141,7 +143,7 @@ Implement those methods in child:
         return obj
 
     def is_def(self):
-        return hasattr(self, 'locals') and self.locals != None
+        return hasattr(self, 'locals') and self.locals != None      # FIXME
 
     def get_parent_block(self, child_blocker=None):
         if child_blocker:
@@ -186,11 +188,18 @@ Implement those methods in child:
             _id = ids.index(self)
             _parent_id = ids.index(self.parent.start_instruction) if self.parent and self.parent.start_instruction else '-'
 
+            is_last_child = False
+            if self.parent and len(self.parent.blocks) > 0:
+                last_parent_block = self.parent.blocks[-1]
+                if self == last_parent_block or (hasattr(last_parent_block, 'start_instruction') and last_parent_block.start_instruction == self):
+                    is_last_child = True
+
             if self.__class__ == _UnknownLine:
                 self.init_otstup(self.line)
 
             padding_left = 4 + self.otstup * 4
-            childs_count = len(self.in_block.blocks) if self.in_block else 0
+            is_block_start = True if self.in_block else False
+            childs_count = len(self.in_block.blocks) if is_block_start else 0
             make_line = lambda text, need_pad=True, hidden=False: '<span class="coup-line{add_class}"><span class="coup-freespace" style="width:{pad}px;"></span>'.format(
                 pad=padding_left if need_pad else 0, add_class=' hidden' if hidden else '') + text + '</span>'
 
@@ -202,11 +211,19 @@ Implement those methods in child:
                 except:
                     _line_result = '-'
 
+            if is_last_child:
+                _line_result += '\n' + self.block.otstup_string(-8) + self.parent._BLOCK_END
+            if is_block_start:
+                _line_result += ' ' + self._BLOCK_START
+
+            _locals = self.get_locals()
+
             lines.append('<p id="p{}" class="child-of-p{}" style="{}" onclick="click_p(this);" onmouseover="show_info(this);">'.format(_id, _parent_id, 'display:none;' if False and hidden else '') +
                          '<span style="min-width:30px;display:inline-block;">{} ({}):</span>'.format(self.line_number, childs_count) +
                          make_line(self.line, need_pad=False, hidden=True) +
                          make_line(str(self).replace('<','[').replace('>',']').replace('[31m','<span class="red">').replace('[0m','</span>'), hidden=True) +
                          make_line(_line_result) +
+                         make_line(str(_locals), hidden=True) +
                          '</p>')
 
         make_full_line(self)
@@ -233,27 +250,39 @@ html, body {
     margin: 0; padding: 0;
     width: 100%; height: 100%;
 }
+.top-panel {
+    margin: 0; padding: 0;
+    width: 100%; height: 80%;
+}
 .code-haver {
     margin: 0; padding: 0;
-    width: 100%; height: 90%;
+    width: 50%; height: 100%;
     overflow: auto;
+    float:left;
 }
-p {margin:0; padding:0; height:14px; border-bottom_:1px solid #aaa; font-family_:"Helvetica"; color:#333; font-size:12px;}
-p:hover {
+.log-haver {
+    margin: 0; padding: 0;
+    height: 100%; width: 50%;
+    overflow: auto;
+    float:left;
+    halign:left;
+}
+.code-haver p {margin:0; padding:0; height:14px; border-bottom_:1px solid #aaa; font-family_:"Helvetica"; color:#333; font-size:12px;}
+.code-haver p:hover {
     background: #a2c7e3; /* Цвет фона под ссылкой */
     color: #08406b; /* Цвет ссылки */
 }
-p .coup-line {
+.code-haver p .coup-line {
     border-right:1px solid #aaa;
     min-width:800px;display:inline-block;
     width:800px;
     overflow:hidden;
     height:14px;
 }
-p .hidden {
+.code-haver p .hidden {
     display: none;
 }
-p .coup-freespace {
+.code-haver p .coup-freespace {
     display:inline-block;
 }
 .red {color:#ff0000;}
@@ -278,19 +307,24 @@ function click_p(p) {
     }
 }
 function show_info(p) {
-    info.innerHTML = p.children[1].innerHTML + '<br>' + p.children[3].innerHTML + '<br>' + p.children[2].innerHTML;
+    info.innerHTML = 'source: ' + p.children[1].innerHTML + '<br>result: ' + p.children[3].innerHTML + '<br>object: ' + p.children[2].innerHTML + '<br>locals: ' + p.children[4].innerHTML;
 }
 </script>
 <body>
-<div class='code-haver'>
-<pre><code class="python">
-    '''.replace('{highlight_js}', PATH_TO_HIGHLIGHT_JS).replace(
-            '{highlight_css}', PATH_TO_HIGHLIGHT_CSS) + root_class.make_objects_tree_html() + '''
-</code></pre>
+<div class=top-panel>
+    <div class='code-haver'>
+        <pre><code class="python">
+            '''.replace('{highlight_js}', PATH_TO_HIGHLIGHT_JS).replace(
+                    '{highlight_css}', PATH_TO_HIGHLIGHT_CSS) + root_class.make_objects_tree_html() + '''
+        </code></pre>
+    </div>
+    <div class='log-haver'>
+        <p>{log_text}</p>
+    </div>
 </div>
 <div id='info'>
 </div>
-</body>'''
+</body>'''.replace('{log_text}', open('build/execute_android.log').read().replace('>', ']').replace('<','[').replace('\n', '<br>'))
         with open('build/coup_errors.html', 'w') as f:
             f.write(html)
 
@@ -300,6 +334,12 @@ function show_info(p) {
         com = os.path.join('build', 'coup_errors.html')
         if sys.platform == 'darwin':
             com = 'open ' + com
+        elif sys.platform.startswith('win'):
+            com2 = r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" ' + com
+            ret = call(com2, shell=True)
+            if ret < 0:
+                call(com, shell=True)
+            return
 
         call(com, shell=True)
 

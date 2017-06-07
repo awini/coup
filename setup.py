@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='coup',
-    version='0.0.7',
+    version='0.0.8',
     description='BP Compas Coup Project',
     author='BP Compas Andrew Andreev-Krasnoselsky',
     author_email='aa.veter@gmail.com',
