@@ -188,10 +188,10 @@ Implement those methods in child:
         def make_full_line(self, hidden=False):
             ids.append(self)
             _id = ids.index(self)
-            _parent_id = ids.index(self.parent.start_instruction) if self.parent and self.parent.start_instruction else '-'
+            _parent_id = ids.index(self.parent.start_instruction) if self.parent and hasattr(self.parent, 'start_instruction') and self.parent.start_instruction else '-'
 
             is_last_child = False
-            if self.parent and len(self.parent.blocks) > 0:
+            if self.parent and hasattr(self.parent, 'blocks') and len(self.parent.blocks) > 0:
                 last_parent_block = self.parent.blocks[-1]
                 if self == last_parent_block or (hasattr(last_parent_block, 'start_instruction') and last_parent_block.start_instruction == self):
                     is_last_child = True
@@ -213,10 +213,11 @@ Implement those methods in child:
                 except:
                     _line_result = '-'
 
-            if is_last_child:
-                _line_result += '\n' + self.block.otstup_string(-8) + self.parent._BLOCK_END
             if is_block_start:
                 _line_result += ' ' + self._BLOCK_START
+            elif is_last_child:
+                _line_result += ' ' + self.parent._BLOCK_END
+
 
             _locals = self.get_locals()
 
@@ -539,7 +540,11 @@ class _Line(_Base):
         for ins in instructers:
             if ins.is_instruction(line, parent=parent, line_number=line_number):
                 #print(ins)
-                ins_o = ins(line, parent=parent, line_number=line_number)
+                try:
+                    ins_o = ins(line, parent=parent, line_number=line_number)
+                except Exception:
+                    _UnknownLine._unknown_lines.append(_UnknownLine(line))
+                    return
                 ins_o.init_otstup(line)
 
                 unknown = ins_o.get_unknown_instructions()
