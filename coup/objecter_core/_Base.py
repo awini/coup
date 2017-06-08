@@ -132,6 +132,8 @@ Implement those methods in child:
             #print('......', parent)
             if hasattr(parent, 'locals') and parent.locals:
                 #print('.......', parent.locals)
+                if hasattr(parent.locals, '__call__'):
+                    return parent.locals(parent)
                 return parent.locals
             return parent.get_locals()
 

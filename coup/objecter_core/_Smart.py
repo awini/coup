@@ -255,7 +255,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             def get_tree_main(self):
                 #print('::: {} --> {} : {}'.format(self.line, self, self.instructions))
-                trees = [ ins.get_tree() for ins in self.instructions ] #line = '|'.join()
+                try:
+                    trees = [ ins.get_tree() for ins in self.instructions ] #line = '|'.join()
+                except Exception:
+                    print('line: {}\ninss: {}'.format(self.line, self.instructions))
+                    raise
                 #print( trees, self.deleters_out )
                 #print(len(self.deleters_in), len(self.instructions), self.deleters_in[0], self.instructions[0])
 

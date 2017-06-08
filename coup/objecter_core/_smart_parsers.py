@@ -272,8 +272,10 @@ class _ExpGetSimpleLocal(_ExpType):
         # if line_number == 37:
         #     raise Exception('37')
 
-        if hasattr(_locals, '__call__'):
-            return None
+        # if hasattr(_locals, '__call__'):
+        #     return None
+        # while hasattr(_locals, '__call__'):
+        #     _locals = _locals(parent)
 
         if stripped in _locals:
             return _GoodLine(line, line_number=line_number, parent=parent)
