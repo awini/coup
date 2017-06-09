@@ -3,19 +3,38 @@ from ..objecter_core._common_classes import ( _Class, _NumberInt, _Str, _Substr,
                                               _Format, _ExpList, _DefBase, _NumberFloat )
 from ..objecter_core._Smart import accord
 from ..objecter_core._Base import _Base
+from ..common.all import Nonnne, If
 
+Nonnne = Nonnne.make(
+    OUT='nil')
 
-Nonnne = accord(
-    IN='None',
-    OUT='nil',
+If = If.make(
+    OUT='if <EXP>')
+
+# Nonnne = accord(
+#     IN='None',
+#     OUT='nil',
+# )
+#
+# If = accord(
+#     IN='if <EXP>:',
+#     OUT='if <EXP>',
+#     INDEX=_Base.FULL_LINE_PARENTER,
+#     locals=lambda self:self.parent.get_locals()
+# )
+
+ExpList = accord(
+    IN='[<EXP:LIST>]',
+    OUT='[<EXP:LIST>]',
+    #INDEX=_Base.IN_LINE_CHILD_LAST
 )
 
-If = accord(
-    IN='if <EXP>:',
-    OUT='if <EXP>',
-    INDEX=_Base.FULL_LINE_PARENTER,
-    locals=lambda self:self.parent.get_locals()
+Exp3List = accord(
+    IN='[<EXP>, <EXP>, <EXP>]',
+    OUT='[<EXP>, <EXP>, <EXP>]',
+    #INDEX=_Base.IN_LINE_CHILD_LAST
 )
+
 
 Else = accord(
     IN='else:',
