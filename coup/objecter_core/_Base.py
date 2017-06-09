@@ -334,7 +334,7 @@ function show_info(p) {
         import os, sys
         from subprocess import call
 
-        com = os.path.join('build', 'coup_errors.html')
+        com = os.path.abspath(os.path.join('build', 'coup_errors.html'))
         if sys.platform == 'darwin':
             com = 'open ' + com
         elif sys.platform.startswith('win'):
