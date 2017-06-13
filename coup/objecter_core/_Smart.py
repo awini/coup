@@ -25,6 +25,7 @@ try:
 except ImportError:
     # Python 2
     from itertools import izip_longest
+from inspect import isclass
 
 from copy import copy
 
@@ -43,7 +44,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_block_end=lambda self, block:None,
            on_get_tree=lambda self, text:text,
            on_good_line=lambda self, line:line,
-           on_is_instruction=lambda cls, line:None,
+           on_is_instruction=lambda cls, line, line_number:None,
            on_new_name=lambda self, name, line, line_number:None,
            BLOCK_START='{', BLOCK_END='}', INSTRUCTION_LINE_ENDING='',
            full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
@@ -56,6 +57,10 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
     if arg_maker and '^arg_to_instance' not in IN_FORMAT:
         raise Exception('It has no "<EXP:^arg_to_instance>" so you should not set "arg_maker"')
+
+    if isclass(OUT):
+        _handler = OUT
+        OUT = _handler.OUT
 
     if OUT != None:
         OUT_FORMAT = OUT
@@ -180,7 +185,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     _Line.log('\tTRUE: need_search: {}'.format(cls.need_search[0]))
                     return True
 
-                _on_is_instruction(cls, line)
+                _on_is_instruction(cls, line, line_number)
 
                 if OUT_FORMAT == NotImplemented:
                     _Line.log('\tFALSE: OUT_FORMAT == NotImplemented')

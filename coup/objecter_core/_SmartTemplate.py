@@ -15,6 +15,9 @@ class template:
         d.update(kwargs)
         return accord(**d)
 
+    def get_in(self):
+        return self._kwargs['IN']
+
 
 def urls(*args):
     pass

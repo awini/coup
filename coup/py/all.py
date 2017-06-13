@@ -102,12 +102,12 @@ class ExpList(_ExpList):
     pass
 
 
-class Format(_Format):
-
-    REPLACE_POINT_TO = '.'
-
-    def get_format_text(self):
-        return '"{:' + self.s + '}".format(' + self.in_instruction.get_tree() + ')'
+# class Format(_Format):
+#
+#     REPLACE_POINT_TO = '.'
+#
+#     def get_format_text(self):
+#         return '"{:' + self.s + '}".format(' + self.in_instruction.get_tree() + ')'
 
 
 ForIn = accord(
