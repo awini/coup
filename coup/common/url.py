@@ -10,6 +10,9 @@ class url:
         self.OUT = OUT
         self.kwargs = kwargs
 
+class Needed:
+    pass
+
 
 class Urler:
 
@@ -27,6 +30,7 @@ class Urler:
 
         _unknown_exps = []
         _error_lst = []
+        _needed_kwargs = []
 
         for url in lst:
             if url.IN not in _d:
@@ -35,8 +39,16 @@ class Urler:
                 # raise Exception('Unknown exp: {}'.format(url.IN))
             o = _d[url.IN]
             name = o._name
+            for n, val in o._kwargs.items():
+                if val == Needed and n not in url.kwargs:
+                    print(n, url.kwargs)
+                    _needed_kwargs.append('{} | {}.{}'.format(url.IN, name, n))
+                    continue
             _d[url.IN] = o.make(OUT=url.OUT, **url.kwargs)
             setattr(NewTranslater, name, _d[url.IN])
+
+        if len(_needed_kwargs) > 0:
+            _error_lst.append('Needed kwargs:\n\t{}'.format('\n\t'.join(_needed_kwargs)))
 
         if len(_unknown_exps) > 0:
             _error_lst.append('Unknown exps:\n\t{}'.format('\n\t'.join(_unknown_exps)))
