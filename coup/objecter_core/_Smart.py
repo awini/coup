@@ -60,7 +60,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
         raise Exception('You want "<EXP:^arg_to_instance>" but I need "arg_maker" for it')
 
     _handler = None
-    if isclass(OUT):
+    if isclass(OUT) or OUT.__class__.__name__.endswith('Handler'):
         _handler = OUT
         OUT = _handler.OUT
 
