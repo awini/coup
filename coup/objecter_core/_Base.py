@@ -104,8 +104,9 @@ Implement those methods in child:
             if type(ins) == tip:
                 return ins
 
-    def get_parent_class(self, full_name=False):
+    def get_parent_class(self, full_name=False, or_last_true=False):
         parent = self.parent
+        last_parent = self
 
         cls_name = lambda: parent.START_NAME if hasattr(parent, 'START_NAME') else parent.__class__.__name__
 
@@ -117,6 +118,10 @@ Implement those methods in child:
                 parent = parent.parent
             if parent:
                 parent = parent.start_instruction
+            if parent:
+                last_parent = parent
+        if not parent and or_last_true:
+            return last_parent
         return parent
 
     def get_locals(self):
@@ -234,7 +239,7 @@ Implement those methods in child:
             for bins in self.in_block.instuctions_lines_gen():
                 make_full_line(bins, hidden=True)
 
-        return '\n'.join(lines)
+        return '\n'.join([ line for line in lines if line.__class__ != _ToDeleteLine ])
 
     def get_tree_main(self):
         inss = self.parent.instructions if self.parent else ''
@@ -242,7 +247,7 @@ Implement those methods in child:
         raise NotImplementedError('in: {} in {}\n\t{}'.format(self, self.parent, inss))
 
     def show_tree_into_html(self):
-        root_class = self.get_parent_class()
+        root_class = self.get_parent_class(or_last_true=True)
 
         html = '''<html>
 <head>
@@ -332,19 +337,21 @@ function show_info(p) {
             f.write(html)
 
         import os, sys
-        from subprocess import call
+        from subprocess import Popen
 
         com = os.path.abspath(os.path.join('build', 'coup_errors.html'))
         if sys.platform == 'darwin':
             com = 'open ' + com
         elif sys.platform.startswith('win'):
-            com2 = r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" ' + com
-            ret = call(com2, shell=True)
-            if ret < 0:
-                call(com, shell=True)
-            return
+            path = r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+            if os.path.exists(path):
+                com = r'"{}" '.format(path) + com
+            # ret = call(com2, shell=True)
+            # if ret < 0:
+            #     call(com, shell=True)
+            # return
 
-        call(com, shell=True)
+        Popen(com, shell=True)
 
     def print_tree_base(self):
         raise NotImplementedError
