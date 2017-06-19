@@ -119,6 +119,14 @@ Implement those methods in child:
                 parent = parent.start_instruction
         return parent
 
+    def get_block_level(self):
+        i = 0
+        parent = self
+        while hasattr(parent, 'parent') and hasattr(parent.parent, 'start_instruction'):
+            parent = parent.parent.start_instruction
+            i += 1
+        return i
+
     def get_locals(self):
         # print('......', self.block)
         # print('......', self.parent, self.parent.locals)

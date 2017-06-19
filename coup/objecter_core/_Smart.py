@@ -305,6 +305,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             locals = None
             TYPE_OUT = _TYPE_OUT
 
+            _OUT_FORMAT = OUT_FORMAT
+
             smarter = None
             name_in_smarter = None
 
@@ -524,7 +526,8 @@ class Smarter(object):
     OUT_START = []
 
     @classmethod
-    def translate(cls, text, filename=None, remove_space_lines=False, strip=False, logger=None):
+    def translate(cls, text, filename=None, remove_space_lines=False, strip=False, logger=None,
+                  only_tree=False, remove_double_space_lines=False):
         if cls._GLOBALS:
             for name, value in cls._GLOBALS.items():
                 try:
@@ -532,23 +535,29 @@ class Smarter(object):
                     value.name_in_smarter = name
                 except AttributeError:
                     pass
-        _getter = _Line.init_instructs(cls._GLOBALS, filename=filename, logger=logger)[1]
+        _getter = _Line.init_instructs(cls._GLOBALS, filename=filename, logger=logger,
+                                       only_tree=only_tree)[1]
         out_text = _getter(text)
+        if only_tree:
+            return out_text
         out_text = '\n'.join(cls.OUT_START) + out_text
         if remove_space_lines:
             out_text = cls._remove_space_lines(out_text)
+        if remove_double_space_lines:
+            while '\n\n\n' in out_text:
+                out_text = out_text.replace('\n\n\n', '\n\n')
         if strip:
             out_text = out_text.strip()
         return out_text
 
     @classmethod
     def translate_file(cls, filename, to_filename=None, remove_space_lines=False, strip=False,
-                       log_file=None):
+                       log_file=None, remove_double_space_lines=False):
         text = open(filename).read()
         logger = open(log_file, 'w') if log_file else None
 
         out_text = cls.translate(text, filename=filename, remove_space_lines=remove_space_lines, strip=strip,
-                                 logger=logger)
+                                 logger=logger, remove_double_space_lines=remove_double_space_lines)
         if logger:
             logger.close()
 
