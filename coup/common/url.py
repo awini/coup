@@ -1,4 +1,6 @@
 # coding: utf-8
+from inspect import isclass
+
 from ..objecter_core._SmartTemplate import template
 from ..objecter_core._Smart import Translater
 
@@ -44,6 +46,11 @@ class Urler:
                     print(n, url.kwargs)
                     _needed_kwargs.append('{} | {}.{}'.format(url.IN, name, n))
                     continue
+
+            if isclass(url.OUT):
+                print('-----> give _translater')
+                url.OUT._translater = NewTranslater
+
             _d[url.IN] = o.make(OUT=url.OUT, **url.kwargs)
             setattr(NewTranslater, name, _d[url.IN])
 

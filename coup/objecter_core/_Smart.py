@@ -50,15 +50,17 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
            arg_maker=None):
 
-
-
     if IN != None:
         IN_FORMAT = IN
 
     if arg_maker and '^arg_to_instance' not in IN_FORMAT:
         raise Exception('It has no "<EXP:^arg_to_instance>" so you should not set "arg_maker"')
 
-    if isclass(OUT):
+    if '^arg_to_instance' in IN_FORMAT and not arg_maker:
+        raise Exception('You want "<EXP:^arg_to_instance>" but I need "arg_maker" for it')
+
+    _handler = None
+    if isclass(OUT) or OUT.__class__.__name__.endswith('Handler'):
         _handler = OUT
         OUT = _handler.OUT
 
@@ -70,17 +72,27 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
     _SEARCH_IN = _smart(IN = SEARCH_IN, OUT = SEARCH_IN if not SEARCH_OUT else SEARCH_OUT) if SEARCH_IN else None
 
-    _INDEX = INDEX
-    _TYPE_OUT = TYPE_OUT
-    _on_block_start = on_block_start
-    _on_block_before_start = on_block_before_start
-    _on_block_end = on_block_end
-    _on_init = on_init
-    _on_init_end = on_init_end
-    _on_good_line = on_good_line
-    _arg_maker = arg_maker
-    _on_is_instruction = on_is_instruction
-    _on_new_name = on_new_name
+    def _arg(name, default):
+        value = default
+        if _handler and hasattr(_handler, name):
+            value = getattr(_handler, name)
+            #print('GOT: {}.{} = {}'.format(_handler.__name__, name, value))
+        return value
+
+    _INDEX = _arg('INDEX', INDEX)
+    _TYPE_OUT = _arg('TYPE_OUT', TYPE_OUT)
+    _on_block_start = _arg('on_block_start', on_block_start)
+    _on_block_before_start = _arg('on_block_before_start', on_block_before_start)
+    _on_block_end = _arg('on_block_end', on_block_end)
+    _on_init = _arg('on_init', on_init)
+    _on_init_end = _arg('on_init_end', on_init_end)
+    _on_good_line = _arg('on_good_line', on_good_line)
+    _arg_maker = _arg('arg_maker', arg_maker)
+    _on_is_instruction = _arg('on_is_instruction', on_is_instruction)
+    _on_new_name = _arg('on_new_name', on_new_name)
+    _on_instruction = _arg('on_instruction', on_instruction)
+    _arg_to_instance = _arg('arg_to_instance', arg_to_instance)
+    _locals = _arg('locals', locals)
 
     def make_smart(IN_FORMAT):
 
@@ -318,8 +330,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             _INSTRUCTION_LINE_ENDING = INSTRUCTION_LINE_ENDING
 
             def __init__(self, line, parent=None, line_number=0):
-                self.locals = locals
-                self.arg_to_instance = arg_to_instance
+                self.locals = _locals
+                self.arg_to_instance = _arg_to_instance
 
                 super(Smart, self).__init__(line, parent, line_number)
 
@@ -343,7 +355,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 _on_init(self)
 
                 def on_my_instruction(i, ins):
-                    return on_instruction(self, i, ins)
+                    # if _handler:
+                    #     print('ON INSTRUCTION: {}'.format(_on_instruction))
+                    return _on_instruction(self, i, ins)
 
                 self.init_exps(line, on_my_instruction)
 
