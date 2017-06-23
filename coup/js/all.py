@@ -2,6 +2,7 @@
 from ..objecter_core._common_classes import ( _Class, _NumberInt, _Str, _Substr,
                                               _Format, _ExpList, _DefBase, _NumberFloat )
 from ..common.all import BasePython, url
+from ..common.url import think
 
 
 BasePython = BasePython.connect_handlers([
@@ -29,16 +30,3 @@ class NumberFloat(_NumberFloat):
     TYPE_OUT = 'Float'
 
 
-think = lambda s:None
-
-think('''
-
-        === Python ===                              === Javascript ===
-
-class `NewName`(`ParentName`):      >>>         class `NewName` { // `ParentName`
-
-    def `new_name`(self):           >>>             `new_name`() {
-        print('`string`')           >>>                 console.log('`string`')
-                                                    }
-                                                }
-''')

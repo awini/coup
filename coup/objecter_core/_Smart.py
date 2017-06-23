@@ -93,6 +93,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     _on_instruction = _arg('on_instruction', on_instruction)
     _arg_to_instance = _arg('arg_to_instance', arg_to_instance)
     _locals = _arg('locals', locals)
+    _BLOCK_END = BLOCK_END
 
     def make_smart(IN_FORMAT):
 
@@ -127,7 +128,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                 need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
-                self.deleters_out = _ExpParser(OUT_FORMAT(self)) if callable(OUT_FORMAT) else _ExpParser(OUT_FORMAT)
+                out_format = OUT_FORMAT(self) if callable(OUT_FORMAT) else OUT_FORMAT
+                # if len(_BLOCK_END) > 0:
+                #     if out_format.endswith(_BLOCK_END):
+                #         raise Exception(out_format)
+                #         out_format = out_format[:-len(_BLOCK_END)]
+                self.deleters_out = _ExpParser(out_format)
 
                 if need_debug: #and OUT_FORMAT == '':
                     print('--------')

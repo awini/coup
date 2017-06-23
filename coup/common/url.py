@@ -69,3 +69,49 @@ class Urler:
             raise Exception('\n\n'.join(_error_lst))
 
         return NewTranslater
+
+
+def think(text, BLOCK_START='{', BLOCK_END='}'): # FIXME
+    lines = text.split('\n')
+    urls = []
+    for line in lines:
+        if '>>>' in line:
+            line = to_exps(line)
+            src, dst = [ a.strip() for a in line.split('>>>') ]
+            if len(BLOCK_START) > 0:
+                if dst.endswith(BLOCK_START):
+                    dst = dst[:-len(BLOCK_START)]
+            if len(BLOCK_END) > 0:
+                if dst.startswith(BLOCK_END):
+                    dst = dst[len(BLOCK_END):]
+            print(':::: ' + src + ' >>> ' + dst)
+            urls.append(url(src, OUT=dst))
+    return urls
+
+
+def to_exps(line):
+    while line.count('`') >= 2:
+        start = line.find('`')
+        stop = line.find('`', start+1)
+        exp_text = line[start+1:stop].lower()
+        tip = []
+        if 'name' in exp_text:
+            tip.append('NAME')
+        tip = ','.join(tip)
+        if len(tip) > 0:
+            tip = ':' + tip
+        line = line[:start] + '<EXP' + tip + '>' + line[stop+1:]
+    return line
+
+
+def thinking(text):
+    lines = text.split('\n')
+    class Thinking(Urler):
+        pass
+    for line in lines:
+        if '>>>' in line:
+            line = to_exps(line)
+            src, name = [ a.strip() for a in line.split('>>>') ]
+            print('??? ' + src + ' >>> ' + name)
+            setattr(Thinking, name, template(IN=src))
+    return Thinking
