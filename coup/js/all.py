@@ -10,17 +10,16 @@ BasePython = BasePython.connect_handlers([
     url('[<EXP:LIST>]',             OUT='[<EXP:LIST>]'),
     url('[<EXP>, <EXP>, <EXP>]',    OUT='[<EXP>, <EXP>, <EXP>]'),
     url('else:',                    OUT='else'),
-    url('print(<EXP>)',             OUT='Console.log(""+<EXP>)'),
+    url('print(<EXP>)',             OUT='console.log(""+<EXP>)'),
     url('range(<EXP>, <EXP>)',      OUT='[...Array(<EXP[1]>).keys()].slice(<EXP[0]>)'),
     url('<EXP>#<EXP:TEXT>',         OUT='<EXP> // <EXP:TEXT>'),
     url('#<EXP:TEXT>',              OUT='// <EXP:TEXT>'),
     url('<EXP:NAME>[<EXP>]',        OUT='<EXP:NAME>[<EXP>]'),
-    url('eval(<EXP>)',              OUT='Expression(<EXP>).eval()'),
+    url('eval(<EXP>)',              OUT='eval(<EXP>)'),
     url('[<EXP>]',                  OUT='[<EXP>]'),
 
-    url('for <EXP:NAME> in <EXP:^var>:',                OUT='for (<EXP:NAME> in <EXP:^var>)'),
-    url('for <EXP:NAME>, <EXP:NAME> in <EXP:^var>:',    OUT='for (<EXP:NAME>, <EXP:NAME> in <EXP:^var>)')
-
+    url('for <EXP:NAME> in <EXP:^var>:',                OUT='for (var <EXP:NAME> in <EXP:^var>)'),
+    url('for <EXP:NAME>, <EXP:NAME> in <EXP:^var>:',    OUT='for (var <EXP:NAME>, <EXP:NAME> in <EXP:^var>)')
 ])
 
 class NumberInt(_NumberInt):
