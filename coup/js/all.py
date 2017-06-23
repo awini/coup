@@ -27,3 +27,18 @@ class NumberInt(_NumberInt):
 
 class NumberFloat(_NumberFloat):
     TYPE_OUT = 'Float'
+
+
+think = lambda s:None
+
+think('''
+
+        === Python ===                              === Javascript ===
+
+class `NewName`(`ParentName`):      >>>         class `NewName` { // `ParentName`
+
+    def `new_name`(self):           >>>             `new_name`() {
+        print('`string`')           >>>                 console.log('`string`')
+                                                    }
+                                                }
+''')
