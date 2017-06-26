@@ -1,0 +1,39 @@
+
+            === Python ===                            === Javascript ===                            === Php ===
+
+    # `Some comment line : text`        >>>     // `Some comment line : text`       >>>     // `Some comment line : text`       >>>     Comment
+
+-------------- Simple types: ---------------------------------------------------------------------------------------------------------------------
+
+    ''                                  >>>     ''                                  >>>     ""                                  >>>     StringEmpty
+    ""                                  >>>     ""                                  >>>     ""                                  >>>     StringEmpty2
+    '<EXP:TEXT>'                        >>>     '<EXP:TEXT>'                        >>>     "<EXP:TEXT>"                        >>>     String
+    "<EXP:TEXT>"                        >>>     "<EXP:TEXT>"                        >>>     "<EXP:TEXT>"                        >>>     String2
+    [<EXP:LIST>]                        >>>     [<EXP:LIST>]                        >>>     [<EXP:LIST>]                        >>>     List
+
+-------------- Simple logic: ---------------------------------------------------------------------------------------------------------------------
+
+    if <EXP>:                           >>>     if <EXP> {                          >>>     if <EXP> {                          >>>     If
+        sorted(<EXP>)                   >>>         <EXP>.sorted()                  >>>         <EXP>.sorted()                  >>>     Sorted
+    elif <EXP>:                         >>>     else if {                           >>>     else if {                           >>>     ElseIf
+        pass                            >>>                                         >>>                                         >>>     Pass
+    else:                               >>>     } else {                            >>>     } else {                            >>>     Else
+        `x:name` = `17`                 >>>         var `x:name` = `17`             >>>         $`x:name` = `17`                >>>     NewVar
+                                                }                                           }
+
+    for `a:name` in <EXP>:              >>>     for (`a:name` in <EXP>) {           >>>     foreach (<EXP[1]> as <EXP[0]>) {    >>>     ForIn
+        pass
+                                                }                                           }
+
+-------------- Classes: --------------------------------------------------------------------------------------------------------------------------
+
+    class `New:Name`(`Parent:Name`):    >>>     class `New:Name` // `Parent:Name`   >>>     class `New:Name` // `Parent:Name`   >>>     Class
+                                                {                                           {
+        def `new:name`(self):           >>>         `new:name`() {                  >>>         function `new:name`() {         >>>     Method
+            print(`exp`)                >>>             console.log(`exp`)          >>>             print(`exp`)                >>>     Print
+                                                    }                                           }
+                                                }                                           }
+
+-------------- Simple funcs: ---------------------------------------------------------------------------------------------------------------------
+
+    range(<EXP>, <EXP>)                 >>>     [...Array(<EXP[1]>).keys()].slice(<EXP[0]>)     >>>           ???               >>>     Range

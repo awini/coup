@@ -197,16 +197,19 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             @classmethod
             def is_instruction(cls, line, parent=None, line_number=None):
 
-                _Line.log('[ {} ].is_instruction [{}]: '.format(IN_FORMAT, line_number + 1) + line)
+                if _Base._LOG_ENABLED:
+                    _Line.log('[ {} ].is_instruction [{}]: '.format(IN_FORMAT, line_number + 1) + line)
 
                 if cls.need_search[0]:
-                    _Line.log('\tTRUE: need_search: {}'.format(cls.need_search[0]))
+                    if _Base._LOG_ENABLED:
+                        _Line.log('\tTRUE: need_search: {}'.format(cls.need_search[0]))
                     return True
 
                 _on_is_instruction(cls, line, line_number)
 
                 if OUT_FORMAT == NotImplemented:
-                    _Line.log('\tFALSE: OUT_FORMAT == NotImplemented')
+                    if _Base._LOG_ENABLED:
+                        _Line.log('\tFALSE: OUT_FORMAT == NotImplemented')
                     return False
 
                 line = line.strip()
@@ -323,6 +326,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             locals = None
             TYPE_OUT = _TYPE_OUT
 
+            _IN_FORMAT = IN_FORMAT
             _OUT_FORMAT = OUT_FORMAT
 
             smarter = None

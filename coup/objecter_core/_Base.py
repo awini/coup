@@ -74,6 +74,8 @@ Implement those methods in child:
     STANDART_OTSTUP = None
 
     _IS_CATCHING = 0
+    _SHOW_ERRORS_IN_HTML = True
+    _LOG_ENABLED = True
 
     def __init__(self, line, parent=None, line_number=0):
         self.line = line
@@ -255,7 +257,18 @@ Implement those methods in child:
         raise NotImplementedError('in: {} in {}\n\t{}'.format(self, self.parent, inss))
 
     def show_tree_into_html(self):
+        if not _Base._SHOW_ERRORS_IN_HTML:
+            return
+
         root_class = self.get_parent_class(or_last_true=True)
+
+        import os
+        if not os.path.exists('build'):
+            os.makedirs('build')
+
+        execute_log = ''
+        if os.path.exists('build/execute_android.log'):
+            execute_log = open('build/execute_android.log').read().replace('>', ']').replace('<','[').replace('\n', '<br>')
 
         html = '''<html>
 <head>
@@ -340,7 +353,7 @@ function show_info(p) {
 </div>
 <div id='info'>
 </div>
-</body>'''.replace('{log_text}', open('build/execute_android.log').read().replace('>', ']').replace('<','[').replace('\n', '<br>'))
+</body>'''.replace('{log_text}', execute_log)
         with open('build/coup_errors.html', 'w') as f:
             f.write(html)
 
