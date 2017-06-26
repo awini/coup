@@ -304,6 +304,9 @@ class _NumberInt(_Base):
 
     @staticmethod
     def is_instruction(line, parent=None, line_number=None):
+        line = line.strip()
+        if line.startswith('-'):
+            line = line[1:]
         return line.strip().isdigit()
 
     def get_tree_main(self):

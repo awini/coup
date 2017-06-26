@@ -1,8 +1,16 @@
 # coding: utf-8
 from ..objecter_core._SmartTemplate import template
 from ..objecter_core._Base import _Base
+from ..objecter_core._Smart import Translater
+from ..objecter_core._common_classes import _NumberInt
 
 from .url import url, Urler, to_exps
+
+
+class Common(Translater):
+
+    class NumberInt(_NumberInt):
+        TYPE_OUT = 'Int'
 
 
 class BasePython(Urler):

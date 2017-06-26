@@ -9,6 +9,7 @@ sys.path.insert(0, abspath(join(HERE, '..')))
 from coup.common.url import url, thinking, think
 from coup.objecter_core._Base import _Base
 from coup import Translater, accord
+from coup.common.all import Common
 
 
 _Base._SHOW_ERRORS_IN_HTML = False
@@ -55,8 +56,16 @@ class MainWidget(BoxLayout):
 class TestOne(TestCase):
 
     def test_4(self):
-        Py2JsNew = think(translater=Translater)
-        out = Py2JsNew.translate(code, remove_space_lines=True)
+        Py2Js = think(translater=Common)
+        Py2Js = think('''
+
+            === Python ===                  === Javascript ===
+
+    self.ids.mainInput.text     >>>     this.ids.mainInput.text     >>> ThisIdsMainInputText
+
+        ''', Py2Js)
+
+        out = Py2Js.translate(code, remove_space_lines=True)
         #self.assertEqual(out, "console.log('Hello!')")
         print(out)
 

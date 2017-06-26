@@ -2,6 +2,7 @@
             === Python ===                            === Javascript ===                            === Php ===
 
     # `Some comment line : text`        >>>     // `Some comment line : text`       >>>     // `Some comment line : text`       >>>     Comment
+    <EXP> # `Comment right : text`      >>>     <EXP> // `Comment right : text`     >>>     <EXP> // `Comment right : text`     >>>     CommentRight
 
 -------------- Simple types: ---------------------------------------------------------------------------------------------------------------------
 
@@ -21,7 +22,7 @@
         `x:name` = `17`                 >>>         var `x:name` = `17`             >>>         $`x:name` = `17`                >>>     NewVar
                                                 }                                           }
 
-    for `a:name` in <EXP>:              >>>     for (`a:name` in <EXP>) {           >>>     foreach (<EXP[1]> as <EXP[0]>) {    >>>     ForIn
+    for `a:name` in <EXP>:              >>>     for (var `a:name` in <EXP>) {       >>>     foreach ($<EXP[1]> as $<EXP[0]>) {  >>>     ForIn
         pass
                                                 }                                           }
 
@@ -36,4 +37,7 @@
 
 -------------- Simple funcs: ---------------------------------------------------------------------------------------------------------------------
 
+    <EXP> += <EXP>                      >>>     <EXP> += <EXP>                                  >>>           ???               >>>     PlusCount
     range(<EXP>, <EXP>)                 >>>     [...Array(<EXP[1]>).keys()].slice(<EXP[0]>)     >>>           ???               >>>     Range
+    <EXP>[<EXP>]                        >>>     <EXP>[<EXP>]                                    >>>           ???               >>>     Index
+    <EXP>[:<EXP>]                       >>>     <EXP>.slice(<EXP>)                              >>>           ???               >>>     RightSlice

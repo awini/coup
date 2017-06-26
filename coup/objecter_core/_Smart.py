@@ -223,6 +223,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                 last_i = len(cls.deleters_in) - 1
 
+                if len(cls.deleters_in.exps) == 0:
+                    return line.strip() == IN_FORMAT.strip()
+
                 for i, part in enumerate(cls.deleters_in):
                     new_pos = line.find(part, pos+1)
 
