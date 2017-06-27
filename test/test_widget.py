@@ -69,7 +69,7 @@ class TestOne(TestCase):
 
             === Python ===                  === Javascript ===
 
-    self.ids.mainInput.text     >_>     this.ids.mainInput.text     >_>     ThisIdsMainInputText
+    mw.ids.mainInput.text     >>>     mw.ids.mainInput.text     >>>     ThisIdsMainInputText
 
         ''', Py2Js)
         Py2Js.Class.init_dict = {'arg_to_instance': {'ids.mainInput.text':'ids.mainInput.text'} }
@@ -128,7 +128,13 @@ class MainWidget // BoxLayout
     {
         this.ids.mainInput.text += "1"
     }
-}'''
+}
+var mw = new MainWidget()
+mw.click_ac()
+mw.click_1()
+mw.click_plus()
+mw.click_1()
+console.log(mw.ids.mainInput.text)'''
         self.assertEqual(make_lines(need_result), make_lines(out))
 
 

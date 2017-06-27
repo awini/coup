@@ -548,6 +548,7 @@ class _Line(_Base):
         _Block.clear_errors()
         b = _Block()
         b.locals = {}
+        #print('>>>>>> main locals: {}'.format(id(b.locals)))
         lines = text.split('\n')
         b.add_lines(lines, [0, len(text)])
         return b
@@ -800,6 +801,8 @@ You need no subclass by this class.
         #return ( self.start_instruction.locals or {} ) if hasattr(self.start_instruction, 'locals') else {}
 
         if not self.start_instruction:
+            if hasattr(self, 'locals') and type(self.locals) == dict:
+                return self.locals
             return {}
 
         func = self.start_instruction.find_def()
