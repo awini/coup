@@ -48,7 +48,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_new_name=lambda self, name, line, line_number:None,
            BLOCK_START='{', BLOCK_END='}', INSTRUCTION_LINE_ENDING='',
            full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
-           arg_maker=None):
+           arg_maker=None, my_objects=None):
 
     if IN != None:
         IN_FORMAT = IN
@@ -92,6 +92,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     _on_new_name = _arg('on_new_name', on_new_name)
     _on_instruction = _arg('on_instruction', on_instruction)
     _arg_to_instance = _arg('arg_to_instance', arg_to_instance)
+    _my_objects = _arg('my_objects', my_objects)
     _locals = _arg('locals', locals)
     _BLOCK_END = BLOCK_END
 
@@ -167,7 +168,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         e = ins
                     elif ins:
                         return ins
-                    return ei.try_instruction(e, line_number=self.line_number, parent=self)
+                    ret = ei.try_instruction(e, line_number=self.line_number, parent=self)
+                    if ret == None:
+                        print('\n\n\t[ ERROR ] cant get ins from: {}\n\tby: {}\n'.format(e, self))
+                        raise Exception('...')
+                    return ret
 
                 in_exps = self.deleters_in.exps
                 # for i, pos in enumerate(self.deleters_out.exps_poses):
@@ -227,7 +232,10 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     return line.strip() == IN_FORMAT.strip()
 
                 for i, part in enumerate(cls.deleters_in):
-                    new_pos = line.find(part, pos+1)
+                    if len(part) == 0:
+                        new_pos = len(line)
+                    else:
+                        new_pos = line.find(part, pos+1)
 
                     # if i == last_i and len(part):
                     #     new_pos2 = line.find(part, -1)
@@ -242,11 +250,23 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         exp_i += 1
                         if len(cls.deleters_in.exps) > exp_i:
                             exp = cls.deleters_in.exps[exp_i]
-                            #print(exp)
+
+                            #print('^^^^^^^^^^^^^^', exp)
+                            _is_me = True
                             if hasattr(exp, 'is_me'):
-                                if not exp.is_me(line[last_pos:new_pos], parent=parent, line_number=line_number):
+                                if not exp.is_me(line[last_pos:new_pos], parent=parent, line_number=line_number, parent_line=line):
                                     _Line.log('\tFALSE: not is_me by exp: {},\n\tline: {}'.format(exp, line[last_pos:new_pos]))
-                                    return False
+                                    _is_me = False
+
+                                # if '"(" + self.ids.mainInput.text + ")"' in line:
+                                #     print('MMMMMMMMMmmmMMM {} ---> {} :\n\tparent_line: {}\n\tline: {}'.format(exp, _is_me, line, line[last_pos:new_pos]))
+
+                            # _exp = str(exp)
+                            # if '_ExpGetLocal' in _exp:
+                            #     print('!!!!! {} !!!! {} === {} --> {}\n\tpart({}): {}'.format(exp, line, line[last_pos:new_pos], _is_me, len(part), part))
+
+                            if not _is_me:
+                                return False
 
                     last_pos = new_pos + len(part)
 
@@ -288,6 +308,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     trees = [ ins.get_tree() for ins in self.instructions ] #line = '|'.join()
                 except Exception:
                     print('line: {}\ninss: {}'.format(self.line, self.instructions))
+                    import traceback, sys
+                    traceback.print_exc(file=sys.stdout)
                     raise
                 #print( trees, self.deleters_out )
                 #print(len(self.deleters_in), len(self.instructions), self.deleters_in[0], self.instructions[0])
@@ -334,6 +356,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             smarter = None
             name_in_smarter = None
+            my_objects = _my_objects
 
             on_block_start = _on_block_start
             on_block_before_start = _on_block_before_start
@@ -341,10 +364,16 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             _BLOCK_START = BLOCK_START
             _BLOCK_END = BLOCK_END
             _INSTRUCTION_LINE_ENDING = INSTRUCTION_LINE_ENDING
+            init_dict = None
 
             def __init__(self, line, parent=None, line_number=0):
                 self.locals = _locals
                 self.arg_to_instance = _arg_to_instance
+
+                if self.init_dict:
+                    for name, val in self.init_dict.items():
+                        #print('!!!!!!', name, val)
+                        setattr(self, name, val)
 
                 super(Smart, self).__init__(line, parent, line_number)
 
@@ -370,6 +399,10 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 def on_my_instruction(i, ins):
                     # if _handler:
                     #     print('ON INSTRUCTION: {}'.format(_on_instruction))
+
+                    # if self.my_objects != None and i == 0:
+                    #     print('&&&&&&&&&&&&&&&&&&&&&', self, line)
+
                     return _on_instruction(self, i, ins)
 
                 self.init_exps(line, on_my_instruction)
@@ -593,6 +626,13 @@ class Smarter(object):
                 f.write(out_text)
         else:
             return out_text
+
+    @classmethod
+    def find_by_name(cls, name):
+        for _name, value in cls._GLOBALS.items():
+            print('...', _name)
+            if _name == name:
+                return value
 
     @classmethod
     def _remove_space_lines(cls, text):

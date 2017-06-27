@@ -112,14 +112,21 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                     if not langs:
                         raise Exception('Need have "=== Lang ====" instructions at start of text.')
 
-                    line = to_exps(line)
+                    line, kwargs = to_exps(line)
                     lst = line.split('>>>')
                     src, dst = [ a.strip() for a in [lst[0], lst[lang_pos]] ]
 
                     if len(lst) <= len(langs):
                         raise Exception('Need have ">>> name" instruction at end of line: \n\t{}'.format(line.strip()))
 
-                    name = lst[-1].strip()
+                    lst = lst[-1].split('|')
+                    name = lst[0].strip()
+                    kwargs_text = lst[1].strip() if len(lst) > 1 else ''
+                    lst = kwargs_text.split(',')
+                    for s in lst:
+                        tt = s.split('=')
+                        if len(tt) > 1:
+                            kwargs[tt[0].strip()] = eval(tt[1].strip())
 
                     if len(BLOCK_START) > 0:
                         if dst.endswith(BLOCK_START):
@@ -129,7 +136,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                             dst = dst[len(BLOCK_END):]
                     #print(':::: ' + src + ' >>> ' + dst)
                     #urls.append(url(src, OUT=dst))
-                    setattr(NewTranslater, name, accord(IN=src, OUT=dst))
+                    setattr(NewTranslater, name, accord(IN=src, OUT=dst, **kwargs))
 
             class NewTranslater(NewTranslater):
                 pass
@@ -139,7 +146,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
     urls = []
     for line in lines:
         if '>>>' in line:
-            line = to_exps(line)
+            line, kwargs = to_exps(line)
             src, dst = [ a.strip() for a in line.split('>>>') ]
             if len(BLOCK_START) > 0:
                 if dst.endswith(BLOCK_START):
@@ -148,7 +155,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                 if dst.startswith(BLOCK_END):
                     dst = dst[len(BLOCK_END):]
             #print(':::: ' + src + ' >>> ' + dst)
-            urls.append(url(src, OUT=dst))
+            urls.append(url(src, OUT=dst, **kwargs))
 
     if translater:
         if issubclass(translater, Urler):
@@ -161,21 +168,38 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
 
 
 def to_exps(line):
+    kwargs = {}
+
     while line.count('`') >= 2:
         start = line.find('`')
         stop = line.find('`', start+1)
-        exp_text = line[start+1:stop].lower()
+        lst = line[start+1:stop].lower().split('|')
+        maker_text = lst[1] if len(lst) > 1 else None
+        exp_text = lst[0]
         tip = []
         if 'name' in exp_text:
             tip.append('NAME')
+        if 'type' in exp_text:
+            tip.append('^type')
         if 'text' in exp_text:
             tip.append('TEXT')
+        if '+instance_arg' in exp_text:
+            tip.append('^arg_to_instance')
+            if maker_text != None:
+                kwargs['arg_maker'] = lambda self,name,tip: maker_text.replace('{name}', str(name)).replace('{tip}', str(tip))
+        if 'index=' in exp_text:
+            _index = int(exp_text.split('index=')[1].split(':')[0])
+            kwargs['INDEX'] = _index
+
         tip = ','.join(tip)
         if len(tip) > 0:
             tip = ':' + tip
         line = line[:start] + '<EXP' + tip + '>' + line[stop+1:]
-    return line
+    return line, kwargs
 
+def kwargs_to_object(obj, kwargs):
+    for name, val in kwargs.items():
+        setattr(obj, name, val)
 
 def thinking(text):
     lines = text.split('\n')
@@ -183,8 +207,8 @@ def thinking(text):
         pass
     for line in lines:
         if '>>>' in line:
-            line = to_exps(line)
+            line, kwargs = to_exps(line)
             src, name = [ a.strip() for a in line.split('>>>') ]
             #print('??? ' + src + ' >>> ' + name)
-            setattr(Thinking, name, template(IN=src))
+            setattr(Thinking, name, template(IN=src, **kwargs))
     return Thinking

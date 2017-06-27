@@ -20,6 +20,8 @@
         pass                            >>>                                         >>>                                         >>>     Pass
     else:                               >>>     } else {                            >>>     } else {                            >>>     Else
         `x:name` = `17`                 >>>         var `x:name` = `17`             >>>         $`x:name` = `17`                >>>     NewVar
+        `x` = `18`                      >>>         `x` = `18`                      >>>         $`x` = `18`                     >>>     ChangeVar
+        `x` += `1`                      >>>         `x` += `1`                      >>>         $`x` += `1`                     >>>     PlusCount
                                                 }                                           }
 
     for `a:name` in <EXP>:              >>>     for (var `a:name` in <EXP>) {       >>>     foreach ($<EXP[1]> as $<EXP[0]>) {  >>>     ForIn
@@ -28,17 +30,24 @@
 
 -------------- Classes: --------------------------------------------------------------------------------------------------------------------------
 
-    class `New:Name`(`Parent:Name`):    >>>     class `New:Name` // `Parent:Name`   >>>     class `New:Name` // `Parent:Name`   >>>     Class
+    class `New:Name`(`Parent:text`):    >>>     class `New:Name` // `Parent:text`   >>>     class `New:Name` // `Parent:text`   >>>     Class   | arg_to_instance = {}, my_objects = {}
                                                 {                                           {
         def `new:name`(self):           >>>         `new:name`() {                  >>>         function `new:name`() {         >>>     Method
             print(`exp`)                >>>             console.log(`exp`)          >>>             print(`exp`)                >>>     Print
                                                     }                                           }
                                                 }                                           }
 
+    <EXP:object_of[Class],^type>()                        >>>     new <EXP:object_of[Class]>()                    >>>     new <EXP:object_of[Class]>()                    >>>     ObjectCreate
+    <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >_>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >_>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >_>     ObjectArgument
+
 -------------- Simple funcs: ---------------------------------------------------------------------------------------------------------------------
 
-    <EXP> += <EXP>                              >>>     <EXP> += <EXP>                                  >>>           ???               >>>     PlusCount
     range(<EXP>, <EXP>)                         >>>     [...Array(<EXP[1]>).keys()].slice(<EXP[0]>)     >>>           ???               >>>     Range
-    <EXP>.replace('<EXP:TEXT>', '<EXP:TEXT>')   >>>     <EXP>.replace("<EXP:TEXT>", "<EXP:TEXT>")       >>>           ???               >>>     Replace
+    <EXP>.replace(<EXP>, <EXP>)                 >>>     <EXP>.replace(<EXP>, <EXP>)                     >>>           ???               >>>     Replace
     <EXP>[<EXP>]                                >>>     <EXP>[<EXP>]                                    >>>           ???               >>>     Index
     <EXP>[:<EXP>]                               >>>     <EXP>.slice(<EXP>)                              >>>           ???               >>>     RightSlice
+    self.`exp:+instance_arg|` = <EXP:^type>     >>>     this.`exp:+instance_arg|` = <EXP:^type>         >>>           ???               >>>     NewInstanceArg
+    self.<EXP:^arg_from_instance>               >>>     this.<EXP:^arg_from_instance>                   >>>           ???               >>>     InstanceArg
+    <EXP> + <EXP>                               >>>     <EXP> + <EXP>                                   >>>           ???               >>>     Plus
+    <EXP>.format(<EXP>)                         >>>     <EXP> + <EXP>                                   >>>           ???               >>>     Format
+    eval(<EXP>)                                 >>>     eval(<EXP>)                                     >>>           ???               >>>     Eval
