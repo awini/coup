@@ -31,7 +31,7 @@ class MainWidget(BoxLayout):
 
     def click_delit(self):
         z = [" / ", " / ", " / "]
-        self.ids.mainInput.text += z[1] #" / "
+        self.ids.mainInput.text += z[1] # " / "
 
     def click_multiply(self):
         self.ttt = 'hello'

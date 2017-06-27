@@ -37,7 +37,8 @@
 
 -------------- Simple funcs: ---------------------------------------------------------------------------------------------------------------------
 
-    <EXP> += <EXP>                      >>>     <EXP> += <EXP>                                  >>>           ???               >>>     PlusCount
-    range(<EXP>, <EXP>)                 >>>     [...Array(<EXP[1]>).keys()].slice(<EXP[0]>)     >>>           ???               >>>     Range
-    <EXP>[<EXP>]                        >>>     <EXP>[<EXP>]                                    >>>           ???               >>>     Index
-    <EXP>[:<EXP>]                       >>>     <EXP>.slice(<EXP>)                              >>>           ???               >>>     RightSlice
+    <EXP> += <EXP>                              >>>     <EXP> += <EXP>                                  >>>           ???               >>>     PlusCount
+    range(<EXP>, <EXP>)                         >>>     [...Array(<EXP[1]>).keys()].slice(<EXP[0]>)     >>>           ???               >>>     Range
+    <EXP>.replace('<EXP:TEXT>', '<EXP:TEXT>')   >>>     <EXP>.replace("<EXP:TEXT>", "<EXP:TEXT>")       >>>           ???               >>>     Replace
+    <EXP>[<EXP>]                                >>>     <EXP>[<EXP>]                                    >>>           ???               >>>     Index
+    <EXP>[:<EXP>]                               >>>     <EXP>.slice(<EXP>)                              >>>           ???               >>>     RightSlice
