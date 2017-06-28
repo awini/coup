@@ -61,26 +61,7 @@ mw.click_1()
 print(mw.ids.mainInput.text)
 '''
 
-class TestOne(TestCase):
-
-    def test_4(self):
-        Py2Js = think(translater=Common)
-        Py2Js = think('''
-
-            === Python ===                  === Javascript ===
-
-    mw.ids.mainInput.text     >>>     mw.ids.mainInput.text     >>>     ThisIdsMainInputText
-
-        ''', Py2Js)
-        Py2Js.Class.init_dict = {'arg_to_instance': {'ids.mainInput.text':'ids.mainInput.text'} }
-
-        out = Py2Js.translate(code, remove_space_lines=True)
-        self.maxDiff = None
-
-        def make_lines(text):
-            return [ line.rstrip() for line in text.split('\n') ]
-
-        need_result = '''// coding: utf-8
+need_result = '''// coding: utf-8
 class MainWidget
 {
     click_ac()
@@ -135,6 +116,29 @@ mw.click_1()
 mw.click_plus()
 mw.click_1()
 console.log(mw.ids.mainInput.text)'''
+
+
+def make_lines(text):
+    return [line.rstrip() for line in text.split('\n')]
+
+
+class TestOne(TestCase):
+
+    maxDiff = None
+
+    def test_1(self):
+        Py2Js = think(translater=Common)
+        Py2Js = think('''
+
+            === Python ===                  === Javascript ===
+
+    mw.ids.mainInput.text     >>>     mw.ids.mainInput.text     >>>     ThisIdsMainInputText
+
+        ''', Py2Js)
+        Py2Js.Class.init_dict = {'arg_to_instance': {'ids.mainInput.text':'ids.mainInput.text'} }
+
+        out = Py2Js.translate(code, remove_space_lines=True)
+
         self.assertEqual(make_lines(need_result), make_lines(out))
 
         outputs = []
@@ -149,7 +153,7 @@ console.log(mw.ids.mainInput.text)'''
                 f.write(text)
 
             from subprocess import check_output
-            outputs.append( check_output(prog + ' ' + filename, shell=True).replace('\r', '').split('\n') )
+            outputs.append( make_lines(check_output(prog + ' ' + filename, shell=True)) )
 
             import os
             os.remove(filename)
