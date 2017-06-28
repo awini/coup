@@ -44,12 +44,12 @@
 
 -------------- Simple funcs: ---------------------------------------------------------------------------------------------------------------------
 
-    range(<EXP>, <EXP>)                             >>>     [...Array(<EXP[1]>).keys()].slice(<EXP[0]>)     >>>           ???                                       >>>     Range
-    <EXP>.replace(<EXP>, <EXP>)                     >>>     <EXP>.replace(<EXP>, <EXP>)                     >>>           ???                                       >>>     Replace
-    <EXP>[<EXP>]                                    >>>     <EXP>[<EXP>]                                    >>>           ???                                       >>>     Index
-    <EXP>[:<EXP>]                                   >>>     <EXP>.slice(<EXP>)                              >>>           ???                                       >>>     RightSlice
-    self.`exp:+instance_arg|` = <EXP:^type>         >>>     this.`exp:+instance_arg|` = <EXP:^type>         >>>           ???                                       >>>     NewInstanceArg
-    self.<EXP:^arg_from_instance>                   >>>     this.<EXP:^arg_from_instance>                   >>>           ???                                       >>>     InstanceArg
-    <EXP> + <EXP>                                   >>>     <EXP> + <EXP>                                   >>>           ???                                       >>>     Plus
-    <EXP>.format(<EXP>)                             >>>     <EXP> + <EXP>                                   >>>           ???                                       >>>     Format
-    eval(<EXP>)                                     >>>     eval(<EXP>)                                     >>>           ???                                       >>>     Eval
+    range(<EXP>, <EXP>)                             >>>     [...Array(<EXP[1]>).keys()].slice(<EXP[0]>)     >>>     range(<EXP>, <EXP>-1)                           >>>     Range
+    <EXP>.replace(<EXP>, <EXP>)                     >>>     <EXP>.replace(<EXP>, <EXP>)                     >>>     str_replace(<EXP[1]>, <EXP[2]>, <EXP[0]>)       >>>     Replace
+    <EXP>[<EXP>]                                    >>>     <EXP>[<EXP>]                                    >>>     $<EXP>[<EXP>]                                   >>>     Index
+    <EXP>[:<EXP>]                                   >>>     <EXP>.slice(<EXP>)                              >>>     array_slice(<EXP>, 0, <EXP>)                    >>>     RightSlice
+    self.`exp:+instance_arg|` = <EXP:^type>         >>>     this.`exp:+instance_arg|` = <EXP:^type>         >>>     $this->`exp:+instance_arg|` = <EXP:^type>       >>>     NewInstanceArg
+    self.<EXP:^arg_from_instance>                   >>>     this.<EXP:^arg_from_instance>                   >>>     $this-><EXP:^arg_from_instance>                 >>>     InstanceArg
+    <EXP> + <EXP>                                   >>>     <EXP> + <EXP>                                   >>>     <EXP> + <EXP>                                   >>>     Plus
+    <EXP>.format(<EXP>)                             >>>     <EXP> + <EXP>                                   >>>     sprintf(<EXP>, <EXP>)                           >>>     Format
+    eval(<EXP>)                                     >>>     eval(<EXP>)                                     >>>     eval(<EXP>)                                     >>>     Eval

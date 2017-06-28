@@ -127,14 +127,21 @@ class TestOne(TestCase):
     maxDiff = None
 
     def test_1(self):
+        self.do_lang('Javascript', 'node', 'js')
+
+    def test_2(self):
+        self.do_lang('Php', 'php', 'php')
+
+    def do_lang(self, lang, app, lang_ext):
         Py2Js = think(translater=Common)
         Py2Js = think('''
 
-            === Python ===                  === Javascript ===
+            === Python ===                  === {lang} ===
 
     mw.ids.mainInput.text     >>>     mw.ids.mainInput.text     >>>     ThisIdsMainInputText
 
-        ''', Py2Js)
+        '''.format(lang=lang), Py2Js, lang=lang)
+
         Py2Js.Class.init_dict = {'arg_to_instance': {'ids.mainInput.text':'ids.mainInput.text'} }
 
         out = Py2Js.translate(code, remove_space_lines=True)
@@ -144,18 +151,21 @@ class TestOne(TestCase):
         outputs = []
         for prog, ext, text in (
                 ('python', 'py', code),
-                ('node', 'js', need_result)
+                (app, lang_ext, need_result)
         ):
             text = text.replace('ids.mainInput.text', 'ids_mainInput_text')
 
-            filename = 'C:/tmp/coup_tst.' + ext # FIXME !!!!
+            import os
+            if not os.path.exists('build/tmp/'):
+                os.makedirs('build/tmp/')
+
+            filename = 'build/tmp/coup_tst.' + ext # FIXME !!!!
             with open(filename, 'w') as f:
                 f.write(text)
 
             from subprocess import check_output
             outputs.append( make_lines(check_output(prog + ' ' + filename, shell=True)) )
 
-            import os
             os.remove(filename)
 
         self.assertEqual(outputs[0], outputs[1])
