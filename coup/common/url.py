@@ -76,6 +76,30 @@ class Urler:
 
         return NewTranslater
 
+def _find_addon_lines(lines):
+    k = -1
+    add_lines = []
+    for i, line in enumerate(lines):
+        if '|||' in line:
+            if k < 0:
+                k = i
+            add_lines.append(line)
+        elif k > 0:
+            break
+    return k, add_lines
+
+def _add_lines_to_line(lines, k, addon_lines):
+    lines = lines[:k] + lines[k+len(addon_lines):]
+
+    lst = [ a.strip() for a in lines[k-1].split('>>>') ]
+    for line in addon_lines:
+        a_lst = [ a.strip() for a in line.split('|||') ]
+        for i in range(len(lst)):
+            lst[i] += a_lst[i]
+
+    lines[k-1] = '>>>'.join(lst)
+
+    return lines
 
 def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END='}'): # FIXME
 
@@ -89,6 +113,9 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                 text = open(filename).read()
 
     lines = text.split('\n')
+    k, addon_lines = _find_addon_lines(lines)
+    if k >= 0:
+        lines = _add_lines_to_line(lines, k, addon_lines)
 
     if translater:
         if issubclass(translater, Translater):

@@ -24,7 +24,8 @@
         `x` += `1`                                  >>>         `x` += `1`                                  >>>         $`x` += `1`                                 >>>     PlusCount
                                                             }                                                       }
 
-    for `a:name` in <EXP>:                          >>>     for (var i=0,lst=<EXP[1]>,<EXP[0]>=lst[i];i<lst.length;i++,a=lst[i]) {  >>>     foreach ($<EXP[1]> as $<EXP[0]>) {              >>>     ForIn
+    for `a:name` in <EXP>:                          >>>     for (var i=0,lst=<EXP[1]>,<EXP[0]>=lst[i];      >>>     foreach ($<EXP[1]> as $<EXP[0]>) {              >>>     ForIn
+                                                    |||              i<lst.length;i++,<EXP[0]>=lst[i]) {    |||                                                     |||
         pass
                                                             }                                                       }
 

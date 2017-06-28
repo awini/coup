@@ -187,7 +187,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 instructions = self.instructions[::]
                 for i, pos in enumerate(self.deleters_out.exps_poses):
                     if pos != None:
-                        instructions[i] = self.instructions[pos]
+                        if i < len(instructions):
+                            instructions[i] = self.instructions[pos]
+                        else:
+                            instructions.append(self.instructions[pos])
+                if len(self.deleters_out.exps) < len(instructions):
+                    instructions = instructions[:len(self.deleters_out.exps)]
 
                 if instructions != self.instructions:
                     self.instructions = instructions
