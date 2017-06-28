@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='coup',
-    version='0.0.27',
+    version='0.0.28',
     description='BP Compas Coup Project',
     author='BP Compas Andrew Andreev-Krasnoselsky',
     author_email='aa.veter@gmail.com',
@@ -13,5 +13,6 @@ setup(
     package_data={'coup': [
         'external/highlight/styles/*.css',
         'external/highlight/highlight.pack.js',
+        'common/*.abc'
     ]},
 )
