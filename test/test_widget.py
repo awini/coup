@@ -17,7 +17,7 @@ _Base._LOG_ENABLED = False
 
 code = '''# coding: utf-8
 
-class MainWidget(BoxLayout):
+class MainWidget:
 
     def click_ac(self):
         for a in [1, 2, 3]:
@@ -81,11 +81,11 @@ class TestOne(TestCase):
             return [ line.rstrip() for line in text.split('\n') ]
 
         need_result = '''// coding: utf-8
-class MainWidget // BoxLayout
+class MainWidget
 {
     click_ac()
     {
-        for (var a in [1,  2,  3])
+        for (var i=0,lst=[1,  2,  3],a=lst[i];i<lst.length;i++,a=lst[i])
         {
             console.log(a)
         }
@@ -93,7 +93,7 @@ class MainWidget // BoxLayout
     }
     click_break()
     {
-        for (var a in [...Array(10).keys()].slice(0))
+        for (var i=0,lst=[...Array(10).keys()].slice(0),a=lst[i];i<lst.length;i++,a=lst[i])
         {
         }
         this.ids.mainInput.text = this.ids.mainInput.text.slice(-1)
@@ -136,6 +136,25 @@ mw.click_plus()
 mw.click_1()
 console.log(mw.ids.mainInput.text)'''
         self.assertEqual(make_lines(need_result), make_lines(out))
+
+        outputs = []
+        for prog, ext, text in (
+                ('python', 'py', code),
+                ('node', 'js', need_result)
+        ):
+            text = text.replace('ids.mainInput.text', 'ids_mainInput_text')
+
+            filename = 'C:/tmp/coup_tst.' + ext # FIXME !!!!
+            with open(filename, 'w') as f:
+                f.write(text)
+
+            from subprocess import check_output
+            outputs.append( check_output(prog + ' ' + filename, shell=True).replace('\r', '').split('\n') )
+
+            import os
+            os.remove(filename)
+
+        self.assertEqual(outputs[0], outputs[1])
 
 
 
