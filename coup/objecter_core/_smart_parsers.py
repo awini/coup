@@ -1,5 +1,5 @@
 # coding: utf-8
-from ._Base import _Line, _GoodLine
+from ._Base import _Line, _GoodLine, _Block, _GlobalName
 
 class _ExpString:
     def __init__(self, names_string, on_new_name=lambda self, name, line, line_number: None):
@@ -24,9 +24,14 @@ class _ExpString:
         #print(self.types)
 
     def try_exp_type(self, line):
+
+        is_empty = line.strip() == ''
+
         for t in _ExpType.types:
             t = t.try_me(line)
             if t:
+                # if is_empty:
+                #     print('!!!!!!! ^^^ 1!!!!!!!!!!!!', t)
                 return t
 
     def try_instruction(self, line, line_number, parent=None):
@@ -37,7 +42,13 @@ class _ExpString:
         for t in self.types:
             ret = None
             if t == None:
-                ret = _ExpType.try_instruction(line, line_number=line_number, parent=parent)
+                info_finder = line.strip() == 'a'
+                # if info_finder:
+                #     print('!')
+                ret = _ExpType.try_instruction(line, line_number=line_number, parent=parent, info_finder=info_finder)
+                if ret and ret.__class__ == _GlobalName: #ret and ret.line.strip() == 'a':
+                    #print('!!!!!!!! >>>>>>> ' + line + ' ::: {} - {} : {}'.format(ret, line_number, parent))
+                    ret.line = _Block.var_format.format(ret.line)
             else:
                 ret = t.try_instruction(line, line_number=line_number, parent=parent, exp_string=self)
             if ret:
@@ -48,6 +59,9 @@ class _ExpString:
         if len(rets):
             _Line.log('\treturn: {}'.format(rets[0]))
             return rets[0]
+
+        # if line.strip() == 'a':
+        #     print('---------- a')
 
 class _ExpType:
     TEXT = None
@@ -70,8 +84,8 @@ class _ExpType:
         return cls if line == cls.TEXT else None
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent):
-        return _Line.try_instruction(line, line_number=line_number, parent=parent)
+    def try_instruction(cls, line, line_number, parent, info_finder=None):
+        return _Line.try_instruction(line, line_number=line_number, parent=parent, info_finder=info_finder)
 
 class _ExpIgnore(_ExpType):
     TEXT = 'ignore'
@@ -347,19 +361,25 @@ class _ExpGetSimpleLocal(_ExpType):
 
     @classmethod
     def is_me(cls, line, parent=None, line_number=None, parent_line=''):
-        stripped = line.strip()
-        _locals = parent.get_locals()
+        try:
+            stripped = line.strip()
+            _locals = parent.get_locals()
 
-        if hasattr(_locals, '__call__'):
-            _locals = _locals(parent)
-            _Line.log('_ExpGetSimpleLocal._locals: {}'.format(_locals))
-            # return None
+            if hasattr(_locals, '__call__'):
+                _locals = _locals(parent)
+                _Line.log('_ExpGetSimpleLocal._locals: {}'.format(_locals))
+                # return None
 
-        if hasattr(_locals, '__call__'):
-            _Line.log('_ExpGetSimpleLocal._locals is callable: {}'.format(_locals))
-            return None
+            if hasattr(_locals, '__call__'):
+                _Line.log('_ExpGetSimpleLocal._locals is callable: {}'.format(_locals))
+                return None
 
-        _Line.log('\tstripped( {} ) in _locals = {}'.format(stripped, stripped in _locals))
+            _Line.log('\tstripped( {} ) in _locals = {}'.format(stripped, stripped in _locals))
+        except:
+            return False
+
+        if stripped in _locals:
+            print('!!!!!!!! local:', stripped)
 
         return stripped in _locals
 

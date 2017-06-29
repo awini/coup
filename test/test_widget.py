@@ -186,17 +186,17 @@ class TestOne(TestCase):
         self.do_lang('Javascript', 'node', 'js')
 
     def test_2(self):
-        self.do_lang('Php', 'php', 'php', '<?\n{}\n?>', need_result=need_result_php)
+        self.do_lang('Php', 'php', 'php', '<?\n{}\n?>', need_result=need_result_php, var_prefix='$', instance_point='->')
 
-    def do_lang(self, lang, app, lang_ext, lang_form='{}', need_result=need_result_js):
+    def do_lang(self, lang, app, lang_ext, lang_form='{}', need_result=need_result_js, var_prefix='', instance_point='.'):
         Py2Js = think(translater=Common, lang=lang)
         Py2Js = think('''
 
             === Python ===                  === {lang} ===
 
-    mw.ids.mainInput.text     >>>     mw.ids.mainInput.text     >>>     ThisIdsMainInputText
+    mw.ids.mainInput.text     >>>     {var_prefix}mw{instance_point}ids.mainInput.text     >>>     ThisIdsMainInputText
 
-        '''.format(lang=lang), Py2Js, lang=lang)
+        '''.format(lang=lang, var_prefix=var_prefix, instance_point=instance_point), Py2Js, lang=lang)
 
         Py2Js.Class.init_dict = {'arg_to_instance': {'ids.mainInput.text':'ids.mainInput.text'} }
 
@@ -219,8 +219,16 @@ class TestOne(TestCase):
             with open(filename, 'w') as f:
                 f.write( form.format(text) )
 
-            from subprocess import check_output
-            outputs.append( make_lines(check_output(prog + ' ' + filename, shell=True)) )
+            from subprocess import Popen, CalledProcessError, PIPE
+            from sys import stdout
+
+            p = Popen(prog + ' ' + filename, shell=True, stdout=PIPE)
+            stdoutdata, stderrdata = p.communicate()
+
+            outputs.append(make_lines( stdoutdata ))
+
+            if p.returncode != 0:
+                raise Exception('[ ERROR on COM: {} ]\n\t{}'.format(prog, stdoutdata))
 
             #os.remove(filename)
 

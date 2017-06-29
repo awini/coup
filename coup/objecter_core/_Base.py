@@ -81,6 +81,7 @@ Implement those methods in child:
         self.line = line
         self.parent = parent
         self.line_number = line_number
+        self.is_comment = False
 
     @classmethod
     def to_str(cls):
@@ -499,6 +500,7 @@ class _Line(_Base):
             if line not in self._GLOBALS:
                 #print('----------->', line, id(self))
                 self.in_glob_adder = True
+            self.line = line
             self._GLOBALS[ line ] = self
 
     def __eq__(self, other):
@@ -554,23 +556,29 @@ class _Line(_Base):
         return b
 
     @staticmethod
-    def try_instruction(line, line_number, parent, no_instructs_react=None):
+    def try_instruction(line, line_number, parent, no_instructs_react=None, info_finder=None):
         return _Line.try_instruction_base(line, _Line._INSTRUCTS, line_number=line_number,
                                           parent = parent,
-                                          no_instructs_react=no_instructs_react)
+                                          no_instructs_react=no_instructs_react,
+                                          info_finder = info_finder)
 
     @staticmethod
     def try_instruction_base(line, instructers, parent=None, line_number=0,
-                             no_instructs_react=None):
+                             no_instructs_react=None, info_finder=None):
 
         got_instructs = []
         was_unknown = copy(_UnknownLine._unknown_lines)
+
+        # if info_finder:
+        #     print('>> !')
 
         for ins in instructers:
             if ins.is_instruction(line, parent=parent, line_number=line_number):
                 #print(ins)
                 try:
                     ins_o = ins(line, parent=parent, line_number=line_number)
+                    # if info_finder:
+                    #     print('got ins_o: "{}" from "{}"'.format(ins_o, ins))
                 except Exception:
                     _UnknownLine._unknown_lines.append(_UnknownLine(line))
                     return
@@ -583,6 +591,9 @@ class _Line(_Base):
                     return ins_o
                 else:
                     got_instructs.append((ins_o, len(unknown), unknown))
+
+        # if info_finder:
+        #     print('>> !!!!!', got_instructs)
 
         if len(got_instructs) > 0:
             gt = sorted(got_instructs, lambda *g:g[0][1])[0]
@@ -597,8 +608,12 @@ class _Line(_Base):
             return _Line(line, line_number=line_number, parent=parent)
 
         stripped = line.strip()
-        if stripped in _Line._GLOBALS:
-            return _Line._GLOBALS[ stripped ]
+        if stripped in _Line._GLOBALS: # FIXME what with locals????
+
+            if info_finder:
+                print('>> stripped in _Line._GLOBALS', _Line._GLOBALS[ stripped ])
+
+            return _GlobalName(_Line._GLOBALS[ stripped ].line)
 
         #print('...', parent)
         block = parent if isinstance(parent, _Block) else parent.get_parent_block()
@@ -623,6 +638,9 @@ class _Line(_Base):
 
 
 class _GoodLine(_Line):
+    pass
+
+class _GlobalName(_GoodLine):
     pass
 
 class _ToDeleteLine(_Line):
@@ -653,6 +671,7 @@ class _UnknownLine(_Base):
 class _Local(_Line):
 
     def __init__(self, line, parent=None, line_number=0):
+
         super(_Local, self).__init__(line, parent, line_number)
 
 # class _TstList(list):
@@ -712,6 +731,7 @@ You need no subclass by this class.
     insert_childs = True
     _ignore_start_block = False
     simple_line_end = ''
+    var_format = '{}'
 
     def __init__(self, line="", i=0, parent=None, start_instruction=None):
         _Block._BLOCKS_COUNT += 1
@@ -778,7 +798,7 @@ You need no subclass by this class.
         gen = ( (b.get_tree(), b) for b in self.blocks )
         gen = ( (t, b) for t, b in gen if type(t) != _ToDeleteLine )
         make_end = lambda b: b._INSTRUCTION_LINE_ENDING if hasattr(b, '_INSTRUCTION_LINE_ENDING') and len(b._INSTRUCTION_LINE_ENDING) > 0 else _Block.simple_line_end
-        make_text = lambda t, b: (t+make_end(b)) if len(t.strip()) and not isinstance(b, _Block) and not b.in_block else t
+        make_text = lambda t, b: (t+make_end(b)) if len(t.strip()) and not isinstance(b, _Block) and not b.in_block and (not b.is_comment and (len(b.instructions)==0 or not b.instructions[-1].is_comment)) else t
         return '\n'.join( make_text(t,b) for t, b in gen ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
 
     def instuctions_lines_gen(self):

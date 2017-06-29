@@ -1,9 +1,10 @@
 
                 === Python ===                                          === Javascript ===                                        === Php ===
                                                     :::                                                     :::     simple_line_end = ;
+                                                    :::                                                     :::     var_format = ${}
 
-    # `Some comment line : text`                    >>>     // `Some comment line : text`                   >>>     // `Some comment line : text`                   >>>     Comment
-    <EXP> # `Comment right : text`                  >>>     <EXP> // `Comment right : text`                 >>>     <EXP> // `Comment right : text`                 >>>     CommentRight
+    # `Some comment line : text`                    >>>     // `Some comment line : text`                   >>>     // `Some comment line : text`                   >>>     Comment         | is_comment = True
+    <EXP> # `Comment right : text`                  >>>     <EXP> // `Comment right : text`                 >>>     <EXP>; // `Comment right : text`                >>>     CommentRight    | is_comment = True
 
 -------------- Simple types: ---------------------------------------------------------------------------------------------------------------------
 
@@ -21,7 +22,7 @@
         pass                                        >>>                                                     >>>                                                     >>>     Pass
     else:                                           >>>     } else {                                        >>>     } else {                                        >>>     Else
         `x:name` = <EXP:^instance>                  >>>         var `x:name` = `17`                         >>>         $`x:name` = `17`                            >>>     NewVar
-        `x` = `18`                                  >>>         `x` = `18`                                  >>>         $`x` = `18`                                 >>>     ChangeVar
+        `x` = `18`                                  >>>         `x` = `18`                                  >>>         $`x` = `18`                                 >>>     ChangeVar   # FIXME !!!!
         `x` += `1`                                  >>>         `x` += `1`                                  >>>         `x` .= `1`                                  >>>     PlusCount
                                                             }                                                       }
 

@@ -164,7 +164,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                     if len(lst) <= len(langs):
                         raise Exception('Need have ">>> name" instruction at end of line: \n\t{}'.format(line.strip()))
 
-                    lst = lst[-1].split('|')
+                    lst = lst[-1].split('#')[0].split('|')
                     name = lst[0].strip()
                     kwargs_text = lst[1].strip() if len(lst) > 1 else ''
                     lst = kwargs_text.split(',')
