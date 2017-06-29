@@ -5,6 +5,7 @@ import os
 
 from ..objecter_core._SmartTemplate import template
 from ..objecter_core._Smart import Translater, accord
+from ..objecter_core._Base import _Block
 
 HERE = dirname(abspath(__file__))
 
@@ -125,6 +126,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
 
             langs = None
             lang_pos = 1
+            was_langs_line = False
             for line in lines:
                 if not langs and line.strip().startswith('==='):
                     lst = line.split('===')
@@ -132,8 +134,24 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                     if lang:
                         lang = lang.lower()
                         lang_pos = langs.index(lang)
+
+                        # if lang != 'javascript':
+                        #     raise Exception('{} --> {} from: {}'.format(lang, lang_pos, langs))
+
                     lang = langs[lang_pos]
+                    was_langs_line = True
                     continue
+
+                if was_langs_line:
+                    if ':::' in line:
+                        param_line = line.split(':::')[lang_pos].strip()
+                        if '=' in param_line:
+                            lang_param_name, lang_param_value = [ a.strip() for a in param_line.split('=') ]
+                            setattr(_Block, lang_param_name, lang_param_value)
+                        continue
+                    else:
+                        was_langs_line = False
+
 
                 if '>>>' in line:
                     if not langs:

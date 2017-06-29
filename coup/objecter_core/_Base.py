@@ -711,6 +711,7 @@ You need no subclass by this class.
 
     insert_childs = True
     _ignore_start_block = False
+    simple_line_end = ''
 
     def __init__(self, line="", i=0, parent=None, start_instruction=None):
         _Block._BLOCKS_COUNT += 1
@@ -776,8 +777,9 @@ You need no subclass by this class.
     def get_tree_base(self):
         gen = ( (b.get_tree(), b) for b in self.blocks )
         gen = ( (t, b) for t, b in gen if type(t) != _ToDeleteLine )
-        return '\n'.join( (t+b._INSTRUCTION_LINE_ENDING)
-                          if len(t) and hasattr(b, '_INSTRUCTION_LINE_ENDING') and not b.in_block else t for t, b in gen ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
+        make_end = lambda b: b._INSTRUCTION_LINE_ENDING if hasattr(b, '_INSTRUCTION_LINE_ENDING') and len(b._INSTRUCTION_LINE_ENDING) > 0 else _Block.simple_line_end
+        make_text = lambda t, b: (t+make_end(b)) if len(t.strip()) and not isinstance(b, _Block) and not b.in_block else t
+        return '\n'.join( make_text(t,b) for t, b in gen ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
 
     def instuctions_lines_gen(self):
         for b in self.blocks:

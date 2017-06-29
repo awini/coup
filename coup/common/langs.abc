@@ -1,5 +1,6 @@
 
-            === Python ===                                        === Javascript ===                            === Php ===
+                === Python ===                                          === Javascript ===                                        === Php ===
+                                                    :::                                                     :::     simple_line_end = ;
 
     # `Some comment line : text`                    >>>     // `Some comment line : text`                   >>>     // `Some comment line : text`                   >>>     Comment
     <EXP> # `Comment right : text`                  >>>     <EXP> // `Comment right : text`                 >>>     <EXP> // `Comment right : text`                 >>>     CommentRight
@@ -21,10 +22,10 @@
     else:                                           >>>     } else {                                        >>>     } else {                                        >>>     Else
         `x:name` = <EXP:^instance>                  >>>         var `x:name` = `17`                         >>>         $`x:name` = `17`                            >>>     NewVar
         `x` = `18`                                  >>>         `x` = `18`                                  >>>         $`x` = `18`                                 >>>     ChangeVar
-        `x` += `1`                                  >>>         `x` += `1`                                  >>>         $`x` += `1`                                 >>>     PlusCount
+        `x` += `1`                                  >>>         `x` += `1`                                  >>>         `x` .= `1`                                  >>>     PlusCount
                                                             }                                                       }
 
-    for `a:name` in <EXP>:                          >>>     for (var i=0,lst=<EXP[1]>,<EXP[0]>=lst[i];      >>>     foreach ($<EXP[1]> as $<EXP[0]>) {              >>>     ForIn
+    for `a:name` in <EXP>:                          >>>     for (var i=0,lst=<EXP[1]>,<EXP[0]>=lst[i];      >>>     foreach (<EXP[1]> as $<EXP[0]>) {               >>>     ForIn
                                                     |||              i<lst.length;i++,<EXP[0]>=lst[i]) {    |||                                                     |||
         pass
                                                             }                                                       }
@@ -34,13 +35,13 @@
     class `New:Name`:                               >>>     class `New:Name`                               >>>     class `New:Name`                                 >>>     Class   | arg_to_instance = {}, my_objects = {}
                                                             {                                                       {
         def `new:name`(self):                       >>>         `new:name`() {                              >>>         function `new:name`() {                     >>>     Method
-            print(`exp`)                            >>>             console.log(`exp`)                      >>>             print(`exp`)                            >>>     Print
+            print(`exp`)                            >>>             console.log(`exp`)                      >>>             print(`exp`.PHP_EOL)                    >>>     Print
                                                                 }                                                       }
                                                             }                                                       }
 
     <EXP:object_of[Class]>()                        >>>     new <EXP:object_of[Class]>()                    >>>     new <EXP:object_of[Class]>()                    >>>     ObjectCreate
-    <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >>>     ObjectArgument
-    <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     ObjectMethodStart
+    <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >>>     $<EXP:instance_of[Class]>-><EXP:^exp_arg[0]>    >>>     ObjectArgument
+    <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     $<EXP:instance_of[Class]>-><EXP:^exp_arg[0]>()  >>>     ObjectMethodStart
 
 -------------- Simple funcs: ---------------------------------------------------------------------------------------------------------------------
 

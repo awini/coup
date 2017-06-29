@@ -61,7 +61,7 @@ mw.click_1()
 print(mw.ids.mainInput.text)
 '''
 
-need_result = '''// coding: utf-8
+need_result_js = '''// coding: utf-8
 class MainWidget
 {
     click_ac()
@@ -117,6 +117,62 @@ mw.click_plus()
 mw.click_1()
 console.log(mw.ids.mainInput.text)'''
 
+need_result_php = '''// coding: utf-8
+class MainWidget
+{
+    function click_ac()
+    {
+        foreach ([1,  2,  3] as $a)
+        {
+            print(a);
+        }
+        $this->ids.mainInput.text = "";
+    }
+    function click_break()
+    {
+        foreach (range(0, 10-1) as $a)
+        {
+        }
+        $this->ids.mainInput.text = array_slice($this->ids.mainInput.text, 0, -1);
+    }
+    function click_delit()
+    {
+        $z = [" / ",  " / ",  " / "];
+        $this->ids.mainInput.text += $z[1]; // " / "
+    }
+    function click_multiply()
+    {
+        $this->ttt = "hello";
+        $this->ids.mainInput.text += " * ";
+        print($this->ttt);
+    }
+    function click_plus()
+    {
+        $this->ids.mainInput.text += " + ";
+    }
+    function click_skobki()
+    {
+        $this->ids.mainInput.text = "(" + $this->ids.mainInput.text + ")";
+    }
+    function click_count()
+    {
+        $text = $this->ids.mainInput.text;
+        $text2 = eval(text);
+        sprintf($text3 = "{:.2f}", text2);
+        str_replace(",", ".", $this->ids.mainInput.text = text3);
+    }
+    function click_1()
+    {
+        $this->ids.mainInput.text += "1";
+    }
+}
+$mw = new MainWidget();
+mw.click_ac();
+mw.click_1();
+mw.click_plus();
+mw.click_1();
+print(mw.ids.mainInput.text);'''
+
 
 def make_lines(text):
     return [line.rstrip() for line in text.split('\n')]
@@ -130,10 +186,10 @@ class TestOne(TestCase):
         self.do_lang('Javascript', 'node', 'js')
 
     def test_2(self):
-        self.do_lang('Php', 'php', 'php')
+        self.do_lang('Php', 'php', 'php', '<?\n{}\n?>', need_result=need_result_php)
 
-    def do_lang(self, lang, app, lang_ext):
-        Py2Js = think(translater=Common)
+    def do_lang(self, lang, app, lang_ext, lang_form='{}', need_result=need_result_js):
+        Py2Js = think(translater=Common, lang=lang)
         Py2Js = think('''
 
             === Python ===                  === {lang} ===
@@ -146,12 +202,12 @@ class TestOne(TestCase):
 
         out = Py2Js.translate(code, remove_space_lines=True)
 
-        self.assertEqual(make_lines(need_result), make_lines(out))
+        #self.assertEqual(make_lines(need_result), make_lines(out))
 
         outputs = []
-        for prog, ext, text in (
-                ('python', 'py', code),
-                (app, lang_ext, need_result)
+        for prog, ext, text, form in (
+                ('python', 'py', code, '{}'),
+                (app, lang_ext, out, lang_form)
         ):
             text = text.replace('ids.mainInput.text', 'ids_mainInput_text')
 
@@ -161,12 +217,12 @@ class TestOne(TestCase):
 
             filename = 'build/tmp/coup_tst.' + ext # FIXME !!!!
             with open(filename, 'w') as f:
-                f.write(text)
+                f.write( form.format(text) )
 
             from subprocess import check_output
             outputs.append( make_lines(check_output(prog + ' ' + filename, shell=True)) )
 
-            os.remove(filename)
+            #os.remove(filename)
 
         self.assertEqual(outputs[0], outputs[1])
 
