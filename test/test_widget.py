@@ -81,7 +81,7 @@ class MainWidget
     }
     click_delit()
     {
-        var z = [" / ",  " / ",  " / "]
+        var z = [" / ", " / ", " / "]
         this.ids.mainInput.text += z[1] // " / "
     }
     click_multiply()
@@ -122,7 +122,7 @@ class MainWidget
 {
     function click_ac()
     {
-        foreach ([1,  2,  3] as $a)
+        foreach ([1, 2, 3] as $a)
         {
             print(a);
         }

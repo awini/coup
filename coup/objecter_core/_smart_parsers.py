@@ -233,7 +233,7 @@ class _ExpSimpleList(_ExpType):
 
         lst = _InstructList()
         for sub in line.split(','):
-            ins = _Line.try_instruction(sub, line_number=line_number, parent=parent)
+            ins = _Line.try_instruction(sub.strip(), line_number=line_number, parent=parent)
             lst.append( ins )
 
         return lst
