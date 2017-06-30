@@ -82,6 +82,7 @@ Implement those methods in child:
         self.parent = parent
         self.line_number = line_number
         self.is_comment = False
+        self.is_method = None
 
     @classmethod
     def to_str(cls):
@@ -610,8 +611,8 @@ class _Line(_Base):
         stripped = line.strip()
         if stripped in _Line._GLOBALS: # FIXME what with locals????
 
-            if info_finder:
-                print('>> stripped in _Line._GLOBALS', _Line._GLOBALS[ stripped ])
+            # if info_finder:
+            #     print('>> stripped in _Line._GLOBALS', _Line._GLOBALS[ stripped ])
 
             return _GlobalName(_Line._GLOBALS[ stripped ].line)
 
@@ -732,6 +733,7 @@ You need no subclass by this class.
     _ignore_start_block = False
     simple_line_end = ''
     var_format = '{}'
+    method_format = '{}'
 
     def __init__(self, line="", i=0, parent=None, start_instruction=None):
         _Block._BLOCKS_COUNT += 1

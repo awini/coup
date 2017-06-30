@@ -48,7 +48,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_new_name=lambda self, name, line, line_number:None,
            BLOCK_START='{', BLOCK_END='}', INSTRUCTION_LINE_ENDING='',
            full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
-           arg_maker=None, my_objects=None, is_comment=False):
+           arg_maker=None, my_objects=None, is_comment=False, is_method=None):
 
     if IN != None:
         IN_FORMAT = IN
@@ -382,6 +382,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                 super(Smart, self).__init__(line, parent, line_number)
                 self.is_comment = is_comment
+                self.is_method = is_method
                 # if is_comment:
                 #     print('!!!!!!!!!!!!!! is_comment')
 

@@ -42,7 +42,7 @@
 
     <EXP:object_of[Class]>()                        >>>     new <EXP:object_of[Class]>()                    >>>     new <EXP:object_of[Class]>()                    >>>     ObjectCreate
     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>      >>>     $<EXP:instance_of[Class]>-><EXP:^exp_arg[0]>    >>>     ObjectArgument
-    <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     $<EXP:instance_of[Class]>-><EXP:^exp_arg[0]>()  >>>     ObjectMethodStart
+    <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     <EXP:instance_of[Class]>.<EXP:^exp_arg[0]>()    >>>     $<EXP:instance_of[Class]>-><EXP:^exp_arg[0]>()  >>>     ObjectMethodStart   | is_method = True
 
 -------------- Simple funcs: ---------------------------------------------------------------------------------------------------------------------
 

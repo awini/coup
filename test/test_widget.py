@@ -230,7 +230,7 @@ class TestOne(TestCase):
             if p.returncode != 0:
                 raise Exception('[ ERROR on COM: {} ]\n\t{}'.format(prog, stdoutdata))
 
-            #os.remove(filename)
+            os.remove(filename)
 
         self.assertEqual(outputs[0], outputs[1])
 

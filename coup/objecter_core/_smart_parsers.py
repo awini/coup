@@ -47,8 +47,11 @@ class _ExpString:
                 #     print('!')
                 ret = _ExpType.try_instruction(line, line_number=line_number, parent=parent, info_finder=info_finder)
                 if ret and ret.__class__ == _GlobalName: #ret and ret.line.strip() == 'a':
-                    #print('!!!!!!!! >>>>>>> ' + line + ' ::: {} - {} : {}'.format(ret, line_number, parent))
-                    ret.line = _Block.var_format.format(ret.line)
+                    #print('!!!!!!!! >>>>>>> ' + line + ' ::: {} - {} : {} is_method = {}'.format(ret, line_number, parent, parent.is_method))
+                    if parent.is_method:
+                        ret.line = _Block.method_format.format(ret.line)
+                    else:
+                        ret.line = _Block.var_format.format(ret.line)
             else:
                 ret = t.try_instruction(line, line_number=line_number, parent=parent, exp_string=self)
             if ret:
