@@ -125,15 +125,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 _on_new_name(self, name, line, line_number)
 
             def init_exps(self, line, on_instruction):
+
                 self.deleters_in.on_new_name = self.on_new_name
 
                 need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
                 out_format = OUT_FORMAT(self) if callable(OUT_FORMAT) else OUT_FORMAT
-                # if len(_BLOCK_END) > 0:
-                #     if out_format.endswith(_BLOCK_END):
-                #         raise Exception(out_format)
-                #         out_format = out_format[:-len(_BLOCK_END)]
                 self.deleters_out = _ExpParser(out_format)
 
                 if need_debug: #and OUT_FORMAT == '':
@@ -168,6 +165,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         e = ins
                     elif ins:
                         return ins
+
                     ret = ei.try_instruction(e, line_number=self.line_number, parent=self)
                     if ret == None:
                         print('\n\n\t[ ERROR ] cant get ins from: {}\n\tby: {}\n'.format(e, self))
@@ -206,6 +204,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def is_instruction(cls, line, parent=None, line_number=None):
+                ret = cls._is_instruction(line, parent=parent, line_number=line_number)
+                return ret
+
+            @classmethod
+            def _is_instruction(cls, line, parent=None, line_number=None):
 
                 if _Base._LOG_ENABLED:
                     _Line.log('[ {} ].is_instruction [{}]: '.format(IN_FORMAT, line_number + 1) + line)
@@ -223,6 +226,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     return False
 
                 line = line.strip()
+
                 need_debug = False #'self.ttt' == line and 'self.' in cls.deleters_in
                 pos = -1
                 last_pos = 0
@@ -256,19 +260,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         if len(cls.deleters_in.exps) > exp_i:
                             exp = cls.deleters_in.exps[exp_i]
 
-                            #print('^^^^^^^^^^^^^^', exp)
                             _is_me = True
                             if hasattr(exp, 'is_me'):
+
                                 if not exp.is_me(line[last_pos:new_pos], parent=parent, line_number=line_number, parent_line=line):
                                     _Line.log('\tFALSE: not is_me by exp: {},\n\tline: {}'.format(exp, line[last_pos:new_pos]))
                                     _is_me = False
-
-                                # if '"(" + self.ids.mainInput.text + ")"' in line:
-                                #     print('MMMMMMMMMmmmMMM {} ---> {} :\n\tparent_line: {}\n\tline: {}'.format(exp, _is_me, line, line[last_pos:new_pos]))
-
-                            # _exp = str(exp)
-                            # if '_ExpGetLocal' in _exp:
-                            #     print('!!!!! {} !!!! {} === {} --> {}\n\tpart({}): {}'.format(exp, line, line[last_pos:new_pos], _is_me, len(part), part))
 
                             if not _is_me:
                                 return False
@@ -277,9 +274,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     pos = new_pos
 
-                    # if pos <= _last_pos:
-                    #     return False
-                    if pos < 0:#part not in line:
+                    if pos < 0:
                         if need_debug:
                             print('\tFALSE')
                         _Line.log('\tFALSE: pos < 0')
@@ -293,14 +288,10 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     pos += len(part) #len(part)-1
 
                 pos -= len(part)
-                    #_last_pos = pos + len(part)-1
                 if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
                     if line[pos:] == cls.deleters_in[-1]:
                         _Line.log('\tTRUE: line[pos:] == cls.deleters_in[-1]')
                         return True
-                    #print('>>>> {} = {}'.format(part, line[pos:]))
-                    #print('\tOK', i, '/', len(cls.deleters_in.exps), not_empty_deleters, '=', line, IN_FORMAT)
-                    #print('\t', pos, len(line), '=', line[pos:], '!=', cls.deleters_in[-1], cls.deleters_in)
                     _Line.log('\tFALSE: need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
                     return False
 
@@ -308,7 +299,6 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 return True
 
             def get_tree_main(self):
-                #print('::: {} --> {} : {}'.format(self.line, self, self.instructions))
                 try:
                     trees = [ ins.get_tree() for ins in self.instructions ] #line = '|'.join()
                 except Exception:
@@ -316,8 +306,6 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     import traceback, sys
                     traceback.print_exc(file=sys.stdout)
                     raise
-                #print( trees, self.deleters_out )
-                #print(len(self.deleters_in), len(self.instructions), self.deleters_in[0], self.instructions[0])
 
                 if len(trees) < len(self.deleters_out):
                     plus = lambda tree, d : d + tree
@@ -326,19 +314,13 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                 cor = lambda ex, p: ex.funcer(p) if hasattr(ex, 'funcer') else p
 
-                #print( self.line, len(trees), len(self.deleters_out) )
-
                 line = ''.join( cor(ex, plus(tree, d)) for tree, d, ex in izip_longest(trees, self.deleters_out, self.deleters_out.exps, fillvalue='') )
-                #print('new line:', line)
 
-                # if tst:
-                #     raise Exception('!!!')
                 if not _Base._IS_CATCHING:
 
                     if self.arg_to_instance:
                         i = 0
                         for name, handler in self.arg_to_instance.items():
-                            #print(self.in_block, name)
                             self.in_block.blocks.insert(i, _GoodLine(self.otstup_string(4)+handler.arg_maker(name, handler.tip))) #'var {}:{}? = nil'.format(name, tip)))
                             i += 1
                         if i > 0:
@@ -377,14 +359,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                 if self.init_dict:
                     for name, val in self.init_dict.items():
-                        #print('!!!!!!', name, val)
                         setattr(self, name, val)
 
                 super(Smart, self).__init__(line, parent, line_number)
                 self.is_comment = is_comment
                 self.is_method = is_method
-                # if is_comment:
-                #     print('!!!!!!!!!!!!!! is_comment')
 
                 if _SEARCH_IN:
                     self.need_search[0] += 1
@@ -406,12 +385,6 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 _on_init(self)
 
                 def on_my_instruction(i, ins):
-                    # if _handler:
-                    #     print('ON INSTRUCTION: {}'.format(_on_instruction))
-
-                    # if self.my_objects != None and i == 0:
-                    #     print('&&&&&&&&&&&&&&&&&&&&&', self, line)
-
                     return _on_instruction(self, i, ins)
 
                 self.init_exps(line, on_my_instruction)
@@ -440,8 +413,6 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             def test_string(cls, line):
                 print('{}: {} --> {}'.format(cls.make_my_str(), line, cls.is_instruction(line)))
 
-        #print(IN_FORMAT, Smart.INDEX)
-
         return Smart
 
     if type(IN_FORMAT) not in (list, tuple):
@@ -451,13 +422,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     current = [ ins_list[0] ]
 
     def _install_current(cur):
-        #print('[ _install_current ] {}'.format(cur))
         current[ 0 ] = cur
 
     class FooType(type):
 
         def __getattr__(cls, key):
-            #print('[ get Foo attr ] {}'.format(key))
             val = getattr(current[ 0 ], key)
             return val
 
@@ -485,21 +454,22 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
         @classmethod
         def is_instruction(cls, line, parent=None, line_number=None):
-            #print('[ is_instruction ] {}'.format(ins_list))
             for ins in ins_list:
                 if ins.is_instruction(line, parent=parent, line_number=line_number):
                     _install_current( ins )
                     return True
 
-    #print('!!!', ins_list)
     return SmartList
 
 def _line_to_slashs(line, deleters_in, need_debug=False):
     line = line.strip()
     start_line = line
 
-    left = deleters_in[:len(deleters_in)/2+1]
-    right = deleters_in[-1:-len(deleters_in) / 2:-1]
+    left_gran = int(len(deleters_in)/2)+1
+    right_gran = int(round(-len(deleters_in)/2))
+
+    left = deleters_in[:left_gran]
+    right = deleters_in[-1:right_gran:-1]
 
     if len(right) > len(left):
         left, right = left + right[-1:], right[:-1]
@@ -586,10 +556,20 @@ class _SmartMeta(type):
 
         return super_new(cls, name, bases, attrs)
 
+import sys
 
-class Smarter(object):
+if sys.version_info[0] < 3:
+    class SmarterBase(object):
+        __metaclass__ = _SmartMeta
+    class SmarterPropertyBase(object):
+        __metaclass__ = _SmartMeta
+else:
+    SmarterBase = _SmartMeta(str('SmarterBase'), (), {})
+    #class SmarterBase(metaclass=_SmartMeta):
+    #    pass
+    SmarterPropertyBase = _SmartMeta(str('SmarterPropertyBase'), (), {})
 
-    __metaclass__ = _SmartMeta
+class Smarter(SmarterBase):
 
     _GLOBALS = None
     OUT_START = []
@@ -639,7 +619,6 @@ class Smarter(object):
     @classmethod
     def find_by_name(cls, name):
         for _name, value in cls._GLOBALS.items():
-            print('...', _name)
             if _name == name:
                 return value
 
@@ -648,9 +627,9 @@ class Smarter(object):
         lines = [li for li in text.split('\n') if len(li.strip()) > 0]
         return '\n'.join(lines)
 
-class SmarterProperty(object):
+class SmarterProperty(SmarterPropertyBase):
 
-    __metaclass__ = _SmartMeta
+    #__metaclass__ = _SmartMeta
 
     IN_FORMAT = None
     OUT_FORMAT = None

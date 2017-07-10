@@ -8,7 +8,7 @@ try:
     from termcolor import colored
     init()
 except ImportError:
-    colored = lambda *args, **kwargs: None
+    colored = lambda text, *args, **kwargs: text
 
 PATH_TO_THIS_DIR = dirname(abspath(__file__))
 PATH_TO_HIGHLIGHT_JS = join(PATH_TO_THIS_DIR, '..', 'external', 'highlight', 'highlight.pack.js')
@@ -581,23 +581,19 @@ class _Line(_Base):
                     # if info_finder:
                     #     print('got ins_o: "{}" from "{}"'.format(ins_o, ins))
                 except Exception:
-                    _UnknownLine._unknown_lines.append(_UnknownLine(line))
+                    #_UnknownLine._unknown_lines.append(_UnknownLine(line))
                     return
                 ins_o.init_otstup(line)
 
                 unknown = ins_o.get_unknown_instructions()
                 if len(unknown) == 0:
-                    #print(ins_o, '!!!!!!!!>>>>>>>>>!!!!!!!!', unknown)
                     _UnknownLine._unknown_lines = was_unknown
                     return ins_o
                 else:
                     got_instructs.append((ins_o, len(unknown), unknown))
 
-        # if info_finder:
-        #     print('>> !!!!!', got_instructs)
-
         if len(got_instructs) > 0:
-            gt = sorted(got_instructs, lambda *g:g[0][1])[0]
+            gt = sorted(got_instructs, key=lambda *g:g[0][1])[0]
             gi = gt[0]
             _UnknownLine._unknown_lines = was_unknown
             _UnknownLine._unknown_lines += gt[2]
@@ -721,6 +717,7 @@ You need no subclass by this class.
     @staticmethod
     def clear_errors():
         _Block.errors[:] = []
+        _UnknownLine._unknown_lines[:] = []
 
 
     blocker = True
@@ -861,7 +858,6 @@ You need no subclass by this class.
         # FIXME think, is it needed...
         return
 
-        #print('[ !!! try_local_instruction ] {} | {}'.format(self, line))
         stripped = line.strip()
         for name, val in self.get_locals().items():
             #print('..local: {} = {}'.format(name, val))

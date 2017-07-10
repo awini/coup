@@ -307,7 +307,8 @@ class _NumberInt(_Base):
         line = line.strip()
         if line.startswith('-'):
             line = line[1:]
-        return line.strip().isdigit()
+        ret = line.strip().isdigit()
+        return ret
 
     def get_tree_main(self):
         return '{}'.format(self.number)

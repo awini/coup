@@ -175,6 +175,8 @@ print(mw.ids.mainInput.text);'''
 
 
 def make_lines(text):
+    if sys.version_info[0] >= 3:
+        text = text.decode('cp1251' if sys.platform.startswith('win') else 'utf-8')
     return [line.rstrip() for line in text.split('\n')]
 
 

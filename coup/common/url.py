@@ -111,7 +111,8 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
         for p in pathes:
             filename = join(p, text.replace('@','')+'.abc')
             if os.path.exists(filename):
-                text = open(filename).read()
+                with open(filename) as f:
+                    text = f.read()
 
     lines = text.split('\n')
     k, addon_lines = _find_addon_lines(lines)
