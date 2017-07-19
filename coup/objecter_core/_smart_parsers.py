@@ -241,6 +241,19 @@ class _ExpText(_ExpType):
     def try_instruction(cls, line, line_number, parent, exp_string=None):
         return _GoodLine(line, line_number=line_number, parent=parent)
 
+
+class _ExpRawText(_ExpType):
+    TEXT = 'RAW_TEXT'
+
+    @classmethod
+    def is_me(cls, line, parent=None, line_number=None, parent_line=''):
+        return len(line.strip()) > 0
+
+    @classmethod
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
+        return _GoodLine(line, line_number=line_number, parent=parent)
+
+
 class _ExpTextWithoutSpaces(_ExpType):
     TEXT = 'TEXT_WITHOUT_SPACES'
 
@@ -425,6 +438,90 @@ class _ExpInsertLocal(_ExpType):
             traceback.print_exc(file=sys.stdout)
 
         return _GoodLine(line, line_number=line_number, parent=parent)
+
+
+class _ExpArgToParent(_ExpType):
+    TEXT = 'parent^.'
+
+    def __init__(self, arg_name):
+        self.arg_name = arg_name
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped.startswith(cls.TEXT):
+            return cls(stripped.split(cls.TEXT)[1])
+
+    # @classmethod
+    # def is_me(cls, line, parent=None, line_number=None, parent_line=''):
+    #     stripped = line.strip()
+    #     for a in ' []:-+/&^%$#@()=':
+    #         if a in stripped:
+    #             return False
+    #     return True
+
+    def try_instruction(self, line, line_number, parent, exp_string=None):
+        parent_object = parent.parent.start_instruction
+
+        #print('>>>>>>>>>>', parent, parent_object)
+
+        try:
+
+            if not hasattr(parent_object, 'arg_to_instance') or parent_object.arg_to_instance == None:
+                parent_object.arg_to_instance = {}
+
+            class _ArgMakerHandler:
+                tip = None
+
+                @staticmethod
+                def arg_maker(name, tip):
+                    #return parent.arg_maker(name, tip)
+                    return line
+
+            parent_object.arg_to_instance[ self.arg_name ] = _ArgMakerHandler
+            parent_object.arg_to_instance_last = self.arg_name
+
+        except Exception as e:
+            print('error: {}'.format(e))
+            import traceback, sys
+            traceback.print_exc(file=sys.stdout)
+
+        return _GoodLine(line, line_number=line_number, parent=parent)
+
+class _ExpMyArg(_ExpType):
+    TEXT = '.'
+
+    def __init__(self, arg_name):
+        self.arg_name = arg_name
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped.startswith(cls.TEXT):
+            return cls(stripped.split(cls.TEXT)[1])
+
+    # @classmethod
+    # def is_me(cls, line, parent=None, line_number=None, parent_line=''):
+    #     stripped = line.strip()
+    #     for a in ' []:-+/&^%$#@()=':
+    #         if a in stripped:
+    #             return False
+    #     return True
+
+    def try_instruction(self, line, line_number, parent, exp_string=None):
+        parent_class = parent.get_parent_class()
+
+        try:
+
+            line = parent_class.arg_to_instance[ self.arg_name ]
+
+        except Exception as e:
+            print('error: {}'.format(e))
+            import traceback, sys
+            traceback.print_exc(file=sys.stdout)
+
+        return _GoodLine(line, line_number=line_number, parent=parent)
+
 
 import sys
 

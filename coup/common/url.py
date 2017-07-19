@@ -47,12 +47,12 @@ class Urler:
             name = o._name
             for n, val in o._kwargs.items():
                 if val == Needed and n not in url.kwargs:
-                    print(n, url.kwargs)
+                    #print(n, url.kwargs)
                     _needed_kwargs.append('{} | {}.{}'.format(url.IN, name, n))
                     continue
 
             if isclass(url.OUT):
-                print('-----> give _translater')
+                #print('-----> give _translater')
                 url.OUT._translater = NewTranslaterBase
 
             _d[url.IN] = o.make(OUT=url.OUT, **url.kwargs)
@@ -119,6 +119,9 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
     if k >= 0:
         lines = _add_lines_to_line(lines, k, addon_lines)
 
+    if translater == None:
+        translater = Translater
+
     if translater:
         if issubclass(translater, Translater):
 
@@ -182,6 +185,21 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                             dst = dst[len(BLOCK_END):]
                     #print(':::: ' + src + ' >>> ' + dst)
                     #urls.append(url(src, OUT=dst))
+
+                    dst_lst = dst.split('|')
+                    if len(dst_lst) > 1:
+                        dst = dst_lst[0].strip()
+                        for a in dst_lst[1].split(','):
+                            #print('\t..{}'.format(a))
+                            lst = a.split('=')
+                            #print('\t__{}'.format(lst))
+                            if len(lst) == 2:
+                                #print('**{} = {}'.format(lst[0].strip(), eval(lst[1].strip())))
+                                kwargs[lst[0].strip()] = eval(lst[1].strip())
+
+                    if '<EXP:INNER>' in dst:
+                        dst, kwargs['BLOCK_END'] = dst.split('<EXP:INNER>')
+
                     setattr(NewTranslater, name, accord(IN=src, OUT=dst, **kwargs))
 
             class NewTranslater(NewTranslater):
@@ -189,10 +207,12 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
 
             return NewTranslater
 
+    # FIXME it s for old idea...
+
     urls = []
     for line in lines:
         if '>>>' in line:
-            line, kwargs = to_exps(line)
+            line, kwargs = (line)
             src, dst = [ a.strip() for a in line.split('>>>') ]
             if len(BLOCK_START) > 0:
                 if dst.endswith(BLOCK_START):

@@ -126,81 +126,89 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             def init_exps(self, line, on_instruction):
 
-                self.deleters_in.on_new_name = self.on_new_name
+                try:
 
-                need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
+                    self.deleters_in.on_new_name = self.on_new_name
 
-                out_format = OUT_FORMAT(self) if callable(OUT_FORMAT) else OUT_FORMAT
-                self.deleters_out = _ExpParser(out_format)
+                    need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
-                if need_debug: #and OUT_FORMAT == '':
-                    print('--------')
-                    print('deleters_in:', self.deleters_in, line)
-                    print('deleters_in.exps:', self.deleters_in.exps)
-                    print('deleters_out:', self.deleters_out, line)
-                    print('deleters_out.exps:', self.deleters_out.exps)
+                    out_format = OUT_FORMAT(self) if callable(OUT_FORMAT) else OUT_FORMAT
+                    self.deleters_out = _ExpParser(out_format)
 
-                line = line.strip()
+                    if need_debug: #and OUT_FORMAT == '':
+                        print('--------')
+                        print('deleters_in:', self.deleters_in, line)
+                        print('deleters_in.exps:', self.deleters_in.exps)
+                        print('deleters_out:', self.deleters_out, line)
+                        print('deleters_out.exps:', self.deleters_out.exps)
 
-                new_line = _line_to_slashs(line, self.deleters_in, need_debug=need_debug)
-                if new_line == None:
-                    raise Exception('cant be {}: {}'.format(self, line))
-                line = new_line
+                    line = line.strip()
 
-                lst = line.split('|')
-                if need_debug:
-                    print('line:', line)
+                    new_line = _line_to_slashs(line, self.deleters_in, need_debug=need_debug)
+                    if new_line == None:
+                        raise Exception('cant be {}: {}'.format(self, line))
+                    line = new_line
 
-                _tmp_line = self.line
-
-                def pr(ei, e, i):
+                    lst = line.split('|')
                     if need_debug:
-                        print('...', ei, e, self)
-                    ins = on_try_instruction(self, i, e)
+                        print('line:', line)
 
-                    if i > len(self.deleters_out.exps)-1:
-                        return _Line('')
+                    _tmp_line = self.line
 
-                    if type(ins) == str:
-                        e = ins
-                    elif ins:
-                        return ins
+                    def pr(ei, e, i):
+                        if need_debug:
+                            print('...', ei, e, self)
+                        ins = on_try_instruction(self, i, e)
 
-                    ret = ei.try_instruction(e, line_number=self.line_number, parent=self)
-                    if ret == None:
-                        print('\n\n\t[ ERROR ] cant get ins from: {}\n\tby: {}\n'.format(e, self))
-                        raise Exception('...')
-                    return ret
+                        if i > len(self.deleters_out.exps)-1:
+                            return _Line('')
 
-                in_exps = self.deleters_in.exps
-                # for i, pos in enumerate(self.deleters_out.exps_poses):
-                #     if pos != None:
-                #         in_exps[i] = self.deleters_in.exps[pos]
-                #
-                # if in_exps != self.deleters_in.exps:
-                #     raise Exception('{} != {}\n{}\n{}'.format(in_exps, self.deleters_in.exps, _tmp_line, self.deleters_out.exps_poses))
+                        if type(ins) == str:
+                            e = ins
+                        elif ins:
+                            return ins
 
-                self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, in_exps)) ]
+                        ret = ei.try_instruction(e, line_number=self.line_number, parent=self)
+                        if ret == None:
+                            print('\n\n\t[ ERROR ] cant get ins from: {}\n\tby: {}\n'.format(e, self))
+                            raise Exception('...')
+                        return ret
 
-                instructions = self.instructions[::]
-                for i, pos in enumerate(self.deleters_out.exps_poses):
-                    if pos != None:
-                        if i < len(instructions):
-                            instructions[i] = self.instructions[pos]
-                        else:
-                            instructions.append(self.instructions[pos])
-                if len(self.deleters_out.exps) < len(instructions):
-                    instructions = instructions[:len(self.deleters_out.exps)]
+                    in_exps = self.deleters_in.exps
+                    # for i, pos in enumerate(self.deleters_out.exps_poses):
+                    #     if pos != None:
+                    #         in_exps[i] = self.deleters_in.exps[pos]
+                    #
+                    # if in_exps != self.deleters_in.exps:
+                    #     raise Exception('{} != {}\n{}\n{}'.format(in_exps, self.deleters_in.exps, _tmp_line, self.deleters_out.exps_poses))
 
-                if instructions != self.instructions:
-                    self.instructions = instructions
-                    # raise Exception('{} != {}\n{}\n{}'.format(instructions, self.instructions, _tmp_line,
-                    #                                           self.deleters_out.exps_poses))
+                    self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, in_exps)) ]
 
-                if need_debug:
-                    print('>>>>>>', self.instructions)
+                    instructions = self.instructions[::]
+                    for i, pos in enumerate(self.deleters_out.exps_poses):
+                        if pos != None:
+                            if i < len(instructions):
+                                instructions[i] = self.instructions[pos]
+                            else:
+                                instructions.append(self.instructions[pos])
+                    if len(self.deleters_out.exps) < len(instructions):
+                        instructions = instructions[:len(self.deleters_out.exps)]
 
-                self.line = _tmp_line
+                    if instructions != self.instructions:
+                        self.instructions = instructions
+                        # raise Exception('{} != {}\n{}\n{}'.format(instructions, self.instructions, _tmp_line,
+                        #                                           self.deleters_out.exps_poses))
+
+                    if need_debug:
+                        print('>>>>>>', self.instructions)
+
+                    self.line = _tmp_line
+
+                except Exception as e:
+                    print('ERROR: {}'.format(e))
+                    import traceback, sys
+                    traceback.print_exc(file=sys.stdout)
+                    raise
 
             @classmethod
             def is_instruction(cls, line, parent=None, line_number=None):
@@ -209,6 +217,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def _is_instruction(cls, line, parent=None, line_number=None):
+
+                def _print(result, comment):
+                    if len(line.strip()):
+                        p = '++' if result else '--'
+                        #print('\t{} is me: {} ? {} --> {} ({})'.format(p, line, IN_FORMAT, result, comment))
+                    return result
 
                 if _Base._LOG_ENABLED:
                     _Line.log('[ {} ].is_instruction [{}]: '.format(IN_FORMAT, line_number + 1) + line)
@@ -223,7 +237,13 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 if OUT_FORMAT == NotImplemented:
                     if _Base._LOG_ENABLED:
                         _Line.log('\tFALSE: OUT_FORMAT == NotImplemented')
-                    return False
+                    return _print(False, 'OUT_FORMAT == NotImplemented')
+
+                if len(cls.deleters_in.exps) == 0:
+                    #print('-'*100)
+                    #print('****** {} ??? {} --> {}'.format(line.strip(), cls._IN_FORMAT.strip(), line.strip() == cls._IN_FORMAT.strip()))
+                    #print('-' * 100)
+                    return line.strip() == cls._IN_FORMAT.strip()
 
                 line = line.strip()
 
@@ -238,7 +258,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 last_i = len(cls.deleters_in) - 1
 
                 if len(cls.deleters_in.exps) == 0:
-                    return line.strip() == IN_FORMAT.strip()
+                    return _print(line.strip() == IN_FORMAT.strip(), 'line.strip() == IN_FORMAT.strip()')
 
                 for i, part in enumerate(cls.deleters_in):
                     if len(part) == 0:
@@ -268,7 +288,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                                     _is_me = False
 
                             if not _is_me:
-                                return False
+                                return _print(False, 'not _is_me: ' + line[last_pos:new_pos] + ' ({})'.format(exp))
 
                     last_pos = new_pos + len(part)
 
@@ -278,25 +298,28 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         if need_debug:
                             print('\tFALSE')
                         _Line.log('\tFALSE: pos < 0')
-                        return False
+                        return _print(False, 'pos < 0')
+
                     if i == 0 and cls._starts_with_deleter:
                         if pos != 0:
                             if need_debug:
                                 print('\tFALSE')
                             _Line.log('\tFALSE: pos != 0')
-                            return False
+                            return _print(False, 'i == 0 and cls._starts_with_deleter')
+
                     pos += len(part) #len(part)-1
 
                 pos -= len(part)
                 if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
                     if line[pos:] == cls.deleters_in[-1]:
                         _Line.log('\tTRUE: line[pos:] == cls.deleters_in[-1]')
-                        return True
+                        return _print(True, 'line[pos:] == cls.deleters_in[-1]')
+
                     _Line.log('\tFALSE: need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
-                    return False
+                    return _print(False, 'need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
 
                 _Line.log('\tTRUE: return True')
-                return True
+                return _print(True, 'return True')
 
             def get_tree_main(self):
                 try:
@@ -601,8 +624,9 @@ class Smarter(SmarterBase):
 
     @classmethod
     def translate_file(cls, filename, to_filename=None, remove_space_lines=False, strip=False,
-                       log_file=None, remove_double_space_lines=False):
-        text = open(filename).read()
+                       log_file=None, remove_double_space_lines=False, text=None):
+        if text == None:
+            text = open(filename).read()
         logger = open(log_file, 'w') if log_file else None
 
         out_text = cls.translate(text, filename=filename, remove_space_lines=remove_space_lines, strip=strip,

@@ -77,6 +77,10 @@ Implement those methods in child:
     _SHOW_ERRORS_IN_HTML = True
     _LOG_ENABLED = True
 
+    @staticmethod
+    def set_SHOW_ERRORS_IN_HTML(value):
+        _Base._SHOW_ERRORS_IN_HTML = value
+
     def __init__(self, line, parent=None, line_number=0):
         self.line = line
         self.parent = parent
@@ -797,7 +801,7 @@ You need no subclass by this class.
         gen = ( (b.get_tree(), b) for b in self.blocks )
         gen = ( (t, b) for t, b in gen if type(t) != _ToDeleteLine )
         make_end = lambda b: b._INSTRUCTION_LINE_ENDING if hasattr(b, '_INSTRUCTION_LINE_ENDING') and len(b._INSTRUCTION_LINE_ENDING) > 0 else _Block.simple_line_end
-        make_text = lambda t, b: (t+make_end(b)) if len(t.strip()) and not isinstance(b, _Block) and not b.in_block and (not b.is_comment and (len(b.instructions)==0 or not b.instructions[-1].is_comment)) else t
+        make_text = lambda t, b: (t+make_end(b)) if len(t.strip()) and not isinstance(b, _GoodLine) and not isinstance(b, _Block) and not b.in_block and (not b.is_comment and (len(b.instructions)==0 or not b.instructions[-1].is_comment)) else t
         return '\n'.join( make_text(t,b) for t, b in gen ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
 
     def instuctions_lines_gen(self):
@@ -842,6 +846,7 @@ You need no subclass by this class.
         if ignore:
             ins = ignore(line, line_number=line_number, parent=parent)
             self.last_instruction = ins
+            #print('::::: last: {}'.format(self.last_instruction))
         else:
             ins = _Line.try_instruction(line, line_number, parent=parent)
             if not ins:
@@ -851,8 +856,11 @@ You need no subclass by this class.
                     print('[ {} ] {}'.format(ins, line))
                 self.blocks.append(ins.set_block(self))
 
+                #print('::::: last: {} --> {}'.format(ins, type(ins) != _Line))
                 if type(ins) != _Line:
                     self.last_instruction = ins
+            #print('\t\tnot ins')
+        #print('..[ {:>3} ]: {} | {} END'.format(line_number, line, line.line_number))
 
     def try_local_instruction(self, line, line_number, parent):
         # FIXME think, is it needed...
@@ -894,15 +902,19 @@ You need no subclass by this class.
         while len(tst_lines):
             line = tst_lines[0]
             if self.is_line_starts_block(line):
+                #print('.....starts block: {}'.format(line))
                 if self.last_block:
                     # FIXME
                     if ( len(self.last_block.blocks) > 0 and type(self.last_block.blocks[-1]) == _Line and
                                  len(self.last_block.blocks[-1].line.strip()) == 0 ):
                         del self.last_block.blocks[-1]
 
+                #print('_____ ' + line + ' | ' + str(self.last_instruction or self.last_block))
+
                 b = _Block(parent=self, line=line,
                            start_instruction=self.last_instruction)
                 self.last_block = b
+                #print('.....starts block end: {}'.format(b))
 
                 smart_ret = None
                 if hasattr(self.last_instruction, 'on_block_before_start'):
