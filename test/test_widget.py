@@ -62,13 +62,17 @@ class TestOne(TestCase):
                 os.makedirs('build/tmp/')
 
             filename = 'build/tmp/coup_tst.' + ext # FIXME !!!!
+            print('[ FILE ] {}'.format(filename))
             with open(filename, 'w') as f:
                 f.write( form.format(text) )
 
             from subprocess import Popen, CalledProcessError, PIPE
             from sys import stdout
 
-            p = Popen(prog + ' ' + filename, shell=True, stdout=PIPE)
+            com = prog + ' ' + filename
+            print('[ COM ] {}'.format(com))
+
+            p = Popen(com, shell=True, stdout=PIPE)
             stdoutdata, stderrdata = p.communicate()
 
             outputs.append(make_lines( stdoutdata ))
