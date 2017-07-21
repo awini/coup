@@ -32,7 +32,7 @@ class TestOne(TestCase):
         self.do_lang('Javascript', 'node', 'js')
 
     def test_2(self):
-        self.do_lang('Php', 'php', 'php', '<?\n{}\n?>', need_result=need_result_php, var_prefix='$', instance_point='->')
+        self.do_lang('Php', 'php', 'php', '<?php\n{}\n?>', need_result=need_result_php, var_prefix='$', instance_point='->')
 
     def do_lang(self, lang, app, lang_ext, lang_form='{}', need_result=need_result_js, var_prefix='', instance_point='.'):
         Py2Js = think(translater=Common, lang=lang)
