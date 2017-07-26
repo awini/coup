@@ -129,7 +129,8 @@ class _ExpName(_ExpType):
         stripped = line.strip()
         return ' ' not in stripped and '.' not in stripped
 
-    def try_instruction(self, line, line_number, parent, exp_string=None):
+    @classmethod
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
 
         locals = None
         parent.current_locals_name = None
