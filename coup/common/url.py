@@ -5,7 +5,7 @@ import os
 
 from ..objecter_core._SmartTemplate import template
 from ..objecter_core._Smart import Translater, accord
-from ..objecter_core._Base import _Block
+from ..objecter_core._Base import _Block, _Base
 
 HERE = dirname(abspath(__file__))
 
@@ -151,7 +151,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                         param_line = line.split(':::')[lang_pos].strip()
                         if '=' in param_line:
                             lang_param_name, lang_param_value = [ a.strip() for a in param_line.split('=') ]
-                            setattr(_Block, lang_param_name, lang_param_value)
+                            _Block.set_main_tune(lang_param_name, lang_param_value)
                         continue
                     else:
                         was_langs_line = False

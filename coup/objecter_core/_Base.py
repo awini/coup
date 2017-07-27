@@ -736,6 +736,17 @@ You need no subclass by this class.
     var_format = '{}'
     method_format = '{}'
 
+    @staticmethod
+    def set_main_tune(name, value):
+        if hasattr(_Block, name):
+            setattr(_Block, name, value)
+        if hasattr(_Block, '_' + name):
+            setattr(_Block, '_' + name, value)
+        if hasattr(_Base, name):
+            setattr(_Base, name, value)
+        if hasattr(_Base, '_' + name):
+            setattr(_Base, '_' + name, value)
+
     def __init__(self, line="", i=0, parent=None, start_instruction=None):
         _Block._BLOCKS_COUNT += 1
         self.b_id = _Block._BLOCKS_COUNT

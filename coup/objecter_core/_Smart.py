@@ -46,9 +46,14 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_good_line=lambda self, line:line,
            on_is_instruction=lambda cls, line, line_number:None,
            on_new_name=lambda self, name, line, line_number:None,
-           BLOCK_START='{', BLOCK_END='}', INSTRUCTION_LINE_ENDING='',
+           BLOCK_START=None, BLOCK_END=None, INSTRUCTION_LINE_ENDING='',
            full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
            arg_maker=None, my_objects=None, is_comment=False, is_method=None):
+
+    if BLOCK_START == None:
+        BLOCK_START = _Base._BLOCK_START
+    if BLOCK_END == None:
+        BLOCK_END = _Base._BLOCK_END
 
     if IN != None:
         IN_FORMAT = IN
