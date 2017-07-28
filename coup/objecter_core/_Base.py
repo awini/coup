@@ -18,6 +18,7 @@ PATH_TO_HIGHLIGHT_CSS = join(PATH_TO_THIS_DIR, '..', 'external', 'highlight', 's
 class _OtstupAbility:
 
     otstup = 0
+    _USE_OTSTUP = True
 
     @staticmethod
     def get_otstup(line):
@@ -33,7 +34,7 @@ class _OtstupAbility:
         self.otstup = self.get_otstup(line)
 
     def otstup_string(self, add_otstup=0):
-        return ' ' * (self.otstup + add_otstup)
+        return (' ' * (self.otstup + add_otstup)) if self._USE_OTSTUP else ''
 
 
 def _base_bases():
@@ -68,6 +69,7 @@ Implement those methods in child:
     _BLOCK_START = '{'
     _BLOCK_END = '}'
     _INSTRUCTION_LINE_ENDING = ''
+    _LINES_SPLITTER = '\n'
 
     block = None
     in_block = None
@@ -195,7 +197,7 @@ Implement those methods in child:
         return self.block.start_instruction if self.block else None
 
     def get_tree(self):
-        return ' '*self.otstup + self.get_tree_main()
+        return ((' '*self.otstup) if self._USE_OTSTUP else '') + self.get_tree_main()
 
     def make_objects_tree_html(self):
         lines = []
@@ -738,14 +740,24 @@ You need no subclass by this class.
 
     @staticmethod
     def set_main_tune(name, value):
-        if hasattr(_Block, name):
-            setattr(_Block, name, value)
-        if hasattr(_Block, '_' + name):
-            setattr(_Block, '_' + name, value)
-        if hasattr(_Base, name):
-            setattr(_Base, name, value)
-        if hasattr(_Base, '_' + name):
-            setattr(_Base, '_' + name, value)
+        setted = [ False ]
+
+        def set(obj, name, value):
+            if hasattr(obj, name):
+                setattr(obj, name, value)
+                setted[ 0 ] = True
+
+        set(_Block, name, value)
+        set(_Block, '_' + name, value)
+        set(_Base, name, value)
+        set(_Base, '_' + name, value)
+
+        if not setted[ 0 ]:
+            raise Exception('''
+
+    Dont know main lang param: {}
+
+            '''.format(name))
 
     def __init__(self, line="", i=0, parent=None, start_instruction=None):
         _Block._BLOCKS_COUNT += 1
@@ -785,17 +797,20 @@ You need no subclass by this class.
             if type(base) == _ToDeleteLine:
                 return base
             return (
-                ((start + '\n') if type(start) != _ToDeleteLine else '')
+                ((start + self.get_lines_splitter()) if type(start) != _ToDeleteLine else '')
                 + base +
-                (('\n' + end) if type(end) != _ToDeleteLine else '')
+                ((self.get_lines_splitter() + end) if type(end) != _ToDeleteLine else '')
             )
 
         else:
             self.get_tree_base() # needed
-            return '\n'.join([
+            return self.get_lines_splitter().join([
                 self.get_tree_start(),
                 self.get_tree_end()
             ])
+
+    def get_lines_splitter(self):
+        return self.start_instruction._LINES_SPLITTER if hasattr(self, 'start_instruction') and self.start_instruction else '\n'
 
     def print_tree(self):
         print(self.get_tree_start())
@@ -813,7 +828,7 @@ You need no subclass by this class.
         gen = ( (t, b) for t, b in gen if type(t) != _ToDeleteLine )
         make_end = lambda b: b._INSTRUCTION_LINE_ENDING if hasattr(b, '_INSTRUCTION_LINE_ENDING') and len(b._INSTRUCTION_LINE_ENDING) > 0 else _Block.simple_line_end
         make_text = lambda t, b: (t+make_end(b)) if len(t.strip()) and not isinstance(b, _GoodLine) and not isinstance(b, _Block) and not b.in_block and (not b.is_comment and (len(b.instructions)==0 or not b.instructions[-1].is_comment)) else t
-        return '\n'.join( make_text(t,b) for t, b in gen ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
+        return self.get_lines_splitter().join( make_text(t,b) for t, b in gen ) #+ '::: {} : {}'.format(self.blocks[-1], self.blocks[-1].line_number)
 
     def instuctions_lines_gen(self):
         for b in self.blocks:
@@ -825,13 +840,13 @@ You need no subclass by this class.
 
     def get_tree_start(self):
         try:
-            return ' ' * (self.otstup-4) + (self.start_instruction._BLOCK_START if self.otstup > 0 else '')
+            return ((' ' * (self.otstup-4)) if self.start_instruction and self.start_instruction._USE_OTSTUP else '') + (self.start_instruction._BLOCK_START if self.otstup > 0 else '')
         except Exception as e:
             print('------> {}'.format(self))
             raise
 
     def get_tree_end(self):
-        return ' ' * (self.otstup-4) + (self.start_instruction._BLOCK_END if self.otstup > 0 else '')
+        return ((' ' * (self.otstup-4)) if self.start_instruction and self.start_instruction._USE_OTSTUP else '') + (self.start_instruction._BLOCK_END if self.otstup > 0 else '')
 
     def get_locals(self):
         #return ( self.start_instruction.locals or {} ) if hasattr(self.start_instruction, 'locals') else {}

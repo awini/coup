@@ -48,7 +48,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            on_new_name=lambda self, name, line, line_number:None,
            BLOCK_START=None, BLOCK_END=None, INSTRUCTION_LINE_ENDING='',
            full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
-           arg_maker=None, my_objects=None, is_comment=False, is_method=None):
+           arg_maker=None, my_objects=None, is_comment=False, is_method=None,
+           LINES_SPLITTER='\n', USE_OTSTUP=True):
 
     if BLOCK_START == None:
         BLOCK_START = _Base._BLOCK_START
@@ -380,6 +381,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             _BLOCK_END = BLOCK_END
             _INSTRUCTION_LINE_ENDING = INSTRUCTION_LINE_ENDING
             init_dict = None
+
+            _LINES_SPLITTER = LINES_SPLITTER
+            _USE_OTSTUP = USE_OTSTUP
 
             def __init__(self, line, parent=None, line_number=0):
                 self.locals = _locals
