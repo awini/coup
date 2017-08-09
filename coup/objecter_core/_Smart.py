@@ -34,7 +34,7 @@ from ._smart_parsers import _ExpParser
 
 
 def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
-           tst=False, locals=None, arg_to_instance=None, TYPE_OUT=None,
+           tst=False, locals=None, instance_attrs=None, TYPE_OUT=None,
            on_init=lambda self:None,
            on_init_end=lambda self:None,
            on_try_instruction=lambda self, i, line: None,
@@ -97,7 +97,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
     _on_is_instruction = _arg('on_is_instruction', on_is_instruction)
     _on_new_name = _arg('on_new_name', on_new_name)
     _on_instruction = _arg('on_instruction', on_instruction)
-    _arg_to_instance = _arg('arg_to_instance', arg_to_instance)
+    _instance_attrs = _arg('instance_attrs', instance_attrs)
     _my_objects = _arg('my_objects', my_objects)
     _locals = _arg('locals', locals)
     _BLOCK_END = BLOCK_END
@@ -124,7 +124,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             _starts_with_deleter = len(deleters_in) > 0 and len(deleters_in[0]) > 0 and IN_FORMAT.startswith(deleters_in[0])
 
-            arg_to_instance = None
+            instance_attrs = None
             arg_maker = _arg_maker
 
             def on_new_name(self, name, line, line_number):
@@ -347,9 +347,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                 if not _Base._IS_CATCHING:
 
-                    if self.arg_to_instance:
+                    if self.instance_attrs:
                         i = 0
-                        for name, handler in self.arg_to_instance.items():
+                        for name, handler in self.instance_attrs.items():
                             self.in_block.blocks.insert(i, _GoodLine(self.otstup_string(4)+handler.arg_maker(name, handler.tip))) #'var {}:{}? = nil'.format(name, tip)))
                             i += 1
                         if i > 0:
@@ -387,7 +387,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             def __init__(self, line, parent=None, line_number=0):
                 self.locals = _locals
-                self.arg_to_instance = _arg_to_instance
+                self.instance_attrs = _instance_attrs
 
                 if self.init_dict:
                     for name, val in self.init_dict.items():
@@ -669,7 +669,7 @@ class SmarterProperty(SmarterPropertyBase):
     INDEX = None
     tst = False
     locals = None
-    arg_to_instance = None
+    instance_attrs = None
     TYPE_OUT = None
     on_init = lambda _, self: None
     on_init_end = lambda _, self: None

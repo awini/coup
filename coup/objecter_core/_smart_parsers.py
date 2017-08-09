@@ -385,7 +385,7 @@ class _ExpSomeName(_ExpType):
 
 class _ExpGetLocal(_ExpType):
     #TEXT = '^get_local' FIXME
-    TEXT = '^arg_from_instance'
+    TEXT = 'attribute'
 
     @classmethod
     def is_me(cls, line, parent=None, line_number=None, parent_line=''):
@@ -400,7 +400,7 @@ class _ExpGetLocal(_ExpType):
         #got = _Line.try_instruction(line, line_number=line_number, parent=parent)
         parent_class = parent.get_parent_class()
 
-        if line in parent_class.arg_to_instance:
+        if line in parent_class.instance_attrs:
             return _GoodLine(line, line_number=line_number, parent=parent)
 
         return None
@@ -430,8 +430,8 @@ class _ExpInsertLocal(_ExpType):
                 def arg_maker(name, tip):
                     return parent.arg_maker(name, tip)
 
-            parent_class.arg_to_instance[ line ] = _ArgMakerHandler
-            parent_class.arg_to_instance_last = line
+            parent_class.instance_attrs[ line ] = _ArgMakerHandler
+            parent_class.instance_attrs_last = line
 
         except Exception as e:
             print('error: {}'.format(e))
@@ -468,8 +468,8 @@ class _ExpArgToParent(_ExpType):
 
         try:
 
-            if not hasattr(parent_object, 'arg_to_instance') or parent_object.arg_to_instance == None:
-                parent_object.arg_to_instance = {}
+            if not hasattr(parent_object, 'instance_attrs') or parent_object.instance_attrs == None:
+                parent_object.instance_attrs = {}
 
             class _ArgMakerHandler:
                 tip = None
@@ -479,8 +479,8 @@ class _ExpArgToParent(_ExpType):
                     #return parent.arg_maker(name, tip)
                     return line
 
-            parent_object.arg_to_instance[ self.arg_name ] = _ArgMakerHandler
-            parent_object.arg_to_instance_last = self.arg_name
+            parent_object.instance_attrs[ self.arg_name ] = _ArgMakerHandler
+            parent_object.instance_attrs_last = self.arg_name
 
         except Exception as e:
             print('error: {}'.format(e))
@@ -514,7 +514,7 @@ class _ExpMyArg(_ExpType):
 
         try:
 
-            line = parent_class.arg_to_instance[ self.arg_name ]
+            line = parent_class.instance_attrs[ self.arg_name ]
 
         except Exception as e:
             print('error: {}'.format(e))
@@ -608,8 +608,8 @@ class _ExpInsertLocalType(_ExpType):
 
         parent_class = parent.get_parent_class()
 
-        parent_class.arg_to_instance[ parent_class.arg_to_instance_last ].tip = got.TYPE_OUT
-        parent_class.arg_to_instance_last = None
+        parent_class.instance_attrs[ parent_class.instance_attrs_last ].tip = got.TYPE_OUT
+        parent_class.instance_attrs_last = None
 
         return _ExpType.try_instruction(line, line_number, parent)
 

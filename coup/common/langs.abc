@@ -33,7 +33,7 @@
 
 -------------- Classes: --------------------------------------------------------------------------------------------------------------------------
 
-    class `New:Name`:                               >>>     class `New:Name`                               >>>     class `New:Name`                                 >>>     Class   | arg_to_instance = {}, my_objects = {}
+    class `New:Name`:                               >>>     class `New:Name`                                >>>     class `New:Name`                                 >>>     Class   | instance_attrs = {}, my_objects = {}
                                                             {                                                       {
         def `new:name`(self):                       >>>         `new:name`() {                              >>>         function `new:name`() {                     >>>     Method
             print(`exp`)                            >>>             console.log(`exp`)                      >>>             print(`exp`.PHP_EOL)                    >>>     Print
@@ -50,8 +50,8 @@
     <EXP>.replace(<EXP>, <EXP>)                     >>>     <EXP>.replace(<EXP>, <EXP>)                     >>>     str_replace(<EXP[1]>, <EXP[2]>, <EXP[0]>)       >>>     Replace
     <EXP>[<EXP>]                                    >>>     <EXP>[<EXP>]                                    >>>     $<EXP>[<EXP>]                                   >>>     Index
     <EXP>[:<EXP>]                                   >>>     <EXP>.slice(<EXP>)                              >>>     array_slice(<EXP>, 0, <EXP>)                    >>>     RightSlice
-    self.`exp:+instance_arg|` = <EXP:^type>         >>>     this.`exp:+instance_arg|` = <EXP:^type>         >>>     $this->`exp:+instance_arg|` = <EXP:^type>       >>>     NewInstanceArg
-    self.<EXP:^arg_from_instance>                   >>>     this.<EXP:^arg_from_instance>                   >>>     $this-><EXP:^arg_from_instance>                 >>>     InstanceArg
+    self.`exp:+attribute|` = <EXP:^type>            >>>     this.`exp:+attribute|` = <EXP:^type>            >>>     $this->`exp:+attribute|` = <EXP:^type>          >>>     NewInstanceArg
+    self.<EXP:attribute>                            >>>     this.<EXP:attribute>                            >>>     $this-><EXP:attribute>                          >>>     InstanceArg
     <EXP> + <EXP>                                   >>>     <EXP> + <EXP>                                   >>>     <EXP> + <EXP>                                   >>>     Plus
     <EXP>.format(<EXP>)                             >>>     <EXP> + <EXP>                                   >>>     sprintf(<EXP>, <EXP>)                           >>>     Format
     eval(<EXP>)                                     >>>     eval(<EXP>)                                     >>>     eval(<EXP>)                                     >>>     Eval

@@ -249,7 +249,7 @@ def to_exps(line):
             tip.append('^type')
         if 'text' in exp_text:
             tip.append('TEXT')
-        if '+instance_arg' in exp_text:
+        if '+attribute' in exp_text:
             tip.append('^arg_to_instance')
             if maker_text != None:
                 kwargs['arg_maker'] = lambda self,name,tip: maker_text.replace('{name}', str(name)).replace('{tip}', str(tip))
