@@ -131,6 +131,9 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
             langs = None
             lang_pos = 1
             was_langs_line = False
+
+            templates = {}
+
             for line in lines:
                 if not langs and line.strip().startswith('==='):
                     lst = line.split('===')
@@ -148,16 +151,80 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
 
                 if was_langs_line:
                     if ':::' in line:
-                        param_line = line.split(':::')[lang_pos].strip()
-                        if '=' in param_line:
-                            lang_param_name, lang_param_value = [ a.strip() for a in param_line.split('=') ]
-                            _Block.set_main_tune(lang_param_name, lang_param_value)
+                        lst = line.split(':::')
+                        stripped_0 = lst[0].strip()
+
+                        if '<EXP:TEMPLATE:' in line:
+                            template_name = lst[0].split('<EXP:TEMPLATE:')[1].split('>')[0]
+                            templates[template_name] = lst[lang_pos].strip()
+                        else:
+                            param_line = lst[lang_pos].strip()
+                            if stripped_0.startswith('.') and param_line.startswith('.'):
+                                src = stripped_0[1:]
+                                dst = param_line[1:]
+
+                                print('\n\n\t{} ---> {}\n\n'.format(src, dst))
+
+                                _Base._ARGS_RENAMER[src] = dst
+                            else:
+                                if '=' in param_line:
+                                    lang_param_name, lang_param_value = [ a.strip() for a in param_line.split('=') ]
+                                    _Block.set_main_tune(lang_param_name, lang_param_value)
                         continue
                     else:
                         was_langs_line = False
 
 
                 if '>>>' in line:
+
+                    _inner = None
+
+                    for template_name in templates:
+                        templ = '<EXP:' + template_name + ':'
+                        templ_out = templates[template_name]
+
+                        if templ in line:
+                            kwargs = {}
+
+                            while True:
+                                start = line.find(templ)
+                                if start < 0:
+                                    break
+                                end = line.find('>', start + 1)
+
+                                next_exp = line.find('<EXP:', start+1)
+                                if next_exp >= 0:
+                                    next_exp_fin = line.find('>', next_exp+1)
+                                    while 0 <= end <= next_exp_fin:
+                                        end = line.find('>', end + 1)
+
+                                _templ_out = templ_out
+                                args = line[start+len(templ):end].split(',')
+                                print('ARGS:', args)
+
+                                for i in range(len(args)):
+                                    arg = args[i]
+                                    if arg == 'EXP':
+                                        arg = '<EXP>'
+                                    if '<ARG_{}>'.format(i) in _templ_out:
+                                        _templ_out = _templ_out.replace('<ARG_{}>'.format(i), arg)
+                                    if '=' in arg:
+                                        lst = arg.split('=')
+                                        if lst[0] == 'INNER':
+                                            _inner = lst[1]
+                                        else:
+                                            kwargs[lst[0]] = lst[1]
+
+                                line = line[:start] + _templ_out + line[end+1:]
+
+                            kwargs_line = ' '.join((name + '=' + val) for name, val in kwargs.items())
+                            if len(kwargs_line) > 0:
+                                kwargs_line = ' ' + kwargs_line
+                            line = line.replace('<KWARGS>', kwargs_line + ' <EXP:kwargs>')
+
+                            #line = line.replace(templ, templates[template_name])
+                            break
+
                     if not langs:
                         raise Exception('Need have "=== Lang ====" instructions at start of text.')
 
@@ -198,7 +265,11 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                                 kwargs[lst[0].strip()] = eval(lst[1].strip())
 
                     if '<EXP:INNER>' in dst:
-                        dst, kwargs['BLOCK_END'] = dst.split('<EXP:INNER>')
+                        if _inner:
+                            dst = dst.replace('<EXP:INNER>', _inner)
+                            print('------', dst)
+                        else:
+                            dst, kwargs['BLOCK_END'] = dst.split('<EXP:INNER>')
 
                     setattr(NewTranslater, name, accord(IN=src, OUT=dst, **kwargs))
 
@@ -242,14 +313,15 @@ def to_exps(line):
         lst = line[start+1:stop].lower().split('|')
         maker_text = lst[1] if len(lst) > 1 else None
         exp_text = lst[0]
+        exp_lst = exp_text.replace(':',' ').split(' ')
         tip = []
-        if 'name' in exp_text:
+        if 'name' in exp_lst:
             tip.append('NAME')
-        if 'type' in exp_text:
+        if 'type' in exp_lst:
             tip.append('^type')
-        if 'text' in exp_text:
+        if 'text' in exp_lst:
             tip.append('TEXT')
-        if '+attribute' in exp_text:
+        if '+attribute' in exp_lst:
             tip.append('^arg_to_instance')
             if maker_text != None:
                 kwargs['arg_maker'] = lambda self,name,tip: maker_text.replace('{name}', str(name)).replace('{tip}', str(tip))

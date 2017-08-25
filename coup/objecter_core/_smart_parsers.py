@@ -1,5 +1,5 @@
 # coding: utf-8
-from ._Base import _Line, _GoodLine, _Block, _GlobalName
+from ._Base import _Line, _GoodLine, _Block, _GlobalName, _Base
 
 _t_name = lambda t: t.__class__.__name__ if hasattr(t, '__class__') else t.__name__
 
@@ -15,9 +15,17 @@ class _ExpString:
         return self.__str__()
 
     def is_me(self, line, parent=None, line_number=None, parent_line=''):
+        boo = False
         for t in self.types:
+            if isinstance(t, _ExpToArg):
+                boo = True
+                print('>>>>>>>>>> _ExpToArg >>>>>>>>>>>>\n\t{}'.format(self.types))
             if t and hasattr(t, 'is_me') and not t.is_me(line, parent=parent, line_number=line_number, parent_line=parent_line):
                 return False
+        if boo:
+            self._ExpToArg = _ExpToArg
+            print('\t=====> !!! {}'.format(t))
+            return t
         return True
 
 
@@ -25,17 +33,24 @@ class _ExpString:
         self.types = [ self.try_exp_type(a.strip()) for a in line.split(',') ]
 
     def try_exp_type(self, line):
-
         is_empty = line.strip() == ''
-
         for t in _ExpType.types:
             t = t.try_me(line)
             if t:
                 return t
 
     def try_instruction(self, line, line_number, parent=None):
-
         _Line.log('_ExpString.try_instruction [{}]: '.format(line_number+1) + line)
+
+        if hasattr(self, 'need_debug') and self.need_debug:
+            print('need_debug ' * 3)
+
+        if hasattr(self, '_ExpToArg'):
+            print('_ExpToArg'*5)
+
+        for t in self.types:
+            if isinstance(t, _ExpToArg):
+                print('=================================')
 
         rets = []
         for t in self.types:
@@ -49,6 +64,8 @@ class _ExpString:
                     else:
                         ret.line = _Block.var_format.format(ret.line)
             else:
+                if isinstance(t, _ExpToArg):
+                    print('========== _ExpToArg >>>>>>>>>>>>\n\t{}'.format(self.types))
                 ret = t.try_instruction(line, line_number=line_number, parent=parent, exp_string=self)
             if ret:
                 rets.append(ret)
@@ -58,6 +75,16 @@ class _ExpString:
         if len(rets):
             _Line.log('\treturn: {}'.format(rets[0]))
             return rets[0]
+
+    def try_out_instruction(self, line, line_number, parent=None):
+        rets = []
+        for t in self.types:
+            if isinstance(t, _ExpKwargs):
+                print('\t~~~~~~~ pre')
+            if hasattr(t, 'try_out_instruction'):
+                ret = t.try_out_instruction(line, line_number=line_number, parent=parent)
+                rets.append(ret)
+        return rets[0] if len(rets) > 0 else line
 
 class _ExpType:
     TEXT = None
@@ -171,13 +198,65 @@ class _ExpName(_ExpType):
 
 class _InstructList(list):
 
+    out_splitter = ', '
+
     def get_tree(self):
-        return ', '.join(a.get_tree() for a in self)
+        return self.out_splitter.join(a.get_tree() for a in self)
 
     @property
     def line_number(self):
         return self[0].line_number
 
+class _ExpTreeWay(_ExpType):
+    TEXT = 'TREE_WAY'
+    splitter = None
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.lstrip()
+        if stripped == cls.TEXT:
+            return _ExpTreeWay()
+        if stripped.startswith('TREE_WAY='):
+            w = _ExpTreeWay()
+            val_lst = stripped[len(cls.TEXT)+1:].split('=')
+            w.splitter = val_lst[0]
+            for s in ("'", '"'):
+                if w.splitter.startswith(s) and w.splitter.endswith(s):
+                    w.splitter = w.splitter[1:-1]
+            return w
+
+    try_instruction = None
+
+    def try_out_instruction(self, line, line_number, parent, exp_string=None):
+
+        lst = _InstructList()
+        for name in line.split(','):
+            lst.append( _ExpName.try_instruction(name.strip(), line_number, parent, exp_string=exp_string) )
+
+        ret = _TreeWay(line, line_number=line_number, parent=parent)
+        ret.splitter = self.splitter
+        return ret
+
+class _TreeWay(_Line):
+    splitter = None
+
+    def get_tree_main(self):
+        lst = []
+        if self.in_exp:
+            lst.insert(0, self.in_exp.get_tree_main())
+        if self.parent:
+            parent = self.parent
+            while parent.parent:
+                if hasattr(parent, 'line'):
+                    pass
+                elif parent.start_instruction:
+                    a = parent.start_instruction.get_tree_main()
+                    splitter = self.splitter.strip()
+                    if a.startswith(splitter):
+                        a = a[len(splitter):]
+                    lst.insert(0, a)
+                parent = parent.parent
+        return self.splitter.join(a for a in lst)
 
 class _ExpList(_ExpType):
     TEXT = 'NAMES_LIST'
@@ -201,13 +280,34 @@ class _ExpList(_ExpType):
 
 class _ExpSimpleList(_ExpType):
     TEXT = 'LIST'
+    splitter = ','
+    out_splitter = ', '
+    tryer = _Line
+    min_count = 0
 
     @classmethod
-    def try_instruction(cls, line, line_number, parent, exp_string=None):
+    def try_me(cls, line):
+        stripped = line.lstrip()
+        if stripped == cls.TEXT:
+            return _ExpSimpleList()
+        if stripped.startswith('LIST='):
+            lst = _ExpSimpleList()
+            val_lst = stripped[5:].split('=')
+            lst.splitter = val_lst[0]
+            if len(val_lst) > 1:
+                lst.out_splitter = val_lst[1]
+            if lst.splitter.startswith("'") and lst.splitter.endswith("'"):
+                lst.splitter = lst.splitter[1:-1]
+            if lst.out_splitter.startswith("'") and lst.out_splitter.endswith("'"):
+                lst.out_splitter = lst.out_splitter[1:-1]
+            return lst
+
+    def try_instruction(self, line, line_number, parent, exp_string=None):
 
         lst = _InstructList()
-        for sub in line.split(','):
-            ins = _Line.try_instruction(sub.strip(), line_number=line_number, parent=parent)
+        lst.out_splitter = self.out_splitter
+        for sub in line.split(self.splitter):
+            ins = self.tryer.try_instruction(sub.strip(), line_number=line_number, parent=parent)
             lst.append( ins )
 
         return lst
@@ -382,6 +482,18 @@ class _ExpSomeName(_ExpType):
                 return False
         return True
 
+class _ExpInt(_ExpType):
+    TEXT = 'int'
+
+    @classmethod
+    def is_me(cls, line, parent=None, line_number=None, parent_line=''):
+        stripped = line.strip()
+        return stripped.isdigit()
+
+    @classmethod
+    def try_instruction(cls, line, line_number, parent, exp_string=None):
+        return _GoodLine(line, line_number=line_number, parent=parent)
+
 
 class _ExpGetLocal(_ExpType):
     #TEXT = '^get_local' FIXME
@@ -523,6 +635,129 @@ class _ExpMyArg(_ExpType):
 
         return _GoodLine(line, line_number=line_number, parent=parent)
 
+    def try_out_instruction(self, line, line_number, parent, exp_string=None):
+        print('--- _ExpMyArg', line)
+        parent_object = parent.parent.start_instruction
+        print('\t--- {} --- {}'.format(parent_object, parent))
+        w = WaitTreeForArg(line, line_number=line_number, parent=parent)
+        w.arg_name = self.arg_name
+        return w
+
+class _ExpToArg(_ExpType):
+    TEXT = '+.'
+
+    def __init__(self, arg_name):
+        self.arg_name = arg_name
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped.startswith(cls.TEXT):
+            print('.', stripped.startswith(cls.TEXT))
+            ret = cls(stripped.split(cls.TEXT)[1])
+            print('\t--> {}'.format(ret))
+            return ret
+
+    def try_instruction(self, line, line_number, parent, exp_string=None):
+        print('!!!!!!! +.', self.arg_name, line)
+        if True:
+            parent_object = parent.parent.start_instruction
+            try:
+
+                if not hasattr(parent_object, 'instance_attrs') or parent_object.instance_attrs == None:
+                    parent_object.instance_attrs = {}
+
+                _line = line
+
+                class _ArgMakerHandler:
+                    tip = None
+                    line = _line
+
+                    @staticmethod
+                    def arg_maker(name, tip):
+                        # return parent.arg_maker(name, tip)
+                        return ''
+
+                print('\t..---> {} -- {}'.format(parent_object, self.arg_name))
+
+                parent_object.instance_attrs[self.arg_name] = _ArgMakerHandler
+                parent_object.instance_attrs_last = self.arg_name
+
+            except Exception as e:
+                print('error: {}'.format(e))
+                import traceback, sys
+                traceback.print_exc(file=sys.stdout)
+
+        return _GoodLine('', line_number=line_number, parent=parent)
+
+class _ExpKwargs(_ExpType):
+    TEXT = 'kwargs'
+
+    def __init__(self):
+        print('\t~')
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped == cls.TEXT:
+            return cls()
+
+    try_instruction = None
+
+    def try_out_instruction(self, line, line_number, parent, exp_string=None):
+        print('--- KWARGS', line)
+        parent_object = parent.parent.start_instruction
+        print('\t--- {} --- {}'.format(parent_object, parent))
+        return WaitTree(line, line_number=line_number, parent=parent)
+
+
+class WaitTree(_Line):
+
+    def get_tree_main(self):
+        print('=== KWARGS')
+
+        kwargs = {}
+
+        if True:
+            parent_object = self.parent #.parent.start_instruction
+            try:
+                if hasattr(parent_object, 'instance_attrs') and parent_object.instance_attrs != None:
+                    kwargs = parent_object.instance_attrs
+                    #parent_object.instance_attrs = {}
+                print('\t..{} -- {}'.format(parent_object, kwargs))
+
+            except Exception as e:
+                print('error: {}'.format(e))
+                import traceback, sys
+                traceback.print_exc(file=sys.stdout)
+
+        return ' '.join('{}="{}"'.format(_Base._ARGS_RENAMER.get(a, a),b.line) for a,b in kwargs.items())
+
+class WaitTreeForArg(_Line):
+
+    arg_name = None
+
+    def get_tree_main(self):
+        print('=== WaitTreeForArg')
+
+        kwargs = {}
+
+        if True:
+            parent_object = self.parent #.parent.start_instruction
+            try:
+                if hasattr(parent_object, 'instance_attrs') and parent_object.instance_attrs != None:
+                    kwargs = parent_object.instance_attrs
+                    #parent_object.instance_attrs = {}
+                print('\t..{} -- {}'.format(parent_object, kwargs))
+
+            except Exception as e:
+                print('error: {}'.format(e))
+                import traceback, sys
+                traceback.print_exc(file=sys.stdout)
+
+        maker = kwargs.get(self.arg_name)
+        return maker.line if maker else maker
+
 
 import sys
 
@@ -567,6 +802,7 @@ class _ExpObjectOf(__ExpObject):
 
     def try_instruction(self, line, line_number, parent, exp_string=None):
         return _GoodLine(line, line_number=line_number, parent=parent)
+
 
 class _ExpInstanceOf(__ExpObject):
     TEXT = 'instance_of'

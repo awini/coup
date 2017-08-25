@@ -30,7 +30,7 @@ from inspect import isclass
 from copy import copy
 
 from ._Base import _Base, _Line, _GoodLine, _Block
-from ._smart_parsers import _ExpParser
+from ._smart_parsers import _ExpParser, _ExpToArg
 
 
 def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
@@ -49,7 +49,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
            BLOCK_START=None, BLOCK_END=None, INSTRUCTION_LINE_ENDING='',
            full_line=False, IN=None, OUT=None, SEARCH_IN=None, SEARCH_OUT=None,
            arg_maker=None, my_objects=None, is_comment=False, is_method=None,
-           LINES_SPLITTER='\n', USE_OTSTUP=True):
+           LINES_SPLITTER='\n', USE_OTSTUP=True, to_level_0=False):
 
     if BLOCK_START == None:
         BLOCK_START = _Base._BLOCK_START
@@ -161,32 +161,56 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     _tmp_line = self.line
 
+                    def eo_try(ei_result, eo):
+                        if eo and hasattr(eo, 'try_out_instruction'):
+                            return eo.try_out_instruction(ei_result, line_number=self.line_number, parent=self)
+                        return ei_result
+
                     def pr(ei, e, i):
-                        if need_debug:
-                            print('...', ei, e, self)
+                        _need_debug = need_debug or hasattr(ei, '_ExpToArg')
+                        if _need_debug:
+                            if ei:
+                                ei.need_debug = True
+                            print('...pr', ei, e, self)
                         ins = on_try_instruction(self, i, e)
 
                         if i > len(self.deleters_out.exps)-1:
+                            if _need_debug:
+                                print('\t--> ""')
+                                if ei:
+                                     ei_result = ei.try_instruction(e, line_number=self.line_number, parent=self)
+                                #     eo_try(ei_result, eo)
                             return _Line('')
 
                         if type(ins) == str:
                             e = ins
                         elif ins:
+                            if _need_debug:
+                                print('\t--> ins')
                             return ins
 
                         ret = ei.try_instruction(e, line_number=self.line_number, parent=self)
                         if ret == None:
                             print('\n\n\t[ ERROR ] cant get ins from: {}\n\tby: {}\n'.format(e, self))
                             raise Exception('...')
+                        # ret = eo_try(ret, eo)
+                        # if ret == None:
+                        #     print('\n\n\t[ ERROR ] cant get ins from (eo): {}\n\tby: {}\n'.format(e, self))
+                        #     raise Exception('...')
                         return ret
 
                     in_exps = self.deleters_in.exps
+                    out_exps = self.deleters_out.exps
                     # for i, pos in enumerate(self.deleters_out.exps_poses):
                     #     if pos != None:
                     #         in_exps[i] = self.deleters_in.exps[pos]
                     #
                     # if in_exps != self.deleters_in.exps:
                     #     raise Exception('{} != {}\n{}\n{}'.format(in_exps, self.deleters_in.exps, _tmp_line, self.deleters_out.exps_poses))
+                    for ie in in_exps:
+                        if hasattr(ie, '_ExpToArg'):
+                            need_debug = True
+                            print('(((((((((((((((\n\t{}\n\t{}'.format(lst,in_exps))
 
                     self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, in_exps)) ]
 
@@ -198,7 +222,24 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                             else:
                                 instructions.append(self.instructions[pos])
                     if len(self.deleters_out.exps) < len(instructions):
+                        if need_debug:
+                            print('len(self.deleters_out.exps) < len(instructions) | {} < {}'.format(len(self.deleters_out.exps), len(instructions)))
                         instructions = instructions[:len(self.deleters_out.exps)]
+
+                    in_out_exps, other_out_exps = self.deleters_out.exps[:len(instructions)], self.deleters_out.exps[len(instructions):]
+                    for i, eo in enumerate(in_out_exps):
+                        if eo and hasattr(eo, 'try_out_instruction'):
+                            eo_ret = eo.try_out_instruction('', line_number=self.line_number, parent=self)
+                            if eo_ret and eo_ret != '':
+                                eo_ret.in_exp = instructions[i]
+                                instructions[i] = eo_ret
+
+                    for eo in other_out_exps:
+                        if eo and hasattr(eo, 'try_out_instruction'):
+                            eo_ret = eo.try_out_instruction('', line_number=self.line_number, parent=self)
+                            if eo_ret and eo_ret != '':
+                                instructions.append(eo_ret)
+                                print('\t&&&', instructions, self.instructions)
 
                     if instructions != self.instructions:
                         self.instructions = instructions
@@ -289,12 +330,20 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                             _is_me = True
                             if hasattr(exp, 'is_me'):
 
-                                if not exp.is_me(line[last_pos:new_pos], parent=parent, line_number=line_number, parent_line=line):
+                                is_me_tmp = exp.is_me(line[last_pos:new_pos], parent=parent, line_number=line_number, parent_line=line)
+                                if isinstance(is_me_tmp, _ExpToArg):
+                                    need_debug = True
+                                    print('..................\n\t {}'.format(cls.deleters_in.exps))
+
+                                if not is_me_tmp:
                                     _Line.log('\tFALSE: not is_me by exp: {},\n\tline: {}'.format(exp, line[last_pos:new_pos]))
                                     _is_me = False
 
                             if not _is_me:
-                                return _print(False, 'not _is_me: ' + line[last_pos:new_pos] + ' ({})'.format(exp))
+                                _text = 'not _is_me: ' + line[last_pos:new_pos] + ' ({})'.format(exp)
+                                if need_debug:
+                                    print(_text)
+                                return _print(False, _text)
 
                     last_pos = new_pos + len(part)
 
@@ -318,12 +367,16 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 pos -= len(part)
                 if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
                     if line[pos:] == cls.deleters_in[-1]:
+                        if need_debug:
+                            print('\tTRUE 1')
                         _Line.log('\tTRUE: line[pos:] == cls.deleters_in[-1]')
                         return _print(True, 'line[pos:] == cls.deleters_in[-1]')
 
                     _Line.log('\tFALSE: need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
                     return _print(False, 'need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
 
+                if need_debug:
+                    print('\tTRUE')
                 _Line.log('\tTRUE: return True')
                 return _print(True, 'return True')
 
@@ -350,6 +403,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     if self.instance_attrs:
                         i = 0
                         for name, handler in self.instance_attrs.items():
+                            print('+++++++')
                             self.in_block.blocks.insert(i, _GoodLine(self.otstup_string(4)+handler.arg_maker(name, handler.tip))) #'var {}:{}? = nil'.format(name, tip)))
                             i += 1
                         if i > 0:
@@ -384,6 +438,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             _LINES_SPLITTER = LINES_SPLITTER
             _USE_OTSTUP = USE_OTSTUP
+            _to_level_0 = to_level_0
 
             def __init__(self, line, parent=None, line_number=0):
                 self.locals = _locals

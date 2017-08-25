@@ -74,10 +74,13 @@ Implement those methods in child:
     block = None
     in_block = None
     STANDART_OTSTUP = None
+    _to_level_0 = False
 
     _IS_CATCHING = 0
     _SHOW_ERRORS_IN_HTML = True
     _LOG_ENABLED = True
+
+    _ARGS_RENAMER = {}
 
     @staticmethod
     def set_SHOW_ERRORS_IN_HTML(value):
@@ -89,6 +92,7 @@ Implement those methods in child:
         self.line_number = line_number
         self.is_comment = False
         self.is_method = None
+        self._args = {}
 
     @classmethod
     def to_str(cls):
@@ -809,6 +813,14 @@ You need no subclass by this class.
                 self.get_tree_end()
             ])
 
+    def get_root_block(self):
+        parent = self.parent
+        if not parent:
+            return self
+        while parent.parent:
+            parent = parent.parent
+        return parent
+
     def get_lines_splitter(self):
         return self.start_instruction._LINES_SPLITTER if hasattr(self, 'start_instruction') and self.start_instruction else '\n'
 
@@ -880,7 +892,9 @@ You need no subclass by this class.
             if ins:
                 if _Block._debug:
                     print('[ {} ] {}'.format(ins, line))
-                self.blocks.append(ins.set_block(self))
+                b = ins.set_block(self)
+                #if not self.insert_before_added_to_level_0(b):
+                self.blocks.append(b)
 
                 #print('::::: last: {} --> {}'.format(ins, type(ins) != _Line))
                 if type(ins) != _Line:
@@ -940,6 +954,7 @@ You need no subclass by this class.
                 b = _Block(parent=self, line=line,
                            start_instruction=self.last_instruction)
                 self.last_block = b
+
                 #print('.....starts block end: {}'.format(b))
 
                 smart_ret = None
@@ -960,7 +975,20 @@ You need no subclass by this class.
                 tst_lines = after_in_lines
                 if d > 0:
                     diapazon[0] += d-1
-                    self.blocks.append(b)
+                    if self.parent and b.start_instruction and b.start_instruction._to_level_0:
+                        self.blocks[:] = self.blocks[:-1]
+                        root_block = self.get_root_block()
+                        root_block.blocks.append(b.start_instruction)
+                        root_block.blocks.append(b)
+                        b._added_to_level_0 = True
+                        b.start_instruction._added_to_level_0 = True
+                        b.otstup = 1                    # FIXME
+                        b.start_instruction.otstup = 0  # FIXME
+                        for bb in b.blocks:
+                            bb.otstup = 4               # FIXME
+                    else:
+                        if not self.insert_before_added_to_level_0(b):
+                            self.blocks.append(b)
                 else:
                     break
             else:
@@ -981,6 +1009,15 @@ You need no subclass by this class.
             b.start_instruction.on_block_end(b)
 
         return tst_lines
+
+    def insert_before_added_to_level_0(self, b):
+        if len(self.blocks) > 0 and hasattr(self.blocks[-1], '_added_to_level_0'):
+            last_bi = 1
+            while last_bi <= len(self.blocks) and hasattr(self.blocks[-last_bi], '_added_to_level_0'):
+                last_bi += 1
+            self.blocks.insert(last_bi - 1, b)
+            return True
+
 
     def is_end(self, line):
         otstup = _Base.get_otstup(line)
