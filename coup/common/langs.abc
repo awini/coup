@@ -33,7 +33,7 @@
 
 -------------- Classes: --------------------------------------------------------------------------------------------------------------------------
 
-    class `New:Name`:                               >>>     class `New:Name`                                >>>     class `New:Name`                                 >>>     Class   | instance_attrs = {}, my_objects = {}
+    class `New:Name`:                               >>>     class `New:Name`                                >>>     class `New:Name`                                >>>     Class   | instance_attrs = {}, my_objects = {}
                                                             {                                                       {
         def `new:name`(self):                       >>>         `new:name`() {                              >>>         function `new:name`() {                     >>>     Method
             print(`exp`)                            >>>             console.log(`exp`)                      >>>             print(`exp`.PHP_EOL)                    >>>     Print

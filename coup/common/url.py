@@ -210,6 +210,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                                         _templ_out = _templ_out.replace('<ARG_{}>'.format(i), arg)
                                     if '=' in arg:
                                         lst = arg.split('=')
+                                        lst = [lst[0], '='.join(lst[1:])]
                                         if lst[0] == 'INNER':
                                             _inner = lst[1]
                                         else:

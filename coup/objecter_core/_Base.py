@@ -201,7 +201,12 @@ Implement those methods in child:
         return self.block.start_instruction if self.block else None
 
     def get_tree(self):
-        return ((' '*self.otstup) if self._USE_OTSTUP else '') + self.get_tree_main()
+        try:
+            return ((' '*self.otstup) if self._USE_OTSTUP else '') + self.get_tree_main()
+        except:
+            print('[ ERROR ] {} otstup={} line={}'.format(self, self.otstup,
+                                                          self.line if hasattr(self, 'line') else '-'))
+            raise
 
     def make_objects_tree_html(self):
         lines = []

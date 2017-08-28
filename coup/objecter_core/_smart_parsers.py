@@ -19,12 +19,12 @@ class _ExpString:
         for t in self.types:
             if isinstance(t, _ExpToArg):
                 boo = True
-                print('>>>>>>>>>> _ExpToArg >>>>>>>>>>>>\n\t{}'.format(self.types))
+                #print('>>>>>>>>>> _ExpToArg >>>>>>>>>>>>\n\t{}'.format(self.types))
             if t and hasattr(t, 'is_me') and not t.is_me(line, parent=parent, line_number=line_number, parent_line=parent_line):
                 return False
         if boo:
             self._ExpToArg = _ExpToArg
-            print('\t=====> !!! {}'.format(t))
+            #print('\t=====> !!! {}'.format(t))
             return t
         return True
 
@@ -42,15 +42,15 @@ class _ExpString:
     def try_instruction(self, line, line_number, parent=None):
         _Line.log('_ExpString.try_instruction [{}]: '.format(line_number+1) + line)
 
-        if hasattr(self, 'need_debug') and self.need_debug:
-            print('need_debug ' * 3)
-
-        if hasattr(self, '_ExpToArg'):
-            print('_ExpToArg'*5)
-
-        for t in self.types:
-            if isinstance(t, _ExpToArg):
-                print('=================================')
+        # if hasattr(self, 'need_debug') and self.need_debug:
+        #     print('need_debug ' * 3)
+        #
+        # if hasattr(self, '_ExpToArg'):
+        #     print('_ExpToArg'*5)
+        #
+        # for t in self.types:
+        #     if isinstance(t, _ExpToArg):
+        #         print('=================================')
 
         rets = []
         for t in self.types:
@@ -64,8 +64,8 @@ class _ExpString:
                     else:
                         ret.line = _Block.var_format.format(ret.line)
             else:
-                if isinstance(t, _ExpToArg):
-                    print('========== _ExpToArg >>>>>>>>>>>>\n\t{}'.format(self.types))
+                # if isinstance(t, _ExpToArg):
+                #     print('========== _ExpToArg >>>>>>>>>>>>\n\t{}'.format(self.types))
                 ret = t.try_instruction(line, line_number=line_number, parent=parent, exp_string=self)
             if ret:
                 rets.append(ret)
@@ -79,8 +79,6 @@ class _ExpString:
     def try_out_instruction(self, line, line_number, parent=None):
         rets = []
         for t in self.types:
-            if isinstance(t, _ExpKwargs):
-                print('\t~~~~~~~ pre')
             if hasattr(t, 'try_out_instruction'):
                 ret = t.try_out_instruction(line, line_number=line_number, parent=parent)
                 rets.append(ret)
@@ -565,18 +563,8 @@ class _ExpArgToParent(_ExpType):
         if stripped.startswith(cls.TEXT):
             return cls(stripped.split(cls.TEXT)[1])
 
-    # @classmethod
-    # def is_me(cls, line, parent=None, line_number=None, parent_line=''):
-    #     stripped = line.strip()
-    #     for a in ' []:-+/&^%$#@()=':
-    #         if a in stripped:
-    #             return False
-    #     return True
-
     def try_instruction(self, line, line_number, parent, exp_string=None):
         parent_object = parent.parent.start_instruction
-
-        #print('>>>>>>>>>>', parent, parent_object)
 
         try:
 
@@ -588,8 +576,13 @@ class _ExpArgToParent(_ExpType):
 
                 @staticmethod
                 def arg_maker(name, tip):
-                    #return parent.arg_maker(name, tip)
                     return line
+
+                def __str__(self):
+                    return '_ExpArgToParent.maker[{}]'.format(line)
+
+                def __repr__(self):
+                    return self.__str__()
 
             parent_object.instance_attrs[ self.arg_name ] = _ArgMakerHandler
             parent_object.instance_attrs_last = self.arg_name
@@ -605,7 +598,9 @@ class _ExpMyArg(_ExpType):
     TEXT = '.'
 
     def __init__(self, arg_name):
-        self.arg_name = arg_name
+        lst = arg_name.split('=')
+        self.arg_name = lst[0]
+        self.default_value = lst[1] if len(lst) > 1 else None
 
     @classmethod
     def try_me(cls, line):
@@ -625,9 +620,7 @@ class _ExpMyArg(_ExpType):
         parent_class = parent.get_parent_class()
 
         try:
-
             line = parent_class.instance_attrs[ self.arg_name ]
-
         except Exception as e:
             print('error: {}'.format(e))
             import traceback, sys
@@ -636,11 +629,12 @@ class _ExpMyArg(_ExpType):
         return _GoodLine(line, line_number=line_number, parent=parent)
 
     def try_out_instruction(self, line, line_number, parent, exp_string=None):
-        print('--- _ExpMyArg', line)
         parent_object = parent.parent.start_instruction
-        print('\t--- {} --- {}'.format(parent_object, parent))
+        print('--- _ExpMyArg - {} - {}'.format(parent_object, parent))
         w = WaitTreeForArg(line, line_number=line_number, parent=parent)
         w.arg_name = self.arg_name
+        w.default_value = self.default_value
+        print('\t---> default_value: {}'.format(self.default_value))
         return w
 
 class _ExpToArg(_ExpType):
@@ -653,13 +647,10 @@ class _ExpToArg(_ExpType):
     def try_me(cls, line):
         stripped = line.strip()
         if stripped.startswith(cls.TEXT):
-            print('.', stripped.startswith(cls.TEXT))
             ret = cls(stripped.split(cls.TEXT)[1])
-            print('\t--> {}'.format(ret))
             return ret
 
     def try_instruction(self, line, line_number, parent, exp_string=None):
-        print('!!!!!!! +.', self.arg_name, line)
         if True:
             parent_object = parent.parent.start_instruction
             try:
@@ -675,12 +666,15 @@ class _ExpToArg(_ExpType):
 
                     @staticmethod
                     def arg_maker(name, tip):
-                        # return parent.arg_maker(name, tip)
                         return ''
 
-                print('\t..---> {} -- {}'.format(parent_object, self.arg_name))
+                    def __str__(self):
+                        return '_ExpToArg.maker[{}]'.format(_line)
 
-                parent_object.instance_attrs[self.arg_name] = _ArgMakerHandler
+                    def __repr__(self):
+                        return self.__str__()
+
+                parent_object.instance_attrs[self.arg_name] = _ArgMakerHandler()
                 parent_object.instance_attrs_last = self.arg_name
 
             except Exception as e:
@@ -693,8 +687,8 @@ class _ExpToArg(_ExpType):
 class _ExpKwargs(_ExpType):
     TEXT = 'kwargs'
 
-    def __init__(self):
-        print('\t~')
+    # def __init__(self):
+    #     print('\t~')
 
     @classmethod
     def try_me(cls, line):
@@ -705,16 +699,14 @@ class _ExpKwargs(_ExpType):
     try_instruction = None
 
     def try_out_instruction(self, line, line_number, parent, exp_string=None):
-        print('--- KWARGS', line)
         parent_object = parent.parent.start_instruction
-        print('\t--- {} --- {}'.format(parent_object, parent))
         return WaitTree(line, line_number=line_number, parent=parent)
 
 
 class WaitTree(_Line):
 
     def get_tree_main(self):
-        print('=== KWARGS')
+        #print('=== KWARGS')
 
         kwargs = {}
 
@@ -723,9 +715,6 @@ class WaitTree(_Line):
             try:
                 if hasattr(parent_object, 'instance_attrs') and parent_object.instance_attrs != None:
                     kwargs = parent_object.instance_attrs
-                    #parent_object.instance_attrs = {}
-                print('\t..{} -- {}'.format(parent_object, kwargs))
-
             except Exception as e:
                 print('error: {}'.format(e))
                 import traceback, sys
@@ -736,27 +725,35 @@ class WaitTree(_Line):
 class WaitTreeForArg(_Line):
 
     arg_name = None
+    default_value = None
+
+    def __str__(self):
+        return 'WaitTreeForArg[{}={}]'.format(self.arg_name, self.get_value())
+
+    def __repr__(self):
+        return self.__str__()
 
     def get_tree_main(self):
-        print('=== WaitTreeForArg')
+        return self.get_value()
 
+    def get_value(self):
         kwargs = {}
 
         if True:
-            parent_object = self.parent #.parent.start_instruction
+            parent_object = self.parent  # .parent.start_instruction
             try:
                 if hasattr(parent_object, 'instance_attrs') and parent_object.instance_attrs != None:
                     kwargs = parent_object.instance_attrs
-                    #parent_object.instance_attrs = {}
-                print('\t..{} -- {}'.format(parent_object, kwargs))
-
             except Exception as e:
                 print('error: {}'.format(e))
                 import traceback, sys
                 traceback.print_exc(file=sys.stdout)
 
         maker = kwargs.get(self.arg_name)
-        return maker.line if maker else maker
+        ret = maker.line if maker else maker
+        if ret == None:
+            ret = self.default_value
+        return ret
 
 
 import sys

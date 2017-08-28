@@ -171,12 +171,12 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         if _need_debug:
                             if ei:
                                 ei.need_debug = True
-                            print('...pr', ei, e, self)
+                            #print('...pr', ei, e, self)
                         ins = on_try_instruction(self, i, e)
 
                         if i > len(self.deleters_out.exps)-1:
                             if _need_debug:
-                                print('\t--> ""')
+                                #print('\t--> ""')
                                 if ei:
                                      ei_result = ei.try_instruction(e, line_number=self.line_number, parent=self)
                                 #     eo_try(ei_result, eo)
@@ -210,7 +210,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     for ie in in_exps:
                         if hasattr(ie, '_ExpToArg'):
                             need_debug = True
-                            print('(((((((((((((((\n\t{}\n\t{}'.format(lst,in_exps))
+                            #print('(((((((((((((((\n\t{}\n\t{}'.format(lst,in_exps))
 
                     self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, in_exps)) ]
 
@@ -222,8 +222,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                             else:
                                 instructions.append(self.instructions[pos])
                     if len(self.deleters_out.exps) < len(instructions):
-                        if need_debug:
-                            print('len(self.deleters_out.exps) < len(instructions) | {} < {}'.format(len(self.deleters_out.exps), len(instructions)))
+                        # if need_debug:
+                        #     print('len(self.deleters_out.exps) < len(instructions) | {} < {}'.format(len(self.deleters_out.exps), len(instructions)))
                         instructions = instructions[:len(self.deleters_out.exps)]
 
                     in_out_exps, other_out_exps = self.deleters_out.exps[:len(instructions)], self.deleters_out.exps[len(instructions):]
@@ -239,15 +239,15 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                             eo_ret = eo.try_out_instruction('', line_number=self.line_number, parent=self)
                             if eo_ret and eo_ret != '':
                                 instructions.append(eo_ret)
-                                print('\t&&&', instructions, self.instructions)
+                                #print('\t&&&', instructions, self.instructions)
 
                     if instructions != self.instructions:
                         self.instructions = instructions
                         # raise Exception('{} != {}\n{}\n{}'.format(instructions, self.instructions, _tmp_line,
                         #                                           self.deleters_out.exps_poses))
 
-                    if need_debug:
-                        print('>>>>>>', self.instructions)
+                    # if need_debug:
+                    #     print('>>>>>>', self.instructions)
 
                     self.line = _tmp_line
 
@@ -333,7 +333,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                                 is_me_tmp = exp.is_me(line[last_pos:new_pos], parent=parent, line_number=line_number, parent_line=line)
                                 if isinstance(is_me_tmp, _ExpToArg):
                                     need_debug = True
-                                    print('..................\n\t {}'.format(cls.deleters_in.exps))
+                                    #print('..................\n\t {}'.format(cls.deleters_in.exps))
 
                                 if not is_me_tmp:
                                     _Line.log('\tFALSE: not is_me by exp: {},\n\tline: {}'.format(exp, line[last_pos:new_pos]))
@@ -341,8 +341,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                             if not _is_me:
                                 _text = 'not _is_me: ' + line[last_pos:new_pos] + ' ({})'.format(exp)
-                                if need_debug:
-                                    print(_text)
+                                # if need_debug:
+                                #     print(_text)
                                 return _print(False, _text)
 
                     last_pos = new_pos + len(part)
@@ -350,15 +350,15 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     pos = new_pos
 
                     if pos < 0:
-                        if need_debug:
-                            print('\tFALSE')
+                        # if need_debug:
+                        #     print('\tFALSE')
                         _Line.log('\tFALSE: pos < 0')
                         return _print(False, 'pos < 0')
 
                     if i == 0 and cls._starts_with_deleter:
                         if pos != 0:
-                            if need_debug:
-                                print('\tFALSE')
+                            # if need_debug:
+                            #     print('\tFALSE')
                             _Line.log('\tFALSE: pos != 0')
                             return _print(False, 'i == 0 and cls._starts_with_deleter')
 
@@ -367,16 +367,16 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 pos -= len(part)
                 if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
                     if line[pos:] == cls.deleters_in[-1]:
-                        if need_debug:
-                            print('\tTRUE 1')
+                        # if need_debug:
+                        #     print('\tTRUE 1')
                         _Line.log('\tTRUE: line[pos:] == cls.deleters_in[-1]')
                         return _print(True, 'line[pos:] == cls.deleters_in[-1]')
 
                     _Line.log('\tFALSE: need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
                     return _print(False, 'need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
 
-                if need_debug:
-                    print('\tTRUE')
+                # if need_debug:
+                #     print('\tTRUE')
                 _Line.log('\tTRUE: return True')
                 return _print(True, 'return True')
 
@@ -384,7 +384,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 try:
                     trees = [ ins.get_tree() for ins in self.instructions ] #line = '|'.join()
                 except Exception:
-                    print('line: {}\ninss: {}'.format(self.line, self.instructions))
+                    print('[EXCEPTION] line: {}\ninss: {}'.format(self.line, self.instructions))
                     import traceback, sys
                     traceback.print_exc(file=sys.stdout)
                     raise
@@ -403,7 +403,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     if self.instance_attrs:
                         i = 0
                         for name, handler in self.instance_attrs.items():
-                            print('+++++++')
+                            #print('+++++++')
                             self.in_block.blocks.insert(i, _GoodLine(self.otstup_string(4)+handler.arg_maker(name, handler.tip))) #'var {}:{}? = nil'.format(name, tip)))
                             i += 1
                         if i > 0:
