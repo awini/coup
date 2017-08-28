@@ -492,6 +492,36 @@ class _ExpInt(_ExpType):
     def try_instruction(cls, line, line_number, parent, exp_string=None):
         return _GoodLine(line, line_number=line_number, parent=parent)
 
+class _ExpFloat(_ExpType):
+    TEXT = 'float'
+    exp = None
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped == cls.TEXT:
+            return _ExpFloat()
+        if stripped.startswith('float'):
+            cutted = stripped[5:]
+            if cutted.startswith('*'):
+                ef = _ExpFloat()
+                ef.exp = cutted
+                return ef
+
+    def is_me(self, line, parent=None, line_number=None, parent_line=''):
+        if line.count('.') != 1 and not line.strip().isdigit():
+            return None
+        try:
+            val = float(line.strip())
+            return True
+        except:
+            pass
+
+    def try_instruction(self, line, line_number, parent, exp_string=None):
+        if self.exp:
+            line = str(eval(line.strip() + self.exp))
+        return _GoodLine(line, line_number=line_number, parent=parent)
+
 
 class _ExpGetLocal(_ExpType):
     #TEXT = '^get_local' FIXME
