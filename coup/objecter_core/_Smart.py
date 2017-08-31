@@ -265,6 +265,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             @classmethod
             def _is_instruction(cls, line, parent=None, line_number=None):
 
+                if hasattr(parent, '_exp_equal__list'):
+                    del parent._exp_equal__list
+
                 def _print(result, comment):
                     if len(line.strip()):
                         p = '++' if result else '--'

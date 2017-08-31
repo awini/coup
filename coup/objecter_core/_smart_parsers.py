@@ -522,6 +522,50 @@ class _ExpFloat(_ExpType):
             line = str(eval(line.strip() + self.exp))
         return _GoodLine(line, line_number=line_number, parent=parent)
 
+class _ExpEqual(_ExpType):
+    TEXT = 'equal'
+    name = None
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped == cls.TEXT:
+            print('EQUAL')
+            return _ExpEqual()
+        if stripped.startswith('equal'):
+            cutted = stripped[5:]
+            if cutted.startswith('='):
+                print('EQUAL 2')
+                ef = _ExpEqual()
+                ef.name = cutted[1:]
+                return ef
+
+    def prepair_parent(self, parent):
+        if not hasattr(parent, '_exp_equal__list'):
+            parent._exp_equal__list = []
+
+    def is_me(self, line, parent=None, line_number=None, parent_line=''):
+        self.line = line
+
+        if hasattr(parent, '_exp_equal__list'):
+            for ex in parent._exp_equal__list:
+                if ex.line != line:
+                    print('-----------------------EQUAL ---> FALSE')
+                    return False
+
+            parent._exp_equal__list.append(self)
+        else:
+            parent._exp_equal__list = [self]
+
+        print('-----------------------EQUAL')
+
+        return True
+
+    def try_instruction(self, line, line_number, parent, exp_string=None):
+
+        print('-----------------------TRY EQUAL')
+
+        return _GoodLine(line, line_number=line_number, parent=parent)
 
 class _ExpGetLocal(_ExpType):
     #TEXT = '^get_local' FIXME
@@ -660,11 +704,11 @@ class _ExpMyArg(_ExpType):
 
     def try_out_instruction(self, line, line_number, parent, exp_string=None):
         parent_object = parent.parent.start_instruction
-        print('--- _ExpMyArg - {} - {}'.format(parent_object, parent))
+        #print('--- _ExpMyArg - {} - {}'.format(parent_object, parent))
         w = WaitTreeForArg(line, line_number=line_number, parent=parent)
         w.arg_name = self.arg_name
         w.default_value = self.default_value
-        print('\t---> default_value: {}'.format(self.default_value))
+        #print('\t---> default_value: {}'.format(self.default_value))
         return w
 
 class _ExpToArg(_ExpType):
