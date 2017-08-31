@@ -161,7 +161,23 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                             param_line = lst[lang_pos].strip()
                             if stripped_0.startswith('.') and param_line.startswith('.'):
                                 src = stripped_0[1:]
-                                dst = param_line[1:]
+                                dst = param_line[1:].replace(stripped_0, '<EXP>')
+                                if '|' in dst:
+                                    dst = [ a.strip() for a in dst.split('|')]
+                                    _dst = []
+                                    for i, d in enumerate(dst):
+                                        dl = d.split('=.')
+                                        if len(dl) > 1:
+                                            fin_d = dl[-1]
+                                            fin_val = fin_d.split('=')[1]
+                                            dl = [ (d + '=' + fin_val) for d in dl[:-1] ] + [fin_d]
+                                            #dl[0] = dl[0][1:]
+                                        else:
+                                            if dl[0].startswith('.'):
+                                                dl[0] = dl[0][1:]
+                                            #dl = [ d[1:] if d.startswith('.') else ('.'+d) for d in dl ]
+                                        _dst += dl
+                                    dst = tuple(_dst)
 
                                 print('\n\n\t{} ---> {}\n\n'.format(src, dst))
 

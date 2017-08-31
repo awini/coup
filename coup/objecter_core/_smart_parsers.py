@@ -794,7 +794,19 @@ class WaitTree(_Line):
                 import traceback, sys
                 traceback.print_exc(file=sys.stdout)
 
-        return ' '.join('{}="{}"'.format(_Base._ARGS_RENAMER.get(a, a),b.line) for a,b in kwargs.items())
+        return ' '.join(self._make_part(_Base._ARGS_RENAMER.get(a, a), b.line) for a,b in kwargs.items())
+
+    def _make_part(self, name, value):
+        names = name if type(name) == tuple else (name,)
+        return ' '.join(self._make_pp(name, value) for name in names)
+
+    def _make_pp(self, name, value):
+        if '<NO_VALUE>' in name:
+            return name.replace('<NO_VALUE>', '').strip()
+        value = value.replace('"', "'")
+        if '=' in name:
+            return name.replace('<EXP>', value)
+        return '{}="{}"'.format(name, value)
 
 class WaitTreeForArg(_Line):
 
