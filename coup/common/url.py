@@ -77,6 +77,22 @@ class Urler:
 
         return NewTranslater
 
+def _join_addon_lines(lines):
+    i = 0
+    while i < len(lines)-1:
+        line = lines[i]
+        next_line = lines[i+1]
+        if '|||' in next_line:
+            splitter = ':::' if ':::' in line else '>>>'
+            lst = line.split(splitter)
+            for j, a in enumerate(next_line.split('|||')):
+                lst[j] = lst[j].strip() + a.strip()
+            lines[i:i+2] = [splitter.join(lst)]
+        else:
+            i += 1
+    #print(lines)
+    return lines
+
 def _find_addon_lines(lines):
     k = -1
     add_lines = []
@@ -104,20 +120,23 @@ def _add_lines_to_line(lines, k, addon_lines):
 
 def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END='}'): # FIXME
 
-    if text.startswith('@'):
+    lines = text.split('\n')
+
+    if lines[0].startswith('@'):
+        stripped_0 = lines[0].strip()
         pathes = [ abspath(os.getcwd()) ]
         if HERE not in pathes:
             pathes.append(HERE)
         for p in pathes:
-            filename = join(p, text.replace('@','')+'.abc')
+            filename = join(p, stripped_0.replace('@','')+'.abc')
             if os.path.exists(filename):
                 with open(filename) as f:
-                    text = f.read()
+                    lines[:1] = f.read().split('\n')
 
-    lines = text.split('\n')
-    k, addon_lines = _find_addon_lines(lines)
-    if k >= 0:
-        lines = _add_lines_to_line(lines, k, addon_lines)
+    lines = _join_addon_lines(lines)
+    # k, addon_lines = _find_addon_lines(lines)
+    # if k >= 0:
+    #     lines = _add_lines_to_line(lines, k, addon_lines)
 
     if translater == None:
         translater = Translater
@@ -134,7 +153,12 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
 
             templates = {}
 
-            for line in lines:
+            #add_count = 0
+            for pos, line in enumerate(lines):
+                # if add_count > 0:
+                #     add_count -= 1
+                #     continue
+
                 if not langs and line.strip().startswith('==='):
                     lst = line.split('===')
                     langs = [ a.strip().lower() for a in lst if len(a.strip()) > 0 ]
@@ -152,6 +176,20 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                 if was_langs_line:
                     if ':::' in line:
                         lst = line.split(':::')
+
+                        # add_count = 0
+                        # add_pos = pos + 1
+                        # while add_pos < len(lines):
+                        #     print('.')
+                        #     print(lines[add_pos])
+                        #     if '|||' not in lines[add_pos]:
+                        #         break
+                        #     print('!!!!!!! ||| {}'.format(lines[add_pos]))
+                        #     for j, part in enumerate(lines[add_pos].split('|||')):
+                        #         lst[j] = lst[j].strip() + part.strip()
+                        #     add_count += 1
+                        #     add_pos += 1
+
                         stripped_0 = lst[0].strip()
 
                         if '<EXP:TEMPLATE:' in line:
@@ -221,7 +259,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                                 for i in range(len(args)):
                                     arg = args[i]
                                     if arg == 'EXP':
-                                        arg = '<EXP>'
+                                        arg = '<EXP[0]>'
                                     if '<ARG_{}>'.format(i) in _templ_out:
                                         _templ_out = _templ_out.replace('<ARG_{}>'.format(i), arg)
                                     if '=' in arg:
@@ -238,6 +276,8 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                             if len(kwargs_line) > 0:
                                 kwargs_line = ' ' + kwargs_line
                             line = line.replace('<KWARGS>', kwargs_line + ' <EXP:kwargs>')
+
+                            print('LINE: {}'.format(line))
 
                             #line = line.replace(templ, templates[template_name])
                             break

@@ -16,12 +16,12 @@
 
 -------------- Simple logic: ---------------------------------------------------------------------------------------------------------------------
 
-    if <EXP>:                                       >>>     if <EXP> {                                      >>>     if <EXP> {                                      >>>     If
+    if <EXP>:                                       >>>     if (<EXP>) {                                    >>>     if <EXP> {                                      >>>     If | INDEX=-9998
         sorted(<EXP>)                               >>>         <EXP>.sorted()                              >>>         <EXP>.sorted()                              >>>     Sorted
-    elif <EXP>:                                     >>>     else if {                                       >>>     else if {                                       >>>     ElseIf
+    elif <EXP>:                                     >>>     else if (<EXP>) {                               >>>     else if {                                       >>>     ElseIf
         pass                                        >>>                                                     >>>                                                     >>>     Pass
     else:                                           >>>     } else {                                        >>>     } else {                                        >>>     Else
-        `x:name` = <EXP:^instance>                  >>>         var `x:name` = `17`                         >>>         $`x:name` = `17`                            >>>     NewVar
+        `x:name` = <EXP:^instance>                  >>>         var `x:name` = `17`                         >>>         $`x:name` = `17`                            >>>     NewVar | INDEX=-9999
         `x` = `18`                                  >>>         `x` = `18`                                  >>>         $`x` = `18`                                 >>>     ChangeVar   # FIXME !!!!
         `x` += `1`                                  >>>         `x` += `1`                                  >>>         `x` .= `1`                                  >>>     PlusCount
                                                             }                                                       }

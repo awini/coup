@@ -118,7 +118,7 @@ Implement those methods in child:
             if type(ins) == tip:
                 return ins
 
-    def get_parent_class(self, full_name=False, or_last_true=False):
+    def get_parent_class(self, full_name=False, or_last_true=False, debug=False):
         parent = self.parent
         last_parent = self
 
@@ -128,7 +128,10 @@ Implement those methods in child:
 
         while parent and check_cls():
             while parent and '_Block' != parent.__class__.__name__:
-                #print('\t{}'.format(parent))
+                if debug:
+                    print('\t* {}: {}'.format(parent, parent.line if hasattr(parent, 'line') else '-'))
+                    stripped = parent.line.strip()
+                    print('\t--> {}'.format(stripped.isdigit() and len(stripped) > 0))
                 parent = parent.parent
             if parent:
                 parent = parent.start_instruction

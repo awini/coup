@@ -152,7 +152,11 @@ class _ExpName(_ExpType):
     @classmethod
     def is_me(cls, line, parent=None, line_number=None, parent_line=''):
         stripped = line.strip()
-        return ' ' not in stripped and '.' not in stripped
+        for a in ' .():/$#!@%^&*()-=+':
+            if a in stripped:
+                return False
+        return True
+        #return ' ' not in stripped and '.' not in stripped
 
     @classmethod
     def try_instruction(cls, line, line_number, parent, exp_string=None):
@@ -197,6 +201,7 @@ class _ExpName(_ExpType):
 class _InstructList(list):
 
     out_splitter = ', '
+    is_comment = False
 
     def get_tree(self):
         return self.out_splitter.join(a.get_tree() for a in self)
@@ -263,8 +268,10 @@ class _ExpList(_ExpType):
     def is_me(cls, line, parent=None, line_number=None, parent_line=''):
         for name in line.split(','):
             name = name.strip()
-            if ' ' in name:
-                return False
+            #if ' ' in name:
+            for a in ' .!@#$%^&*()-=+':
+                if a in name:
+                    return False
         return True
 
     @classmethod
@@ -282,15 +289,27 @@ class _ExpSimpleList(_ExpType):
     out_splitter = ', '
     tryer = _Line
     min_count = 0
+    tip = None
 
     @classmethod
     def try_me(cls, line):
         stripped = line.lstrip()
+        tip = None
+        if stripped.endswith('=int'):
+            stripped = stripped[:-len('=int')]
+            tip = 'int'
         if stripped == cls.TEXT:
-            return _ExpSimpleList()
+            ret = _ExpSimpleList()
+            ret.tip = tip
+            return ret
         if stripped.startswith('LIST='):
+            stripped = stripped[len('LIST='):]
+            if stripped.startswith('int='):
+                stripped = stripped[len('int='):]
+                tip = 'int'
             lst = _ExpSimpleList()
-            val_lst = stripped[5:].split('=')
+            lst.tip = tip
+            val_lst = stripped.split('=')
             lst.splitter = val_lst[0]
             if len(val_lst) > 1:
                 lst.out_splitter = val_lst[1]
@@ -305,7 +324,21 @@ class _ExpSimpleList(_ExpType):
         lst = _InstructList()
         lst.out_splitter = self.out_splitter
         for sub in line.split(self.splitter):
+
+            if self.tip == 'int':
+                if not sub.strip().isdigit():
+                    return None
+                lst.append(_GoodLine(sub.strip(), line_number=line_number, parent=parent))
+                continue
+
+            #try:
             ins = self.tryer.try_instruction(sub.strip(), line_number=line_number, parent=parent)
+            if ins == None:
+                return None
+            #except BaseException as e:
+            #    print(e)
+            #    return None
+
             lst.append( ins )
 
         return lst
@@ -472,8 +505,8 @@ class _ExpSomeName(_ExpType):
     @classmethod
     def is_me(cls, line, parent=None, line_number=None, parent_line=''):
 
-        if line_number == 37: #and line.strip() == 'main_root':
-            raise Exception('37: {}\n\tparent: {}'.format(line, parent))
+        # if line_number == 37: #and line.strip() == 'main_root':
+        #     raise Exception('37: {}\n\tparent: {}'.format(line, parent))
 
         for a in line:
             if a not in cls.TST_STRING:
@@ -486,7 +519,7 @@ class _ExpInt(_ExpType):
     @classmethod
     def is_me(cls, line, parent=None, line_number=None, parent_line=''):
         stripped = line.strip()
-        return stripped.isdigit()
+        return stripped.isdigit() and len(stripped) > 0
 
     @classmethod
     def try_instruction(cls, line, line_number, parent, exp_string=None):
@@ -618,7 +651,12 @@ class _ExpInsertLocal(_ExpType):
             parent_class.instance_attrs_last = line
 
         except Exception as e:
-            print('error: {}'.format(e))
+            print('\terror: {}, line_number: {}'.format(e, line_number))
+            print('\tline: {}'.format(line))
+            print('\twho: {}'.format(cls))
+
+            parent.get_parent_class(debug=True)
+
             import traceback, sys
             traceback.print_exc(file=sys.stdout)
 
@@ -803,6 +841,24 @@ class WaitTree(_Line):
     def _make_pp(self, name, value):
         if '<NO_VALUE>' in name:
             return name.replace('<NO_VALUE>', '').strip()
+
+        chang_pos = name.find('<CHANGE_VALUE:')
+        if chang_pos >= 0:
+            next_exp_pos = chang_pos
+            while next_exp_pos >= 0:
+                chang_fin_pos = name.find('>', next_exp_pos+5)
+                next_exp_pos = name.find('<EXP>', next_exp_pos+5)
+                if next_exp_pos + 4 != chang_fin_pos:
+                    break
+
+            exp = name[chang_pos+len('<CHANGE_VALUE:'):chang_fin_pos]
+            name = (name[:chang_pos] + name[chang_fin_pos+1:]).strip()
+
+            exp = exp.replace('<EXP>', value)
+            print('EVAL: {}'.format(exp))
+
+            value = eval(exp)
+
         value = value.replace('"', "'")
         if '=' in name:
             return name.replace('<EXP>', value)

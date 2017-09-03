@@ -191,7 +191,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                         ret = ei.try_instruction(e, line_number=self.line_number, parent=self)
                         if ret == None:
-                            print('\n\n\t[ ERROR ] cant get ins from: {}\n\tby: {}\n'.format(e, self))
+                            print('\n\n\t[ ERROR ] cant get ins from: {}\n\tby: {}'.format(e, self))
+                            print('\tline: {}, line_number: {}\n'.format(line, self.line_number))
                             raise Exception('...')
                         # ret = eo_try(ret, eo)
                         # if ret == None:
@@ -215,12 +216,15 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     self.instructions = [ on_instruction(i, pr(ei, e, i)) for i, (e, ei) in enumerate(zip(lst, in_exps)) ]
 
                     instructions = self.instructions[::]
+                    out_ins_append = {}
                     for i, pos in enumerate(self.deleters_out.exps_poses):
                         if pos != None:
                             if i < len(instructions):
                                 instructions[i] = self.instructions[pos]
                             else:
+                                out_ins_append[i] = self.instructions[pos]
                                 instructions.append(self.instructions[pos])
+
                     if len(self.deleters_out.exps) < len(instructions):
                         # if need_debug:
                         #     print('len(self.deleters_out.exps) < len(instructions) | {} < {}'.format(len(self.deleters_out.exps), len(instructions)))
@@ -234,12 +238,16 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                                 eo_ret.in_exp = instructions[i]
                                 instructions[i] = eo_ret
 
-                    for eo in other_out_exps:
+                    for i, eo in enumerate(other_out_exps):
                         if eo and hasattr(eo, 'try_out_instruction'):
                             eo_ret = eo.try_out_instruction('', line_number=self.line_number, parent=self)
                             if eo_ret and eo_ret != '':
                                 instructions.append(eo_ret)
                                 #print('\t&&&', instructions, self.instructions)
+
+                    for i, ins in sorted(out_ins_append.items(), key=lambda a: a[0]):
+                        if i >= len(instructions):
+                            instructions.append(ins)
 
                     if instructions != self.instructions:
                         self.instructions = instructions
