@@ -132,6 +132,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
             if os.path.exists(filename):
                 with open(filename) as f:
                     lines[:1] = f.read().split('\n')
+                break
 
     lines = _join_addon_lines(lines)
     # k, addon_lines = _find_addon_lines(lines)

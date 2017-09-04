@@ -1,0 +1,38 @@
+
+                === Python ===                                          === Javascript ===
+                                                    :::
+                                                    :::
+
+    # `Some comment line : text`                    >>>     // `Some comment line : text`                   >>>     Comment         | is_comment = True
+
+-------------- Simple instructions: ---------------------------------------------------------------------------------------------------------------------
+
+    '<EXP:TEXT>'                                    >>>     '<EXP:TEXT>'                                    >>>     String
+    "<EXP:TEXT>"                                    >>>     "<EXP:TEXT>"                                    >>>     String2
+    [<EXP:LIST>]                                    >>>     [<EXP:LIST>]                                    >>>     List
+    <EXP:NAME> = <EXP>                              >>>     var <EXP:NAME> = <EXP>;                         >>>     Create_var
+    print('<EXP:TEXT>')                             >>>     alert('<EXP:TEXT>');                            >>>     print_msg
+    input('<EXP:TEXT>')                             >>>     prompt('<EXP:TEXT>')                            >>>     get_user_input
+    <EXP:NAME>.split(<EXP>)                         >>>     <EXP:NAME>.split(<EXP>)                         >>>     splitting
+    <EXP:local>                                     ---     <EXP:local>                                     ---     local
+
+-------------- Func definition: ---------------------------------------------------------------------------------------------------------------------
+    def <EXP:NAME>(<EXP:NAME>):                     >>>     function <EXP:NAME>(<EXP:NAME>)                 >>>     func_dev
+    def <EXP:NAME>():                               >>>     function <EXP:NAME>()                           >>>     func_dev_no_args
+    return <EXP:NAME>                               >>>     return <EXP:NAME>                               >>>     func_return
+
+-------------- Func start: ---------------------------------------------------------------------------------------------------------------------
+    <EXP>(<EXP:LIST>)                               >>>     <EXP>()                                         >>>     func_start
+
+-------------- Simple logic: ---------------------------------------------------------------------------------------------------------------------
+
+    if <EXP>:                                       >>>     if <EXP> {                                      >>>     If
+        sorted(<EXP>)                               >>>         <EXP>.sorted()                              >>>     Sorted
+    elif <EXP>:                                     >>>     else if {                                       >>>     ElseIf
+        pass                                        >>>                                                     >>>     Pass
+    else:                                           >>>     } else {                                        >>>     Else
+        `x:name` = <EXP:^instance>                  >>>         var `x:name` = `17`                         >>>     NewVar
+        `x` = `18`                                  >>>         `x` = `18`                                  >>>     ChangeVar   # FIXME !!!!
+        `x` += `1`                                  >>>         `x` += `1`                                  >>>     PlusCount
+                                                            }                                                       }
+    for <EXP:NAME> in <EXP>:                        >>>     for (var i=0; i < <EXP[1]>.length; i++)         >>>     ForIn

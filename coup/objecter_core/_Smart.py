@@ -174,7 +174,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                             #print('...pr', ei, e, self)
                         ins = on_try_instruction(self, i, e)
 
-                        if i > len(self.deleters_out.exps)-1:
+                        if (i > len(self.deleters_out.exps)-1) and i not in self.deleters_out.exps_poses:
                             if _need_debug:
                                 #print('\t--> ""')
                                 if ei:
@@ -217,13 +217,35 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     instructions = self.instructions[::]
                     out_ins_append = {}
+
+                    #new_inses = []
+                    pos_now = -1
                     for i, pos in enumerate(self.deleters_out.exps_poses):
-                        if pos != None:
+                        pos_now += 1
+                        if pos == None:
+                            pass
+                            # try:
+                            #     new_inses.append(self.instructions[pos_now])
+                            # except:
+                            #     print('line: {}'.format(line))
+                            #     print('deleters_in:', self.deleters_in, line)
+                            #     print('deleters_in.exps:', self.deleters_in.exps)
+                            #     print('deleters_out:', self.deleters_out, line)
+                            #     print('deleters_out.exps:', self.deleters_out.exps)
+                                #raise
+                        else:
+                            #new_inses.append(self.instructions[pos])
+
                             if i < len(instructions):
                                 instructions[i] = self.instructions[pos]
                             else:
                                 out_ins_append[i] = self.instructions[pos]
                                 instructions.append(self.instructions[pos])
+
+                    # for i in range(len(new_inses), len(self.deleters_out.exps)):
+                    #     new_inses.append(self.instructions[i])
+                    #
+                    # instructions = new_inses
 
                     if len(self.deleters_out.exps) < len(instructions):
                         # if need_debug:
