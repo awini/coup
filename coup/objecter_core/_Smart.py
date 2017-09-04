@@ -143,6 +143,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     if need_debug: #and OUT_FORMAT == '':
                         print('--------')
+                        print('SELF: {}'.format(self))
+                        print('line: {}'.format(line))
                         print('deleters_in:', self.deleters_in, line)
                         print('deleters_in.exps:', self.deleters_in.exps)
                         print('deleters_out:', self.deleters_out, line)
@@ -176,10 +178,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                         if (i > len(self.deleters_out.exps)-1) and i not in self.deleters_out.exps_poses:
                             if _need_debug:
-                                #print('\t--> ""')
+                                print('\t--> ""')
                                 if ei:
                                      ei_result = ei.try_instruction(e, line_number=self.line_number, parent=self)
                                 #     eo_try(ei_result, eo)
+
                             return _Line('')
 
                         if type(ins) == str:
@@ -198,6 +201,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         # if ret == None:
                         #     print('\n\n\t[ ERROR ] cant get ins from (eo): {}\n\tby: {}\n'.format(e, self))
                         #     raise Exception('...')
+                        else:
+                            if _need_debug:
+                                print('\tret: {}'.format(ret))
                         return ret
 
                     in_exps = self.deleters_in.exps
@@ -281,6 +287,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     self.line = _tmp_line
 
+                    if need_debug:
+                        print('\tinstructions: {}'.format(instructions))
+
                 except Exception as e:
                     print('ERROR: {}'.format(e))
                     import traceback, sys
@@ -294,6 +303,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def _is_instruction(cls, line, parent=None, line_number=None):
+
+                need_debug = False or ('self.errors_info.text' in line) #and 'self.<EXP:some_name>.text' in IN_FORMAT  # 'self.ttt' == line and 'self.' in cls.deleters_in
+
+                if need_debug:
+                    print('self: {} line: {}'.format(IN_FORMAT, line))
 
                 if hasattr(parent, '_exp_equal__list'):
                     del parent._exp_equal__list
@@ -310,6 +324,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 if cls.need_search[0]:
                     if _Base._LOG_ENABLED:
                         _Line.log('\tTRUE: need_search: {}'.format(cls.need_search[0]))
+                    if need_debug:
+                        print('\tTRUE by search')
                     return True
 
                 _on_is_instruction(cls, line, line_number)
@@ -317,17 +333,21 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 if OUT_FORMAT == NotImplemented:
                     if _Base._LOG_ENABLED:
                         _Line.log('\tFALSE: OUT_FORMAT == NotImplemented')
+                    # if need_debug:
+                    #     print('\tFALSE by OUT_FORMAT == NotImplemented')
                     return _print(False, 'OUT_FORMAT == NotImplemented')
 
                 if len(cls.deleters_in.exps) == 0:
                     #print('-'*100)
                     #print('****** {} ??? {} --> {}'.format(line.strip(), cls._IN_FORMAT.strip(), line.strip() == cls._IN_FORMAT.strip()))
                     #print('-' * 100)
-                    return line.strip() == cls._IN_FORMAT.strip()
+                    ret = line.strip() == cls._IN_FORMAT.strip()
+                    if need_debug and ret:
+                        print('\tlen(cls.deleters_in.exps) == 0 ===> TRUE')
+                    return ret
 
                 line = line.strip()
 
-                need_debug = False #'self.ttt' == line and 'self.' in cls.deleters_in
                 pos = -1
                 last_pos = 0
                 i = -1
@@ -338,6 +358,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 last_i = len(cls.deleters_in) - 1
 
                 if len(cls.deleters_in.exps) == 0:
+                    if need_debug:
+                        print('\tline.strip() == IN_FORMAT.strip()')
                     return _print(line.strip() == IN_FORMAT.strip(), 'line.strip() == IN_FORMAT.strip()')
 
                 for i, part in enumerate(cls.deleters_in):
@@ -351,9 +373,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     #     if new_pos2 > new_pos:
                     #         #raise Exception(line +"\n\t{}:{}:{}".format(part, new_pos, new_pos2))
                     #         new_pos = new_pos2
-
-                    if need_debug:
-                        print('>>>>>', line, '>>', cls.deleters_in, '>>', part, ':', pos)
+                    #print('>>>>>', line, '>>', cls.deleters_in, '>>', part, ':', pos)
 
                     if new_pos > last_pos:
                         exp_i += 1
@@ -400,16 +420,18 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 pos -= len(part)
                 if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
                     if line[pos:] == cls.deleters_in[-1]:
-                        # if need_debug:
-                        #     print('\tTRUE 1')
+                        if need_debug:
+                            print('\tTRUE 1')
                         _Line.log('\tTRUE: line[pos:] == cls.deleters_in[-1]')
                         return _print(True, 'line[pos:] == cls.deleters_in[-1]')
 
+                    # if need_debug:
+                    #     print('\tFALSE 2')
                     _Line.log('\tFALSE: need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
                     return _print(False, 'need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
 
-                # if need_debug:
-                #     print('\tTRUE')
+                if need_debug:
+                    print('\tTRUE: return True')
                 _Line.log('\tTRUE: return True')
                 return _print(True, 'return True')
 

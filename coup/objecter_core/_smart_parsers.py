@@ -628,7 +628,7 @@ class _ExpInsertLocal(_ExpType):
     @classmethod
     def is_me(cls, line, parent=None, line_number=None, parent_line=''):
         stripped = line.strip()
-        for a in ' []:-+/&^%$#@()=':
+        for a in ' []:-+/&^%$#@()=.':
             if a in stripped:
                 return False
         return True
@@ -813,6 +813,33 @@ class _ExpKwargs(_ExpType):
     def try_out_instruction(self, line, line_number, parent, exp_string=None):
         parent_object = parent.parent.start_instruction
         return WaitTree(line, line_number=line_number, parent=parent)
+
+class _ExpToBlockEnd(_ExpType):
+    TEXT = '+BLOCK_END='
+    _text = None
+    _in_instructions = None
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped.startswith(cls.TEXT):
+            print('_ExpToBlockEnd ----------------------')
+            ret = cls()
+            ret._text = stripped[len(cls.TEXT):]
+            return ret
+
+    try_instruction = None
+
+    def try_out_instruction(self, line, line_number, parent, exp_string=None):
+        parent_object = parent
+        print('_ExpToBlockEnd ---------- parent: {}'.format(parent_object))
+        text = self._text
+        if 'EXP_0' in text:
+            text = text.replace('EXP_0', parent_object.instructions[0].line.strip())
+        parent._BLOCK_END += text
+        return _GoodLine('')
+
+        #return WaitTree(line, line_number=line_number, parent=parent)
 
 
 class WaitTree(_Line):
