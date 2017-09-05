@@ -122,17 +122,24 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
 
     lines = text.split('\n')
 
-    if lines[0].startswith('@'):
-        stripped_0 = lines[0].strip()
-        pathes = [ abspath(os.getcwd()) ]
-        if HERE not in pathes:
-            pathes.append(HERE)
-        for p in pathes:
-            filename = join(p, stripped_0.replace('@','')+'.abc')
-            if os.path.exists(filename):
-                with open(filename) as f:
-                    lines[:1] = f.read().split('\n')
-                break
+    new_lines = []
+    for line in lines:
+
+        stripped = line.strip()
+        if stripped.startswith('@') and '>>>' not in line and ':::' not in line and '|||' not in line:
+            pathes = [ abspath(os.getcwd()) ]
+            pathes.append(join(pathes[0], 'abc'))
+            if HERE not in pathes:
+                pathes.append(HERE)
+            for p in pathes:
+                filename = join(p, stripped.replace('@','')+'.abc')
+                if os.path.exists(filename):
+                    with open(filename) as f:
+                        new_lines += f.read().split('\n')
+                    break
+        else:
+            new_lines.append(line)
+    lines = new_lines
 
     lines = _join_addon_lines(lines)
     # k, addon_lines = _find_addon_lines(lines)
