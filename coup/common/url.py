@@ -120,7 +120,16 @@ def _add_lines_to_line(lines, k, addon_lines):
 
 def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END='}'): # FIXME
 
-    lines = text.split('\n')
+    lines = text.strip().split('\n')
+    stripped_0 = lines[0].strip()
+    if stripped_0.startswith('@:extends:'):
+        bases = stripped_0[len('@:extends:'):].split(',')
+        lines = lines[1:]
+        if translater == None:
+            from . import all
+            translater = getattr(all, bases[0].strip())
+        else:
+            raise Exception('"@:extends" config need no "translater" argument on input!')
 
     new_lines = []
     for line in lines:
@@ -209,7 +218,9 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                                 src = stripped_0[1:]
                                 dst = param_line[1:].replace(stripped_0, '<EXP>')
                                 if '|' in dst:
-                                    dst = [ a.strip() for a in dst.split('|')]
+
+                                    dst = [a.strip() for a in dst.split('|')]
+
                                     _dst = []
                                     for i, d in enumerate(dst):
                                         dl = d.split('=.')
@@ -311,7 +322,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
 
                     if len(BLOCK_START) > 0:
                         if dst.endswith(BLOCK_START):
-                            dst = dst[:-len(BLOCK_START)]
+                            dst = dst[:-len(BLOCK_START)].rstrip()
                     if len(BLOCK_END) > 0:
                         if dst.startswith(BLOCK_END):
                             dst = dst[len(BLOCK_END):]
@@ -320,6 +331,16 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
 
                     dst_lst = dst.split('|')
                     if len(dst_lst) > 1:
+                        k = 1
+                        while k < len(dst_lst):
+                            if '<EXP' in dst_lst[k] or len(dst_lst[k]) == 0:
+                                dst_lst[k - 1] = '|'.join(dst_lst[k - 1:k + 1])
+                                del dst_lst[k]
+                                continue
+                            k += 1
+
+                    if len(dst_lst) > 1:
+
                         dst = dst_lst[0].strip()
                         for a in dst_lst[1].split(','):
                             #print('\t..{}'.format(a))

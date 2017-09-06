@@ -152,12 +152,14 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     line = line.strip()
 
-                    new_line = _line_to_slashs(line, self.deleters_in, need_debug=need_debug)
+                    _SPLITTER = '~;@:&'
+
+                    new_line = _line_to_slashs(line, self.deleters_in, need_debug=need_debug, splitter=_SPLITTER)
                     if new_line == None:
                         raise Exception('cant be {}: {}'.format(self, line))
                     line = new_line
 
-                    lst = line.split('|')
+                    lst = line.split(_SPLITTER)
                     if need_debug:
                         print('line:', line)
 
@@ -304,7 +306,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             @classmethod
             def _is_instruction(cls, line, parent=None, line_number=None):
 
-                need_debug = False or ('self.errors_info.text' in line) #and 'self.<EXP:some_name>.text' in IN_FORMAT  # 'self.ttt' == line and 'self.' in cls.deleters_in
+                need_debug = False #and 'self.<EXP:some_name>.text' in IN_FORMAT  # 'self.ttt' == line and 'self.' in cls.deleters_in
 
                 if need_debug:
                     print('self: {} line: {}'.format(IN_FORMAT, line))
@@ -436,6 +438,11 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 return _print(True, 'return True')
 
             def get_tree_main(self):
+                need_debug = False
+                if need_debug:
+                    print('[ get_tree_main ] {} <-- exps: {}'.format(self, self.deleters_in.exps))
+                    print('\t{}'.format(self.instructions))
+
                 try:
                     trees = [ ins.get_tree() for ins in self.instructions ] #line = '|'.join()
                 except Exception:
@@ -603,7 +610,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
     return SmartList
 
-def _line_to_slashs(line, deleters_in, need_debug=False):
+def _line_to_slashs(line, deleters_in, need_debug=False, splitter='|'):
     line = line.strip()
     start_line = line
 
@@ -627,7 +634,7 @@ def _line_to_slashs(line, deleters_in, need_debug=False):
             continue
         i = line.find(l)
         ii_1.append(ii_1)
-        new_line = line[:i] + '|' + line[i+len(l):]
+        new_line = line[:i] + splitter + line[i+len(l):]
         if need_debug:
             print('\t{} [{}]: {} --> {}'.format(i, l, line, new_line))
         line = new_line
@@ -640,13 +647,13 @@ def _line_to_slashs(line, deleters_in, need_debug=False):
             return None
         if need_debug:
             print('\t{} [{}]: {} R'.format(i, l, line))
-        line = line[:i] + '|' + line[i + len(l):]
+        line = line[:i] + splitter + line[i + len(l):]
 
 
-    if line.startswith('|'):
-        line = line[1:]
-    if line.endswith('|'):
-        line = line[:-1]
+    if line.startswith(splitter):
+        line = line[len(splitter):]
+    if line.endswith(splitter):
+        line = line[:-len(splitter)]
 
     if need_debug:
         print('... {} --> {} --> {}'.format(start_line, deleters_in, line) )
