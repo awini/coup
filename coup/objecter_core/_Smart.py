@@ -136,7 +136,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     self.deleters_in.on_new_name = self.on_new_name
 
-                    need_debug = False or 'self.errors_info_label.text' in line #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
+                    need_debug = False or "self.errors_info_label.text = ''" in line #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
                     out_format = OUT_FORMAT(self) if callable(OUT_FORMAT) else OUT_FORMAT
                     self.deleters_out = _ExpParser(out_format)
@@ -305,7 +305,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def _is_instruction(cls, line, parent=None, line_number=None):
-                need_debug = False
+                need_debug = False or "self.errors_info_label.text = ''" in line
 
                 if need_debug:
                     print('self: {} line: {}'.format(IN_FORMAT, line))
@@ -419,7 +419,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                     pos += len(part) #len(part)-1
 
                 pos -= len(part)
-                if need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters:
+                if True: #i < len(cls.deleters_in.exps) and i < not_empty_deleters: #need_debug or
                     if line[pos:] == cls.deleters_in[-1]:
                         if need_debug:
                             print('\tTRUE 1')
@@ -437,7 +437,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 return _print(True, 'return True')
 
             def get_tree_main(self):
-                need_debug = False
+                need_debug = False or "self.errors_info_label.text = ''" in self.line
                 if need_debug:
                     print('[ get_tree_main ] {} <-- exps: {}'.format(self, self.deleters_in.exps))
                     print('\t{}'.format(self.instructions))
@@ -458,6 +458,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 cor = lambda ex, p: ex.funcer(p) if hasattr(ex, 'funcer') else p
 
                 line = ''.join( cor(ex, plus(tree, d)) for tree, d, ex in izip_longest(trees, self.deleters_out, self.deleters_out.exps, fillvalue='') )
+
+                if need_debug:
+                    print('\t--> {}'.format(line))
 
                 if not _Base._IS_CATCHING:
 

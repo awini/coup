@@ -22,7 +22,7 @@
         pass                                        >>>                                                     >>>                                                     >>>     Pass
     else:                                           >>>     } else {                                        >>>     } else {                                        >>>     Else
         `x:name` = <EXP:^instance>                  >>>         var `x:name` = `17`                         >>>         $`x:name` = `17`                            >>>     NewVar | INDEX=-9999
-        `x` = `18`                                  >>>         `x` = `18`                                  >>>         $`x` = `18`                                 >>>     ChangeVar   # FIXME !!!!
+        `x` = `18`                                  >>>         `x` = `18`                                  >>>         <EXP:add_preffix=$> = `18`                  >>>     ChangeVar   # FIXME !!!!
         `x` += `1`                                  >>>         `x` += `1`                                  >>>         `x` .= `1`                                  >>>     PlusCount
                                                             }                                                       }
 

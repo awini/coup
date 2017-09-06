@@ -40,7 +40,8 @@ class TestOne(TestCase):
 
             === Python ===                  === {lang} ===
 
-    mw.ids.mainInput.text     >>>     {var_prefix}mw{instance_point}ids.mainInput.text     >>>     ThisIdsMainInputText
+    self.ids.mainInput.text   >>>       {var_prefix}this{instance_point}ids.mainInput.text  >>>     ThisIdsMainInputText
+    mw.ids.mainInput.text     >>>       {var_prefix}mw{instance_point}ids.mainInput.text    >>>     MwIdsMainInputText
 
         '''.format(lang=lang, var_prefix=var_prefix, instance_point=instance_point), Py2Js, lang=lang)
 

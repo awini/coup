@@ -128,6 +128,39 @@ class _ExpIgnore(_ExpType):
 
         return _ExpType.try_instruction(line, line_number, parent)
 
+class _ExpAddPreffix(_ExpType):
+    TEXT = 'add_preffix'
+    preffix = None
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped.startswith(cls.TEXT+'='):
+            preffix = stripped[len(cls.TEXT)+1:].strip()
+            ret = _ExpInsertInstance()
+            ret.preffix = preffix
+            return ret
+
+    def try_instruction(self, line, line_number, parent, exp_string=None):
+        got = _Line.try_instruction(line, line_number=line_number, parent=parent)
+        return _AddPreffixInstruct(self.preffix, got)
+
+class _AddPreffixInstruct:
+
+    def __init__(self, preffix, ins):
+        self.preffix = preffix
+        self.ins = ins
+
+    def get_tree(self):
+        text = self.ins.get_tree()
+        if not text.startswith(self.preffix):
+            text = self.preffix + text
+        return text
+
+    @property
+    def line_number(self):
+        return self.ins.line_number
+
 class _ExpInsertInstance(_ExpType):
     TEXT = '^instance'
 
@@ -1066,7 +1099,7 @@ class _ExpParser(list):
         return poses
 
     def split_line(self, line):
-        need_debug = False #'<EXP:TEXT>.<EXP:TEXT>' in str(line) #'#<EXP:TEXT>' == line
+        need_debug = False or "self.errors_info_label.text = ''" in line
         exps = []
         deleters = []
         main_lst = line.split('<EXP')
