@@ -498,18 +498,34 @@ class _ExpSomeName(_ExpType):
     TST_STRING = 'qwertyuiopasdfghjklzxcvbnm'
     TST_STRING += TST_STRING.upper() + '1234567890_'
 
+    _ends_with = None
+
     @classmethod
-    def try_instruction(cls, line, line_number, parent, exp_string=None):
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped == cls.TEXT:
+            return _ExpSomeName()
+
+        if stripped.startswith(cls.TEXT+'='):
+            stripped = stripped[len(cls.TEXT)+1:]
+            if stripped.startswith('ends_with='):
+                ef = _ExpSomeName()
+                ef._ends_with = stripped[len('ends_with='):]
+                print('............. {}'.format(ef._ends_with))
+                return ef
+
+    #@classmethod
+    def try_instruction(self, line, line_number, parent, exp_string=None):
         return _GoodLine(line.strip(), line_number=line_number, parent=parent)
 
-    @classmethod
-    def is_me(cls, line, parent=None, line_number=None, parent_line=''):
-
-        # if line_number == 37: #and line.strip() == 'main_root':
-        #     raise Exception('37: {}\n\tparent: {}'.format(line, parent))
+    def is_me(self, line, parent=None, line_number=None, parent_line=''):
+        line = line.strip()
+        if self._ends_with != None:
+            if not line.endswith(self._ends_with):
+                return False
 
         for a in line:
-            if a not in cls.TST_STRING:
+            if a not in self.TST_STRING:
                 return False
         return True
 

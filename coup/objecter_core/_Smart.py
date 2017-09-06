@@ -136,7 +136,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     self.deleters_in.on_new_name = self.on_new_name
 
-                    need_debug = False #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
+                    need_debug = False or 'self.errors_info_label.text' in line #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
                     out_format = OUT_FORMAT(self) if callable(OUT_FORMAT) else OUT_FORMAT
                     self.deleters_out = _ExpParser(out_format)
@@ -305,8 +305,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def _is_instruction(cls, line, parent=None, line_number=None):
-
-                need_debug = False #and 'self.<EXP:some_name>.text' in IN_FORMAT  # 'self.ttt' == line and 'self.' in cls.deleters_in
+                need_debug = False
 
                 if need_debug:
                     print('self: {} line: {}'.format(IN_FORMAT, line))
