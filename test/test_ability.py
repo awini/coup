@@ -17,7 +17,7 @@ def make_lines(text):
     return [line.rstrip() for line in text.split('\n')]
 
 
-class TestOne(TestCase):
+class Test1(TestCase):
 
     def test_1_if_or_ravno_ravno(self):
 
@@ -41,6 +41,34 @@ if x == 1 or x == 2:
 if (x == 1 || x == 2)
 {
     console.log('Okkk!!!')
+}'''.split('\n'), out.split('\n'))
+
+class Test2(TestCase):
+
+    def test_2_var(self):
+
+        Py2Js = think('''
+        @:extends:Common
+        @langs
+
+    def <EXP:NAME>():       >>>     function <EXP:NAME>() {     >>>         >>>     Func
+
+        ''', lang='Javascript')
+
+        out = Py2Js.translate('''
+
+def func():
+    x = 1
+    x = 2
+    print(x)
+
+        ''', remove_space_lines=True)
+
+        self.assertEqual('''function func()
+{
+    var x = 1
+    x = 2
+    console.log(x)
 }'''.split('\n'), out.split('\n'))
 
 
