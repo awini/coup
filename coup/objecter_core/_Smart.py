@@ -505,7 +505,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
             _to_level_0 = to_level_0
 
             def __init__(self, line, parent=None, line_number=0):
-                self.locals = _locals
+                self.locals = copy(_locals)
                 self.instance_attrs = _instance_attrs
 
                 if self.init_dict:

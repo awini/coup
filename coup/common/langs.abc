@@ -21,21 +21,21 @@
     elif <EXP>:                                     >>>     else if (<EXP>) {                               >>>     else if {                                       >>>     ElseIf
         pass                                        >>>                                                     >>>                                                     >>>     Pass
     else:                                           >>>     } else {                                        >>>     } else {                                        >>>     Else
-        `x:name` = <EXP:^instance>                  >>>         var `x:name` = `17`                         >>>         $`x:name` = `17`                            >>>     NewVar | INDEX=-9999
+        <EXP:+NAME> = <EXP:^instance>               >>>         var <EXP:+NAME> = `17`                      >>>         $<EXP:+NAME> = `17`                         >>>     NewVar | INDEX=-9999
         `x` = `18`                                  >>>         `x` = `18`                                  >>>         <EXP:add_preffix=$> = `18`                  >>>     ChangeVar   # FIXME !!!!
         `x` += `1`                                  >>>         `x` += `1`                                  >>>         `x` .= `1`                                  >>>     PlusCount
                                                             }                                                       }
 
-    for `a:name` in <EXP>:                          >>>     for (var i=0,lst=<EXP[1]>,<EXP[0]>=lst[i];      >>>     foreach (<EXP[1]> as $<EXP[0]>) {               >>>     ForIn
+    for <EXP:+NAME> in <EXP>:                       >>>     for (var i=0,lst=<EXP[1]>,<EXP[0]>=lst[i];      >>>     foreach (<EXP[1]> as $<EXP[0]>) {               >>>     ForIn
                                                     |||              i<lst.length;i++,<EXP[0]>=lst[i]) {    |||                                                     |||
         pass
                                                             }                                                       }
 
 -------------- Classes: --------------------------------------------------------------------------------------------------------------------------
 
-    class `New:Name`:                               >>>     class `New:Name`                                >>>     class `New:Name`                                >>>     Class   | instance_attrs = {}, my_objects = {}
+    class <EXP:+NAME>:                              >>>     class <EXP:+NAME>                               >>>     class <EXP:+NAME>                               >>>     Class   | instance_attrs = {}, my_objects = {}
                                                             {                                                       {
-        def `new:name`(self):                       >>>         `new:name`() {                              >>>         function `new:name`() {                     >>>     Method
+        def <EXP:+NAME>(self):                      >>>         <EXP:+NAME>() {                             >>>         function <EXP:+NAME>() {                    >>>     Method
             print(`exp`)                            >>>             console.log(`exp`)                      >>>             print(`exp`.PHP_EOL)                    >>>     Print
                                                                 }                                                       }
                                                             }                                                       }

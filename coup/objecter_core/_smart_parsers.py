@@ -175,7 +175,7 @@ class _ExpInsertInstance(_ExpType):
         return got
 
 class _ExpName(_ExpType):
-    TEXT = 'NAME'
+    TEXT = '+NAME'
 
     @classmethod
     def try_me(cls, line):
@@ -188,33 +188,27 @@ class _ExpName(_ExpType):
         for a in ' .():/$#!@%^&*()-=+':
             if a in stripped:
                 return False
+
+        name = cls._get_my_name(line)
+        _locals = cls._get_my_locals(parent)
+        if name in _locals:
+            return False
+
         return True
-        #return ' ' not in stripped and '.' not in stripped
 
     @classmethod
     def try_instruction(cls, line, line_number, parent, exp_string=None):
 
         locals = None
         parent.current_locals_name = None
-
-        block = parent.get_parent_block()
-
-        locals = block.get_locals()
-        # FIXME !!!!
-        # if hasattr(parent, 'locals') and parent.locals != None:
-        #     if hasattr(parent.locals, '__call__'):
-        #         #print('!!!!!!!!!!!!!!!!!!!')
-        #         locals = parent.locals(parent)
-        #     else:
-        #         locals = parent.locals
-        # else:
-        #     locals = parent.get_locals()
+        locals = cls._get_my_locals(parent)
 
         if parent and hasattr(parent, 'my_objects') and parent.my_objects != None:
             parent.my_objects[line.strip()] = parent
 
         if locals != None:
-            name = line.split('=')[0].split(':')[0].strip().replace('*', '')  # FIXME
+            name = cls._get_my_name(line)
+
             locals[ name ] = None
             parent.current_locals_name = (locals, name)
 
@@ -230,6 +224,16 @@ class _ExpName(_ExpType):
             '''.format(parent, line, line_number))
 
         return _GoodLine(line, line_number=line_number, new_name=True, parent=parent)
+
+    @classmethod
+    def _get_my_locals(cls, parent):
+        block = parent if isinstance(parent, _Block) else parent.get_parent_block()
+        return block.get_locals()
+
+    @classmethod
+    def _get_my_name(cls, line):
+        return line.split('=')[0].split(':')[0].strip().replace('*', '')  # FIXME
+
 
 class _InstructList(list):
 
