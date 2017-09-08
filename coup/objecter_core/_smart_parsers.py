@@ -360,7 +360,9 @@ class _ExpSimpleList(_ExpType):
 
         lst = _InstructList()
         lst.out_splitter = self.out_splitter
-        for sub in line.split(self.splitter):
+        lst_split = line.split(self.splitter)
+        print(lst_split)
+        for sub in lst_split:
 
             if self.tip == 'int':
                 if not sub.strip().isdigit():

@@ -113,8 +113,23 @@ class Test4(TestCase):
     def test_4_utf8(self):
         Py2Js = think('''@langs''', lang='Javascript')
         out = Py2Js.translate('''print("Привет!")''', remove_space_lines=True)
-        #print(out.decode('utf-8').encode('cp866'))
+        print(out) #print(out.decode('utf-8').encode('cp866'))
         self.assertEqual('''console.log("Привет!")'''.split('\n'), out.split('\n'))
+
+
+class Test5(TestCase):
+
+    def test_5_utf8(self):
+        Py2Js = think('''
+        @:extends:Common
+        @langs''', lang='Javascript')
+        out = Py2Js.translate('''
+a = [1, 2, 3]
+b = [1, 2, [3, 4, 5]]
+print(a + b)
+        ''', remove_space_lines=True)
+        print(out)
+        #self.assertEqual('''console.log("Привет!")'''.split('\n'), out.split('\n'))
 
 
 if __name__=='__main__':
