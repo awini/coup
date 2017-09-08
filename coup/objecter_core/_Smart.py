@@ -310,12 +310,31 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
 
                 if need_debug_false:
+                    print('\tstack: {}'.format(cls.deleters_in.stack))
                     ttt = []
                     last_pos = 0
-                    for dl in cls.deleters_in:
-                        pos = line.find(dl)
-                        ttt.append(line[last_pos:pos])
-                        last_pos = pos + len(dl)
+                    _last_exp = None
+                    center = len(cls.deleters_in.stack) / 2.0
+                    for i, dl in enumerate(cls.deleters_in.stack):
+                        if dl.__class__.__name__ == '_ExpString':
+                            _last_exp = dl
+                            continue
+                        add_text = ''
+                        if i <= center:
+                            pos = line.find(dl, last_pos)
+                            add_text = line[last_pos:pos]
+                            last_pos = pos + len(dl)
+                        else:
+                            if last_pos < center:
+                                pos = line.find(dl, len(line), -1)
+                                add_text = line[last_pos:pos]
+                            else:
+                                pos = line.find(dl, last_pos, -1)
+                                add_text = line[pos:last_pos]
+                            last_pos = pos-1
+                        if len(add_text):
+                            ttt.append(add_text)
+
                     print('\t: {}'.format(ttt))
 
 

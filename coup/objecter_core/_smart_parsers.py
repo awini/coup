@@ -1106,6 +1106,9 @@ class _ExpParser(list):
 
     def split_line(self, line):
         need_debug = False or "self.errors_info_label.text = ''" in line
+
+        stack = []
+
         exps = []
         deleters = []
         main_lst = line.split('<EXP')
@@ -1118,6 +1121,7 @@ class _ExpParser(list):
             lst = ex.split('>')
             if i == 0:
                 if len(main_lst[0]) > 0:
+                    stack.append(ex)
                     deleters.append(ex)
             else:
                 e_lst = lst[0].split(':')
@@ -1131,8 +1135,11 @@ class _ExpParser(list):
                         es.funcer = fu
                         #print('\t--> {}'.format(fu))
                 exps.append( es )
+                stack.append( es )
                 if len(lst) > 1:
-                    deleters.append( '>'.join(lst[1:]) )
+                    dl = '>'.join(lst[1:])
+                    stack.append( dl )
+                    deleters.append( dl )
 
         if need_debug:
             print('**** DELETERS:', deleters)
@@ -1146,6 +1153,7 @@ class _ExpParser(list):
         #print('**** DELETERS:', deleters)
 
         self.exps = exps
+        self.stack = stack
         #print(exps, '--', line)
 
         return deleters
