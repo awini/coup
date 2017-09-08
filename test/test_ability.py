@@ -3,6 +3,10 @@ import sys
 from os.path import join, dirname, abspath
 from unittest import TestCase, main as unittest_main
 
+HERE = dirname(abspath(__file__))
+PROJ_DIR = abspath(join(HERE, '..'))
+sys.path.insert(0, PROJ_DIR)
+
 from coup.common.url import think
 from coup.objecter_core._Base import _Base
 
@@ -113,13 +117,13 @@ class Test4(TestCase):
     def test_4_utf8(self):
         Py2Js = think('''@langs''', lang='Javascript')
         out = Py2Js.translate('''print("Привет!")''', remove_space_lines=True)
-        print(out) #print(out.decode('utf-8').encode('cp866'))
+        #print(out) #print(out.decode('utf-8').encode('cp866'))
         self.assertEqual('''console.log("Привет!")'''.split('\n'), out.split('\n'))
 
 
 class Test5(TestCase):
 
-    def test_5_utf8(self):
+    def test_5_list_in_list(self):
         Py2Js = think('''
         @:extends:Common
         @langs''', lang='Javascript')
@@ -128,8 +132,52 @@ a = [1, 2, 3]
 b = [1, 2, [3, 4, 5]]
 print(a + b)
         ''', remove_space_lines=True)
-        print(out)
-        #self.assertEqual('''console.log("Привет!")'''.split('\n'), out.split('\n'))
+        self.assertEqual('''var a = [1, 2, 3]
+var b = [1, 2, [3, 4, 5]]
+console.log(a + b)'''.split('\n'), out.split('\n'))
+
+
+class Test6(TestCase):
+
+    def test_6_list_in_list_in_list(self):
+        Py2Js = think('''
+        @:extends:Common
+        @langs''', lang='Javascript')
+        out = Py2Js.translate('''
+a = [1, 2, 3]
+b = [[1, "2"], [[3, "4"], 5], ["1, 7", 9]]
+print(a + b)
+        ''', remove_space_lines=True)
+        self.assertEqual('''var a = [1, 2, 3]
+var b = [[1, "2"], [[3, "4"], 5], ["1, 7", 9]]
+console.log(a + b)'''.split('\n'), out.split('\n'))
+
+
+class Test7(TestCase):
+
+    def test_7_list_in_list(self):
+        Py2Js = think('''
+        @:extends:Common
+        @langs
+    def <EXP:+NAME>():                  >>>     function <EXP:+NAME>() {                    >>>     >>>     func_0
+    def <EXP:+NAME>(<EXP:NAMES_LIST>):  >>>     function <EXP:+NAME>(<EXP:NAMES_LIST>) {    >>>     >>>     func_2
+    <EXP>()                             >>>     <EXP>()                                     >>>     >>>     func_start_0
+    <EXP>(<EXP:LIST>)                   >>>     <EXP>(<EXP:LIST>)                           >>>     >>>     func_start_2
+    ''', lang='Javascript')
+        out = Py2Js.translate('''
+def func(a, b):
+    pass
+def func_2():
+    pass
+func([1, 2], func_2())
+        ''', remove_space_lines=True)
+        self.assertEqual('''function func(a, b)
+{
+}
+function func_2()
+{
+}
+func([1, 2], func_2())'''.split('\n'), out.split('\n'))
 
 
 if __name__=='__main__':

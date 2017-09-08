@@ -361,7 +361,21 @@ class _ExpSimpleList(_ExpType):
         lst = _InstructList()
         lst.out_splitter = self.out_splitter
         lst_split = line.split(self.splitter)
-        print(lst_split)
+        i = 0
+        while i < len(lst_split)-1:
+            a = lst_split[i]
+            boo = True
+            for b in ('()"', '[]\''):
+                if a.count(b[0]) != a.count(b[1]) or a.count(b[2]) % 2 != 0:
+                    boo = False
+                    break
+            if boo:
+                i += 1
+                continue
+            lst_split[i] = lst_split[i] + self.splitter + lst_split[i+1]
+            del lst_split[i+1]
+
+        #print(lst_split)
         for sub in lst_split:
 
             if self.tip == 'int':

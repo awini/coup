@@ -305,38 +305,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def _is_instruction(cls, line, parent=None, line_number=None):
-                need_debug = False or "[1, 2, [3, 4, 5]]" == line and '[<EXP:LIST>]' in IN_FORMAT
-                need_debug_false = False or "[1, 2, [3, 4, 5]]" == line and '[<EXP:LIST>]' in IN_FORMAT
-
-
-                if need_debug_false:
-                    print('\tstack: {}'.format(cls.deleters_in.stack))
-                    ttt = []
-                    last_pos = 0
-                    _last_exp = None
-                    center = len(cls.deleters_in.stack) / 2.0
-                    for i, dl in enumerate(cls.deleters_in.stack):
-                        if dl.__class__.__name__ == '_ExpString':
-                            _last_exp = dl
-                            continue
-                        add_text = ''
-                        if i <= center:
-                            pos = line.find(dl, last_pos)
-                            add_text = line[last_pos:pos]
-                            last_pos = pos + len(dl)
-                        else:
-                            if last_pos < center:
-                                pos = line.find(dl, len(line), -1)
-                                add_text = line[last_pos:pos]
-                            else:
-                                pos = line.find(dl, last_pos, -1)
-                                add_text = line[pos:last_pos]
-                            last_pos = pos-1
-                        if len(add_text):
-                            ttt.append(add_text)
-
-                    print('\t: {}'.format(ttt))
-
+                need_debug = False #or "func([1, 2], func_2())" == line and '<EXP>(<EXP:LIST>)' in IN_FORMAT
+                need_debug_false = False #or "func([1, 2], func_2())" == line and '<EXP>(<EXP:LIST>)' in IN_FORMAT
 
                 if need_debug:
                     print('self: {} line: {}'.format(IN_FORMAT, line))
@@ -463,6 +433,43 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
                     if need_debug_false:
                         print('\tFALSE 2 : {} ?= {}'.format(line[pos:], cls.deleters_in[-1]))
+
+                    if len(cls.deleters_in) == 2 and len(cls.deleters_in.exps) in (1, 2):
+                        #print('\tstack: {}'.format(cls.deleters_in.stack))
+                        ttt = []
+                        last_pos = 0
+                        _last_exp = None
+                        center = len(cls.deleters_in.stack) / 2.0
+                        for i, dl in enumerate(cls.deleters_in.stack):
+                            if dl.__class__.__name__ == '_ExpString':
+                                _last_exp = dl
+                                continue
+                            if i <= center:
+                                pos = line.find(dl, last_pos)
+                                add_text = line[last_pos:pos]
+                                last_pos = pos + len(dl)
+                            else:
+                                if last_pos < center:
+                                    pos = line.find(dl, len(line), -1)
+                                    add_text = line[last_pos:pos]
+                                else:
+                                    pos = line.find(dl, last_pos, -1)
+                                    add_text = line[pos:last_pos]
+                                last_pos = pos - 1
+                            if len(add_text):
+                                ttt.append(add_text)
+
+                        #print('\t: {}'.format(ttt))
+                        if len(ttt) > 0:
+                            boos = []
+                            for exp in cls.deleters_in.exps:
+                                if hasattr(exp, 'is_me'):
+                                    boos.append(exp.is_me(ttt[0], parent=parent, line_number=line_number, parent_line=line))
+                                else:
+                                    boos.append(True)
+                            return all(boos)
+                        else:
+                            return False
 
                     _Line.log('\tFALSE: need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
                     return _print(False, 'need_debug or i < len(cls.deleters_in.exps) and i < not_empty_deleters')
