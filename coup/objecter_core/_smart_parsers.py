@@ -928,15 +928,34 @@ class WaitTree(_Line):
                 import traceback, sys
                 traceback.print_exc(file=sys.stdout)
 
+        self.kwargs = kwargs
+
         return ' '.join(self._make_part(_Base._ARGS_RENAMER.get(a, a), b.line) for a,b in kwargs.items())
 
     def _make_part(self, name, value):
         names = name if type(name) == tuple else (name,)
-        return ' '.join(self._make_pp(name, value) for name in names)
+        parts = [ self._make_pp(name, value) for name in names ]
+        return ' '.join(p for p in parts if p != None)
 
     def _make_pp(self, name, value):
         if '<NO_VALUE>' in name:
             return name.replace('<NO_VALUE>', '').strip()
+
+        extract = False
+        if '<EXTRACT>' in name:
+            extract = True
+            name = name.replace('<EXTRACT>', '').strip()
+
+        while True:
+            add_pos = name.find('<KWARGS.')
+            if add_pos >= 0:
+                ln = len('<KWARGS.')
+                add_fin = name.find('>', add_pos+ln)
+                add_name = name[add_pos+ln:add_fin]
+                add = self.kwargs[add_name]
+                name = name[:add_pos] + add.line + name[add_fin+1:]
+            else:
+                break
 
         chang_pos = name.find('<CHANGE_VALUE:')
         if chang_pos >= 0:
@@ -957,8 +976,17 @@ class WaitTree(_Line):
 
         value = value.replace('"', "'")
         if '=' in name:
-            return name.replace('<EXP>', value)
-        return '{}="{}"'.format(name, value)
+            ret = name.replace('<EXP>', value)
+        else:
+            if extract:
+                ret = value
+            else:
+                ret = '{}="{}"'.format(name, value)
+        if extract:
+            root = self.get_root_block()
+            root.extracts.append(ret)
+            return None
+        return ret
 
 class WaitTreeForArg(_Line):
 

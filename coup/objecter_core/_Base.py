@@ -104,6 +104,15 @@ Implement those methods in child:
     def __repr__(self):
         return self.__str__()
 
+    def get_root_block(self):
+        parent = self
+        while parent and parent.parent:
+            parent = parent.parent
+            if parent.__class__.__name__ == '_Block':
+                if parent.start_instruction:
+                    parent = parent.start_instruction
+        return parent
+
     def get_unknown_instructions(self):
         if hasattr(self, 'instructions'):
             return [ ins for ins in self.instructions if type(ins) == _UnknownLine ]
@@ -558,16 +567,17 @@ class _Line(_Base):
                 print('{:>12}. {}'.format(ins.INDEX, ins.to_str()))
 
     @staticmethod
-    def _get_text_tree(text):
-        b = _Line._get_objects_tree(text)
+    def _get_text_tree(text, extracts=None):
+        b = _Line._get_objects_tree(text, extracts=extracts)
         ret = b.get_tree()
         return ret
 
     @staticmethod
-    def _get_objects_tree(text, debug=False):
+    def _get_objects_tree(text, debug=False, extracts=None):
         _Block._debug = debug
         _Block.clear_errors()
         b = _Block()
+        b.extracts = extracts
         b.locals = {}
         #print('>>>>>> main locals: {}'.format(id(b.locals)))
         lines = text.split('\n')

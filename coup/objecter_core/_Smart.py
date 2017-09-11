@@ -771,7 +771,7 @@ class Smarter(SmarterBase):
 
     @classmethod
     def translate(cls, text, filename=None, remove_space_lines=False, strip=False, logger=None,
-                  only_tree=False, remove_double_space_lines=False):
+                  only_tree=False, remove_double_space_lines=False, extracts=None):
         if cls._GLOBALS:
             for name, value in cls._GLOBALS.items():
                 try:
@@ -781,7 +781,7 @@ class Smarter(SmarterBase):
                     pass
         _getter = _Line.init_instructs(cls._GLOBALS, filename=filename, logger=logger,
                                        only_tree=only_tree)[1]
-        out_text = _getter(text)
+        out_text = _getter(text, extracts=extracts)
         if only_tree:
             return out_text
         out_text = '\n'.join(cls.OUT_START) + out_text
@@ -796,13 +796,14 @@ class Smarter(SmarterBase):
 
     @classmethod
     def translate_file(cls, filename, to_filename=None, remove_space_lines=False, strip=False,
-                       log_file=None, remove_double_space_lines=False, text=None):
+                       log_file=None, remove_double_space_lines=False, text=None, extracts=None):
         if text == None:
             text = open(filename).read()
         logger = open(log_file, 'w') if log_file else None
 
         out_text = cls.translate(text, filename=filename, remove_space_lines=remove_space_lines, strip=strip,
-                                 logger=logger, remove_double_space_lines=remove_double_space_lines)
+                                 logger=logger, remove_double_space_lines=remove_double_space_lines,
+                                 extracts=extracts)
         if logger:
             logger.close()
 
