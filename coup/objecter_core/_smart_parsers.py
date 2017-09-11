@@ -1,4 +1,5 @@
 # coding: utf-8
+from copy import copy
 from ._Base import _Line, _GoodLine, _Block, _GlobalName, _Base
 
 _t_name = lambda t: t.__class__.__name__ if hasattr(t, '__class__') else t.__name__
@@ -868,9 +869,6 @@ class _ExpToArg(_ExpType):
 class _ExpKwargs(_ExpType):
     TEXT = 'kwargs'
 
-    # def __init__(self):
-    #     print('\t~')
-
     @classmethod
     def try_me(cls, line):
         stripped = line.strip()
@@ -882,6 +880,34 @@ class _ExpKwargs(_ExpType):
     def try_out_instruction(self, line, line_number, parent, exp_string=None):
         parent_object = parent.parent.start_instruction
         return WaitTree(line, line_number=line_number, parent=parent)
+
+class _ExpExtract(_ExpType):
+    TEXT = 'extract='
+    text = None
+
+    @classmethod
+    def try_me(cls, line):
+        stripped = line.strip()
+        if stripped.startswith(cls.TEXT):
+            c = cls()
+            c.text = stripped[len(cls.TEXT):]
+            return c
+
+    try_instruction = None
+
+    def try_out_instruction(self, line, line_number, parent, exp_string=None):
+
+        print('''
+
+        Extract:
+            {}
+
+
+        '''.format(self.text))
+
+        parent_object = parent.parent.start_instruction
+        return Extract(self.text, line_number=line_number, parent=parent)
+
 
 class _ExpToBlockEnd(_ExpType):
     TEXT = '+BLOCK_END='
@@ -914,8 +940,6 @@ class _ExpToBlockEnd(_ExpType):
 class WaitTree(_Line):
 
     def get_tree_main(self):
-        #print('=== KWARGS')
-
         kwargs = {}
 
         if True:
@@ -987,6 +1011,32 @@ class WaitTree(_Line):
             root.extracts.append(ret)
             return None
         return ret
+
+class Extract(_Line):
+
+    IS_EXTRACT = True
+
+    def get_tree_main(self):
+
+        if True:
+            parent_object = self.parent #.parent.start_instruction
+            try:
+                if hasattr(parent_object, 'instance_attrs') and parent_object.instance_attrs != None:
+                    kwargs = parent_object.instance_attrs
+            except Exception as e:
+                print('error: {}'.format(e))
+                import traceback, sys
+                traceback.print_exc(file=sys.stdout)
+
+        line = self.line
+        if '<EXP[0]>' in line:
+            line = line.replace('<EXP[0]>', parent_object.instructions[0].line.strip())
+
+        root = self.get_root_block()
+        root.extracts.append(line)
+
+        return ''
+
 
 class WaitTreeForArg(_Line):
 
@@ -1153,7 +1203,25 @@ class _ExpParser(list):
 
         exps = []
         deleters = []
-        main_lst = line.split('<EXP')
+
+        #main_lst = line.split('<EXP') !!!!!!!!!!!!!!!!!
+        main_lst = []
+
+        last_pos = 0
+        last_find_pos = 0
+        while True:
+            pos = line.find('<EXP', last_find_pos)
+            fin_pos = line.find('>', last_find_pos)
+            if last_pos > 0 and fin_pos > pos:
+                last_find_pos = fin_pos+1
+                continue
+            if pos < 0:
+                main_lst.append(line[last_pos:])
+                break
+            main_lst.append(line[last_pos:pos])
+            last_pos = pos + len('<EXP')
+            last_find_pos = last_pos
+
         poses = self.get_exps_positions(main_lst)
 
         if need_debug:
@@ -1161,6 +1229,28 @@ class _ExpParser(list):
 
         for i, ex in enumerate(main_lst):
             lst = ex.split('>')
+            _pre_lst = copy(lst)
+
+            k = 0
+            _boooo = False
+            while k+1 < len(lst):
+                lo = lst[k]
+                while lo.count('<') > lo.count('>') and k+1 < len(lst):
+                    _boooo = True
+                    lst[k] = '>'.join(lst[k:k+2])
+                    del lst[k+1]
+                if lst[k].count('>') > lst[k].count('<') and lst[k].endswith('>'):
+                    lst[k] = lst[k][:-1]
+                k += 1
+            if _boooo:
+                print('''
+
+        >>>>>>> {}
+        >>>>>>> {}
+        ....... {}
+
+                '''.format(line, _pre_lst, lst))
+
             if i == 0:
                 if len(main_lst[0]) > 0:
                     stack.append(ex)

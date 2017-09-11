@@ -132,11 +132,13 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             def init_exps(self, line, on_instruction):
 
+                self.extract_instructions = []
+
                 try:
 
                     self.deleters_in.on_new_name = self.on_new_name
 
-                    need_debug = False or "self.errors_info_label.text = ''" in line #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
+                    need_debug = False or "EXP:extract" in OUT_FORMAT #'readonly' in line #self.deleters_in.line == 'self.<EXP:TEXT>.<EXP:TEXT>'
 
                     out_format = OUT_FORMAT(self) if callable(OUT_FORMAT) else OUT_FORMAT
                     self.deleters_out = _ExpParser(out_format)
@@ -147,6 +149,7 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         print('line: {}'.format(line))
                         print('deleters_in:', self.deleters_in, line)
                         print('deleters_in.exps:', self.deleters_in.exps)
+                        print('OUT_FORMAT:', OUT_FORMAT)
                         print('deleters_out:', self.deleters_out, line)
                         print('deleters_out.exps:', self.deleters_out.exps)
 
@@ -265,15 +268,21 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         if eo and hasattr(eo, 'try_out_instruction'):
                             eo_ret = eo.try_out_instruction('', line_number=self.line_number, parent=self)
                             if eo_ret and eo_ret != '':
-                                eo_ret.in_exp = instructions[i]
-                                instructions[i] = eo_ret
+                                if hasattr(eo_ret, 'IS_EXTRACT'):
+                                    self.extract_instructions.append(eo_ret)
+                                else:
+                                    eo_ret.in_exp = instructions[i]
+                                    instructions[i] = eo_ret
 
                     for i, eo in enumerate(other_out_exps):
                         if eo and hasattr(eo, 'try_out_instruction'):
                             eo_ret = eo.try_out_instruction('', line_number=self.line_number, parent=self)
                             if eo_ret and eo_ret != '':
-                                instructions.append(eo_ret)
-                                #print('\t&&&', instructions, self.instructions)
+                                if hasattr(eo_ret, 'IS_EXTRACT'):
+                                    self.extract_instructions.append(eo_ret)
+                                else:
+                                    instructions.append(eo_ret)
+                                    #print('\t&&&', instructions, self.instructions)
 
                     for i, ins in sorted(out_ins_append.items(), key=lambda a: a[0]):
                         if i >= len(instructions):
@@ -485,6 +494,9 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                 if need_debug:
                     print('[ get_tree_main ] {} <-- exps: {}'.format(self, self.deleters_in.exps))
                     print('\t{}'.format(self.instructions))
+
+                for exp in self.extract_instructions:
+                    exp.get_tree_main()
 
                 try:
                     trees = [ ins.get_tree() for ins in self.instructions ] #line = '|'.join()
