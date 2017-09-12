@@ -20,15 +20,12 @@ class _ExpString:
         for t in self.types:
             if isinstance(t, _ExpToArg):
                 boo = True
-                #print('>>>>>>>>>> _ExpToArg >>>>>>>>>>>>\n\t{}'.format(self.types))
             if t and hasattr(t, 'is_me') and not t.is_me(line, parent=parent, line_number=line_number, parent_line=parent_line):
                 return False
         if boo:
             self._ExpToArg = _ExpToArg
-            #print('\t=====> !!! {}'.format(t))
             return t
         return True
-
 
     def try_exp_types(self, line):
         self.types = [ self.try_exp_type(a.strip()) for a in line.split(',') ]
@@ -42,17 +39,6 @@ class _ExpString:
 
     def try_instruction(self, line, line_number, parent=None):
         _Line.log('_ExpString.try_instruction [{}]: '.format(line_number+1) + line)
-
-        # if hasattr(self, 'need_debug') and self.need_debug:
-        #     print('need_debug ' * 3)
-        #
-        # if hasattr(self, '_ExpToArg'):
-        #     print('_ExpToArg'*5)
-        #
-        # for t in self.types:
-        #     if isinstance(t, _ExpToArg):
-        #         print('=================================')
-
         rets = []
         for t in self.types:
             ret = None
@@ -65,8 +51,6 @@ class _ExpString:
                     else:
                         ret.line = _Block.var_format.format(ret.line)
             else:
-                # if isinstance(t, _ExpToArg):
-                #     print('========== _ExpToArg >>>>>>>>>>>>\n\t{}'.format(self.types))
                 ret = t.try_instruction(line, line_number=line_number, parent=parent, exp_string=self)
             if ret:
                 rets.append(ret)
@@ -122,11 +106,8 @@ class _ExpIgnore(_ExpType):
             return _ExpIgnore(lst[1].strip())
 
     def try_instruction(self, line, line_number, parent, exp_string=None):
-
         if line.strip() == self.ign_text:
-            #raise Exception("{}: ".format(line_number)+line)
             return _GoodLine(self.ign_text)
-
         return _ExpType.try_instruction(line, line_number, parent)
 
 class _ExpAddPreffix(_ExpType):
@@ -215,14 +196,14 @@ class _ExpName(_ExpType):
 
             if exp_string:
                 exp_string.on_new_name(name, line, line_number)
-
         else:
             raise Exception('''
+    CLS: {}
     {} have no "locals",
     line: {}
     line_number: {}
 
-            '''.format(parent, line, line_number))
+            '''.format(cls, parent, line, line_number))
 
         return _GoodLine(line, line_number=line_number, new_name=True, parent=parent)
 
@@ -300,13 +281,12 @@ class _TreeWay(_Line):
         return self.splitter.join(a for a in lst)
 
 class _ExpList(_ExpType):
-    TEXT = 'NAMES_LIST'
+    TEXT = '+NAMES_LIST'
 
     @classmethod
     def is_me(cls, line, parent=None, line_number=None, parent_line=''):
         for name in line.split(','):
             name = name.strip()
-            #if ' ' in name:
             for a in ' .!@#$%^&*()-=+':
                 if a in name:
                     return False
@@ -376,22 +356,16 @@ class _ExpSimpleList(_ExpType):
             lst_split[i] = lst_split[i] + self.splitter + lst_split[i+1]
             del lst_split[i+1]
 
-        #print(lst_split)
         for sub in lst_split:
-
             if self.tip == 'int':
                 if not sub.strip().isdigit():
                     return None
                 lst.append(_GoodLine(sub.strip(), line_number=line_number, parent=parent))
                 continue
 
-            #try:
             ins = self.tryer.try_instruction(sub.strip(), line_number=line_number, parent=parent)
             if ins == None:
                 return None
-            #except BaseException as e:
-            #    print(e)
-            #    return None
 
             lst.append( ins )
 
@@ -446,10 +420,7 @@ class _ExpTextWithoutSpaces(_ExpType):
     @classmethod
     def try_instruction(cls, line, line_number, parent, exp_string=None):
         if ' ' in line.strip():
-
-            #if line.strip() == 'self.users_checked and str(id) != str(self.main_root.api.user_id)':
             raise Exception(line)
-
             return None
         return _GoodLine(line, line_number=line_number, parent=parent)
 
@@ -513,11 +484,6 @@ class _ExpGetSimpleLocal(_ExpType):
         stripped = line.strip()
         _locals = parent.get_locals()
 
-        # if hasattr(_locals, '__call__'):
-        #     return None
-        # while hasattr(_locals, '__call__'):
-        #     _locals = _locals(parent)
-
         if stripped in _locals:
             return _GoodLine(line, line_number=line_number, parent=parent)
 
@@ -541,10 +507,6 @@ class _ExpGetSimpleLocal(_ExpType):
             _Line.log('\tstripped( {} ) in _locals = {}'.format(stripped, stripped in _locals))
         except:
             return False
-
-        if stripped in _locals:
-            print('!!!!!!!! local:', stripped)
-
         return stripped in _locals
 
 class _ExpSomeName(_ExpType):
@@ -565,10 +527,8 @@ class _ExpSomeName(_ExpType):
             if stripped.startswith('ends_with='):
                 ef = _ExpSomeName()
                 ef._ends_with = stripped[len('ends_with='):]
-                print('............. {}'.format(ef._ends_with))
                 return ef
 
-    #@classmethod
     def try_instruction(self, line, line_number, parent, exp_string=None):
         return _GoodLine(line.strip(), line_number=line_number, parent=parent)
 
@@ -633,12 +593,10 @@ class _ExpEqual(_ExpType):
     def try_me(cls, line):
         stripped = line.strip()
         if stripped == cls.TEXT:
-            print('EQUAL')
             return _ExpEqual()
         if stripped.startswith('equal'):
             cutted = stripped[5:]
             if cutted.startswith('='):
-                print('EQUAL 2')
                 ef = _ExpEqual()
                 ef.name = cutted[1:]
                 return ef
@@ -653,25 +611,18 @@ class _ExpEqual(_ExpType):
         if hasattr(parent, '_exp_equal__list'):
             for ex in parent._exp_equal__list:
                 if ex.line != line:
-                    print('-----------------------EQUAL ---> FALSE')
                     return False
 
             parent._exp_equal__list.append(self)
         else:
             parent._exp_equal__list = [self]
 
-        print('-----------------------EQUAL')
-
         return True
 
     def try_instruction(self, line, line_number, parent, exp_string=None):
-
-        print('-----------------------TRY EQUAL')
-
         return _GoodLine(line, line_number=line_number, parent=parent)
 
 class _ExpGetLocal(_ExpType):
-    #TEXT = '^get_local' FIXME
     TEXT = 'attribute'
 
     @classmethod
@@ -684,7 +635,6 @@ class _ExpGetLocal(_ExpType):
 
     @classmethod
     def try_instruction(cls, line, line_number, parent, exp_string=None):
-        #got = _Line.try_instruction(line, line_number=line_number, parent=parent)
         parent_class = parent.get_parent_class()
 
         if line in parent_class.instance_attrs:
@@ -705,7 +655,6 @@ class _ExpInsertLocal(_ExpType):
 
     @classmethod
     def try_instruction(cls, line, line_number, parent, exp_string=None):
-        #got = _Line.try_instruction(line, line_number=line_number, parent=parent)
         parent_class = parent.get_parent_class()
 
         try:
@@ -790,14 +739,6 @@ class _ExpMyArg(_ExpType):
         if stripped.startswith(cls.TEXT):
             return cls(stripped.split(cls.TEXT)[1])
 
-    # @classmethod
-    # def is_me(cls, line, parent=None, line_number=None, parent_line=''):
-    #     stripped = line.strip()
-    #     for a in ' []:-+/&^%$#@()=':
-    #         if a in stripped:
-    #             return False
-    #     return True
-
     def try_instruction(self, line, line_number, parent, exp_string=None):
         parent_class = parent.get_parent_class()
 
@@ -812,11 +753,10 @@ class _ExpMyArg(_ExpType):
 
     def try_out_instruction(self, line, line_number, parent, exp_string=None):
         parent_object = parent.parent.start_instruction
-        #print('--- _ExpMyArg - {} - {}'.format(parent_object, parent))
+
         w = WaitTreeForArg(line, line_number=line_number, parent=parent)
         w.arg_name = self.arg_name
         w.default_value = self.default_value
-        #print('\t---> default_value: {}'.format(self.default_value))
         return w
 
 class _ExpToArg(_ExpType):
@@ -896,15 +836,6 @@ class _ExpExtract(_ExpType):
     try_instruction = None
 
     def try_out_instruction(self, line, line_number, parent, exp_string=None):
-
-        print('''
-
-        Extract:
-            {}
-
-
-        '''.format(self.text))
-
         parent_object = parent.parent.start_instruction
         return Extract(self.text, line_number=line_number, parent=parent)
 
@@ -918,7 +849,6 @@ class _ExpToBlockEnd(_ExpType):
     def try_me(cls, line):
         stripped = line.strip()
         if stripped.startswith(cls.TEXT):
-            print('_ExpToBlockEnd ----------------------')
             ret = cls()
             ret._text = stripped[len(cls.TEXT):]
             return ret
@@ -927,14 +857,11 @@ class _ExpToBlockEnd(_ExpType):
 
     def try_out_instruction(self, line, line_number, parent, exp_string=None):
         parent_object = parent
-        print('_ExpToBlockEnd ---------- parent: {}'.format(parent_object))
         text = self._text
         if 'EXP_0' in text:
             text = text.replace('EXP_0', parent_object.instructions[0].line.strip())
         parent._BLOCK_END += text
         return _GoodLine('')
-
-        #return WaitTree(line, line_number=line_number, parent=parent)
 
 
 class WaitTree(_Line):
@@ -994,8 +921,6 @@ class WaitTree(_Line):
             name = (name[:chang_pos] + name[chang_fin_pos+1:]).strip()
 
             exp = exp.replace('<EXP>', value)
-            print('EVAL: {}'.format(exp))
-
             value = eval(exp)
 
         value = value.replace('"', "'")
@@ -1108,7 +1033,6 @@ class _ExpObjectOf(__ExpObject):
                 my_objects = {}
                 if hasattr(instance_class, 'my_objects'):
                     my_objects = instance_class.my_objects
-                #instance_class = bool(my_objects.get(stripped))
                 return stripped in my_objects
 
         return instance_class
@@ -1133,16 +1057,11 @@ class _ExpInstanceOf(__ExpObject):
                 text = lst[1].split(']')[0]
                 return _ExpInstanceOf(text.strip())
 
-    #@classmethod
     def is_me(self, line, parent=None, line_number=None, parent_line=''):
-
         locals = parent.get_locals()
-
         inst = locals.get(line.strip())
         if inst:
-
             cls = inst.deleters_in.exps[0].types[0].instance_class
-
             return cls==self.instance_class
 
     def try_instruction(self, line, line_number, parent, exp_string=None):
@@ -1197,14 +1116,12 @@ class _ExpParser(list):
         return poses
 
     def split_line(self, line):
-        need_debug = False or "self.errors_info_label.text = ''" in line
+        need_debug = False
 
         stack = []
 
         exps = []
         deleters = []
-
-        #main_lst = line.split('<EXP') !!!!!!!!!!!!!!!!!
         main_lst = []
 
         last_pos = 0
@@ -1242,7 +1159,7 @@ class _ExpParser(list):
                 if lst[k].count('>') > lst[k].count('<') and lst[k].endswith('>'):
                     lst[k] = lst[k][:-1]
                 k += 1
-            if _boooo:
+            if _boooo and need_debug:
                 print('''
 
         >>>>>>> {}
@@ -1258,14 +1175,11 @@ class _ExpParser(list):
             else:
                 e_lst = lst[0].split(':')
                 es_in = e_lst[1] if len(e_lst) > 1 else e_lst[-1]
-                #print('>>>', id(self), type(self), hasattr(self, 'on_new_name'))
                 es = _ExpString(es_in)
                 if len(e_lst) > 2:
-                    #print('>>>', es, e_lst)
                     fu = _EXP_FUNCERS.get(e_lst[2])
                     if fu:
                         es.funcer = fu
-                        #print('\t--> {}'.format(fu))
                 exps.append( es )
                 stack.append( es )
                 if len(lst) > 1:
@@ -1282,10 +1196,7 @@ class _ExpParser(list):
         if need_debug:
             print(exps, '--', line)
 
-        #print('**** DELETERS:', deleters)
-
         self.exps = exps
         self.stack = stack
-        #print(exps, '--', line)
 
         return deleters

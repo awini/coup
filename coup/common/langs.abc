@@ -33,9 +33,9 @@
 
 -------------- Classes: --------------------------------------------------------------------------------------------------------------------------
 
-    class <EXP:+NAME>:                              >>>     class <EXP:+NAME>                               >>>     class <EXP:+NAME>                               >>>     Class   | instance_attrs = {}, my_objects = {}
+    class <EXP:+NAME>:                              >>>     class <EXP:+NAME>                               >>>     class <EXP:+NAME>                               >>>     Class   | instance_attrs = {}, my_objects = {}, locals = {}
                                                             {                                                       {
-        def <EXP:+NAME>(self):                      >>>         <EXP:+NAME>() {                             >>>         function <EXP:+NAME>() {                    >>>     Method
+        def <EXP:+NAME>(self):                      >>>         <EXP:+NAME>() {                             >>>         function <EXP:+NAME>() {                    >>>     Method  | locals = {}
             print(`exp`)                            >>>             console.log(`exp`)                      >>>             print(`exp`.PHP_EOL)                    >>>     Print
                                                                 }                                                       }
                                                             }                                                       }

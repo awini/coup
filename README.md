@@ -1,121 +1,60 @@
 # ~=~ COUP ~=~
-## -(= Translate engine =)-
+## Движок для создания "переводимых приложений"
 
-*It is very **simple** to translate your programs to other languages with this tool!*
+Сейчас уже очень много языков программирования и проектирования. У каждого есть свои
+плюсы и минусы. Бывает много ситуаций, когда может понадобиться перевести код с одного
+языка на другой.
 
-Imagine we have program code on **Python** like (file **"main.py"**):
-```python
-if __name__ == '__main__':
-    print('Hello!')
+Эта библиотека поможет во множестве таких ситуаций, облегчит задачу и сократит время
+на перевод.
+
+Для примера, посмотрите, как можно обозначить перевод рядового "Hello World" c **Python** на **Javascript**:
 ```
-Now we want auto translater that can translate it ro **Golang**. In **Golang**
-this program code will be like:
-```Golang
-package main
-import "fmt"
-
-func main()
-{
-    fmt.Println("Hello!")
-}
+print('Hello World!')        >>>       console.log('Hello World!');      >>>     PrintHello
 ```
+Вы просто создаете список соответствий между языками. Всю вспомогательную работу мы уже
+внедрили в библиотеку.
 
-OK, this task is created for this tool!
-Now let's try to write our new translate engine in simple syntax. It wil be like this:
+## Общая кодовая база на многих языках.
 
-```python
-from coup import Translater, accord, Accord
+Часто одна и та же задача даже в рамках одной компании решается на разных языках повторно,
+просто потому, что нет так называемой "общей кодовой базы". Разработчик либо переписывает вручную
+код, либо пишет его полностью заново.
 
-class ToGO(Translater):
+Что мы называем **общей кодовой базой**?
+Вобщем-то это просто набор библиотек на все случаи жизни, каждая из которых может быть запущена на любом
+языке в компании. Можно сидеть и переводить библиотеки вручную, а можно автоматизировать этот процесс.
 
-    OUT_START = [ 'package main',
-                  'import "fmt"' ]
+**COUP** спроектирована таким образом, чтобы задав соответствия между несколькими языками,
+можно было получить возможность переводить между любыми из них в любую сторону.
 
-    Main = accord(
-        IN = "if __name__ == '__main__':",
-        OUT = 'func main()'
-    )
+*Почитайте таже и про другие способы применения этой библиотеки в конце этого документа ;)*
 
-    Print = accord(
-        IN =  'print(<EXP>)',
-        OUT = 'fmt.Println(<EXP>)',
-    )
+##Три простых шага для начала:
 
-    class Str(Accord):
-        IN = "'<EXP:TEXT>'"
-        OUT = '"<EXP:TEXT>"'
-
+1. Создайте файл **langs.abc** и в нем добавьте описание перевода в следующем формате:
 ```
-
-And now translate is simple:
-
-```python
-new_text = ToGO.translate_file('main.py')
+class <EXP:+NAME>:           >>>     class <EXP:+NAME>            >>>     class <EXP:+NAME>              >>>     Class   | arg_to_instance = {}, my_objects = {}
+                                     {                                    {
+    def <EXP:+NAME>(self):   >>>         <EXP:+NAME>() {          >>>         function <EXP:+NAME>() {   >>>     Method
+        print(<EXP>)         >>>             console.log(<EXP>)   >>>             print(<EXP>)           >>>     Print
+                                         }                                    }
+                                     }                                    }
 ```
-
-And you will get this text:
+В начале файла добавьте следующую строку:
 ```
-package main
-import "fmt"
-
-func main()
-{
-    fmt.Println("Hello!")
-
-}
+=== Python ===      === Javascript ===      === Php ===
 ```
-OK
-------
-You can use classess oportunities a lot:
+Таким образом вы зададите описание сразу 3-х языков перевода.
 
-```python
-class ToGO(ToGO):
-
-    class Str(Accord):
-        IN = "'<EXP:TEXT>'"
-        OUT = '"<EXP:TEXT>"'
-
-        def _hello(self):
-            print('Hello!')
-
-        def on_init(self, *args, **kwargs):
-            print('on_init:', args, kwargs)
-            self._hello()
+2. Создайте файл **translate.py** и добавьте в него следующие строки:
 ```
-
-Other example:
-```python
-from coup import Translater, Accord, accord
-
-class SimpleTranslate(Translater):
-
-    For = accord(
-        IN_FORMAT='for <EXP:NAME> in <EXP>:',
-        OUT_FORMAT='for <EXP:NAME> in <EXP>',
-    )
-
-    Lst = accord(
-        IN_FORMAT='[<EXP:LIST>]',
-        OUT_FORMAT='[<EXP:LIST>]',
-    )
-
-    If = accord(
-        IN_FORMAT='if <EXP>:',
-        OUT_FORMAT='if <EXP>'
-    )
-
-    Else = accord(
-        IN_FORMAT='else:',
-        OUT_FORMAT='else'
-    )
-
-    ElIf = accord(
-        IN_FORMAT='elif <EXP>:',
-        OUT_FORMAT='else if <EXP>'
-    )
-
-    Range = accord(
-        IN_FORMAT='range(<EXP>, <EXP>)',
-        OUT_FORMAT='<EXP>...<EXP>'
-    )
+Py2Js = think(lang='Javascript')
+out = Py2Js.translate(code, remove_space_lines=True)
 ```
+Таким образом вы переведете код из многострочного текста **code** на языке **Python** в многосточный текст **out** на языке **Javascript**. Естественно только если код состоит из описанных конструкций =)
+
+
+3. В конце отладь переводимость. Просто запускай перевод интересующего тебя кода. Библиотека сама подскажет, какие конструкции ей неизвестны. Добавляешь новое соответствие, проверяешь переводимость.
+
+Когда не останется неизвестных конструкций, ты увидишь код на целевом языке. При этом последующие переводы будут с каждым разом отнимать все меньше и меньше времени.

@@ -160,7 +160,7 @@ class Test7(TestCase):
         @:extends:Common
         @langs
     def <EXP:+NAME>():                  >>>     function <EXP:+NAME>() {                    >>>     >>>     func_0
-    def <EXP:+NAME>(<EXP:NAMES_LIST>):  >>>     function <EXP:+NAME>(<EXP:NAMES_LIST>) {    >>>     >>>     func_2
+    def <EXP:+NAME>(<EXP:+NAMES_LIST>): >>>     function <EXP:+NAME>(<EXP:+NAMES_LIST>) {   >>>     >>>     func_2
     <EXP>()                             >>>     <EXP>()                                     >>>     >>>     func_start_0
     <EXP>(<EXP:LIST>)                   >>>     <EXP>(<EXP:LIST>)                           >>>     >>>     func_start_2
     ''', lang='Javascript')
@@ -178,6 +178,45 @@ function func_2()
 {
 }
 func([1, 2], func_2())'''.split('\n'), out.split('\n'))
+
+class Test8(TestCase):
+
+    def test_8_fact(self):
+        Py2Js = think('''
+        @:extends:Common
+        @langs
+    def <EXP:+NAME>(<EXP:+NAME>):       >>>     function <EXP:+NAME>(<EXP:+NAME>) {         >>>     >>>     func_1          | locals = {}
+    def <EXP:+NAME>(<EXP:+NAMES_LIST>): >>>     function <EXP:+NAME>(<EXP:+NAMES_LIST>) {   >>>     >>>     func_2          | locals = {}
+    <EXP>(<EXP>)                        >>>     <EXP>(<EXP>)                                >>>     >>>     func_start_1
+    <EXP>(<EXP:LIST>)                   >>>     <EXP>(<EXP:LIST>)                           >>>     >>>     func_start_2
+    while <EXP>:                        >>>     while (<EXP>) {                             >>>     >>>     While
+    <EXP> <= <EXP>                      >>>     <EXP> <= <EXP>                              >>>     >>>     Lower
+    <EXP> * <EXP>                       >>>     <EXP> * <EXP>                               >>>     >>>     Mnoz
+    return <EXP>                        >>>     return <EXP>                                >>>     >>>     ReturnVal
+    print(<EXP>)                        >>>     console.log(<EXP>)                          >>>     >>>     Print
+    ''', lang='Javascript')
+        out = Py2Js.translate('''
+def fact(num):
+    rval = 1
+    i = 2
+    while i <= num:
+        rval = rval * i
+        i += 1
+    return rval
+print(fact(7))
+        ''', remove_space_lines=True)
+        self.assertEqual('''function fact(num)
+{
+    var rval = 1
+    var i = 2
+    while (i <= num)
+    {
+        rval = rval * i
+        i += 1
+    }
+    return rval
+}
+console.log(fact(7))'''.split('\n'), out.split('\n'))
 
 
 if __name__=='__main__':

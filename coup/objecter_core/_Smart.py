@@ -314,8 +314,8 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
 
             @classmethod
             def _is_instruction(cls, line, parent=None, line_number=None):
-                need_debug = False #or "func([1, 2], func_2())" == line and '<EXP>(<EXP:LIST>)' in IN_FORMAT
-                need_debug_false = False #or "func([1, 2], func_2())" == line and '<EXP>(<EXP:LIST>)' in IN_FORMAT
+                need_debug = False #or "print(fact(7))" == line and 'print(<EXP>)' in IN_FORMAT
+                need_debug_false = False #or "print(fact(7))" == line and 'print(<EXP>)' in IN_FORMAT
 
                 if need_debug:
                     print('self: {} line: {}'.format(IN_FORMAT, line))
@@ -444,11 +444,13 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                         print('\tFALSE 2 : {} ?= {}'.format(line[pos:], cls.deleters_in[-1]))
 
                     if len(cls.deleters_in) == 2 and len(cls.deleters_in.exps) in (1, 2):
-                        #print('\tstack: {}'.format(cls.deleters_in.stack))
+                        if need_debug:
+                            print('\tstack: {}'.format(cls.deleters_in.stack))
                         ttt = []
                         last_pos = 0
                         _last_exp = None
                         center = len(cls.deleters_in.stack) / 2.0
+                        center_x = len(line) / 2.0
                         for i, dl in enumerate(cls.deleters_in.stack):
                             if dl.__class__.__name__ == '_ExpString':
                                 _last_exp = dl
@@ -457,18 +459,25 @@ def _smart(IN_FORMAT = None, OUT_FORMAT = None, INDEX = None,
                                 pos = line.find(dl, last_pos)
                                 add_text = line[last_pos:pos]
                                 last_pos = pos + len(dl)
+                                if need_debug:
+                                    print('\t+++ {}({}/{}) --> {}'.format(pos, last_pos, len(line), add_text))
                             else:
-                                if last_pos < center:
+                                if last_pos < center_x:
                                     pos = line.find(dl, len(line), -1)
                                     add_text = line[last_pos:pos]
+                                    if need_debug:
+                                        print('\t.... {} --> {}'.format(pos, add_text))
                                 else:
                                     pos = line.find(dl, last_pos, -1)
                                     add_text = line[pos:last_pos]
+                                    if need_debug:
+                                        print('\t---- {} --> {}'.format(pos, add_text))
                                 last_pos = pos - 1
                             if len(add_text):
                                 ttt.append(add_text)
 
-                        #print('\t: {}'.format(ttt))
+                        if need_debug:
+                            print('\t: {}'.format(ttt))
                         if len(ttt) > 0:
                             boos = []
                             for exp in cls.deleters_in.exps:
