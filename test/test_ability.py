@@ -195,7 +195,7 @@ class Test8(TestCase):
     return <EXP>                        >>>     return <EXP>                                >>>     >>>     ReturnVal
     print(<EXP>)                        >>>     console.log(<EXP>)                          >>>     >>>     Print
     ''', lang='Javascript')
-        out = Py2Js.translate('''
+        in_code = '''
 def fact(num):
     rval = 1
     i = 2
@@ -204,7 +204,8 @@ def fact(num):
         i += 1
     return rval
 print(fact(7))
-        ''', remove_space_lines=True)
+        '''
+        out = Py2Js.translate(in_code, remove_space_lines=True)
         self.assertEqual('''function fact(num)
 {
     var rval = 1

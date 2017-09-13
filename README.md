@@ -17,6 +17,13 @@ print('Hello World!')   >>>   console.log('Hello World!');   >>>   PrintHello
 
 Прочитай краткий туториал https://github.com/awini/coup/blob/master/doc/tutorial.md
 
+#### Установка
+
+Для установки библиотеки введите команду:
+```
+pip install coup
+```
+
 ### Общая кодовая база на многих языках
 
 Часто одна и та же задача даже в рамках одной компании решается на разных языках повторно,
