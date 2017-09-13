@@ -10,7 +10,7 @@
 
 Для примера, посмотрите, как можно обозначить перевод рядового "Hello World" c **Python** на **Javascript**:
 ```
-print('Hello World!')   >>>   console.log('Hello World!');   >>>   PrintHello
+print('Hello World!')   >>>   console.log('Hello World!');
 ```
 Вы просто создаете список соответствий между языками. Всю вспомогательную работу мы уже
 внедрили в библиотеку.
