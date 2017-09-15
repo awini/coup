@@ -143,6 +143,7 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
             for p in pathes:
                 filename = join(p, stripped.replace('@','')+'.abc')
                 if os.path.exists(filename):
+                    #print('INSERT: {}'.format(filename))
                     with open(filename) as f:
                         new_lines += f.read().split('\n')
                     break
@@ -301,15 +302,20 @@ def think(text='@langs', translater=None, lang=None, BLOCK_START='{', BLOCK_END=
                             #line = line.replace(templ, templates[template_name])
                             break
 
-                    if not langs:
+                    if not langs and lang != None:
                         raise Exception('Need have "=== Lang ====" instructions at start of text.')
 
                     line, kwargs = to_exps(line)
                     lst = line.split('>>>')
                     src, dst = [ a.strip() for a in [lst[0], lst[lang_pos]] ]
 
-                    if len(lst) <= len(langs):
-                        raise Exception('Need have ">>> name" instruction at end of line: \n\t{}'.format(line.strip()))
+                    if len(lst) > 2:
+                        if lang == None:
+                            raise Exception('Need choose one of langs list at start of "think".')
+                        elif langs == None:
+                            raise Exception('Need have "=== Lang ====" instructions at start of text.')
+                        elif len(lst) <= len(langs):
+                            raise Exception('Need have ">>> name" instruction at end of line: \n\t{}'.format(line.strip()))
 
                     lst = lst[-1].split('#')[0].split('|')
                     name = lst[0].strip()

@@ -77,8 +77,8 @@ Implement those methods in child:
     _to_level_0 = False
 
     _IS_CATCHING = 0
-    _SHOW_ERRORS_IN_HTML = True
-    _LOG_ENABLED = True
+    _SHOW_ERRORS_IN_HTML = False
+    _LOG_ENABLED = False
 
     _ARGS_RENAMER = {}
 
@@ -581,6 +581,26 @@ class _Line(_Base):
         b.locals = {}
         #print('>>>>>> main locals: {}'.format(id(b.locals)))
         lines = text.split('\n')
+
+        first_line, first_line_stripped = None, None
+        for line in lines:
+            first_line_stripped = line.lstrip()
+            if len(first_line_stripped) > 0:
+                first_line = line
+                break
+        d = 0
+        if first_line != None:
+            d = len(first_line) - len(first_line_stripped)
+
+        if d > 0:
+            new_lines = []
+            for i, line in enumerate(lines):
+                new_line = line[d:]
+                if new_line.lstrip() != line.lstrip():
+                    raise Exception('You have wrong indentation at:\n\t{}\n\tline number: {}'.format(line, i+1))
+                new_lines.append(new_line)
+            lines = new_lines
+
         b.add_lines(lines, [0, len(text)])
         return b
 

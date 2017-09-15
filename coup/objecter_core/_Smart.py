@@ -791,7 +791,7 @@ class Smarter(SmarterBase):
     OUT_START = []
 
     @classmethod
-    def translate(cls, text, filename=None, remove_space_lines=False, strip=False, logger=None,
+    def translate(cls, text, filename=None, remove_space_lines=True, strip=False, logger=None,
                   only_tree=False, remove_double_space_lines=False, extracts=None):
         if cls._GLOBALS:
             for name, value in cls._GLOBALS.items():
@@ -816,7 +816,7 @@ class Smarter(SmarterBase):
         return out_text
 
     @classmethod
-    def translate_file(cls, filename, to_filename=None, remove_space_lines=False, strip=False,
+    def translate_file(cls, filename, to_filename=None, remove_space_lines=True, strip=False,
                        log_file=None, remove_double_space_lines=False, text=None, extracts=None):
         if text == None:
             text = open(filename).read()
